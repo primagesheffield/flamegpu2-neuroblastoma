@@ -38,9 +38,9 @@ int main(int argc, const char ** argv) {
         auto &sc_agt = m_vis.addAgent("Schwann");
         // Position vars are named x, y, z; so they are used by default
         nb_agt.setModel(Stock::Models::ICOSPHERE);
-        nb_agt.setModelScale(11);
+        nb_agt.setModelScale(22); // 2 * env::R_CELL
         sc_agt.setModel(Stock::Models::ICOSPHERE);
-        sc_agt.setModelScale(11);
+        sc_agt.setModelScale(22); // 2 * env::R_CELL
         // Render the messaging bounding box, -1000 - 1000 each dimension
         {
             auto pen = m_vis.newLineSketch(1, 1, 1, 0.2f);  // white
@@ -63,14 +63,14 @@ int main(int argc, const char ** argv) {
             pen.addVertex(-1000, -1000, -1000);
             pen.addVertex(-1000,  1000, -1000);
             // Z axis
-            pen.addVertex( 1000, -1000,  1000);
-            pen.addVertex( 1000,  1000,  1000);
-            pen.addVertex(-1000, -1000,  1000);
-            pen.addVertex(-1000,  1000,  1000);
-            pen.addVertex( 1000, -1000, -1000);
             pen.addVertex( 1000,  1000, -1000);
-            pen.addVertex(-1000, -1000, -1000);
+            pen.addVertex( 1000,  1000,  1000);
+            pen.addVertex( 1000, -1000, -1000);
+            pen.addVertex( 1000, -1000,  1000);
             pen.addVertex(-1000,  1000, -1000);
+            pen.addVertex(-1000,  1000,  1000);
+            pen.addVertex(-1000, -1000, -1000);
+            pen.addVertex(-1000, -1000,  1000);
         }
     }
     m_vis.activate();
