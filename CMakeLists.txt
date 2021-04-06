@@ -3,7 +3,7 @@
 cmake_minimum_required(VERSION VERSION 3.12 FATAL_ERROR)
 
 # Name the project and set languages
-project(flamegpu2_example CUDA CXX)
+project(fgpu2_neuroblastoma CUDA CXX)
 
 # Our core dependency is FLAMEGPU2 lib, first lets find it
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/flamegpu2.cmake)
@@ -29,6 +29,11 @@ SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin/${CMAKE_SYSTE
 # Prepare list of source files
 # Can't do this automatically, as CMake wouldn't know when to regen (as CMakeLists.txt would be unchanged)
 SET(ALL_SRC
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/header.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/environment.cu
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/agents/neuroblastoma.cu
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/agents/schwann.cu
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/submodels/force_resolution.cu
     ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cu
 )
 
@@ -37,6 +42,9 @@ option(VISUALISATION "Enable visualisation support" OFF)
 
 # Add the executable and set required flags for the target
 add_flamegpu_executable("${PROJECT_NAME}" "${ALL_SRC}" "${FLAMEGPU_ROOT}" "${PROJECT_BINARY_DIR}" TRUE)
+
+# Mark the root of our source directory as an include directory, so we can include files relative to root
+target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 
 # Also set as startup project
 set_property(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"  PROPERTY VS_STARTUP_PROJECT "${PROJECT_NAME}")
