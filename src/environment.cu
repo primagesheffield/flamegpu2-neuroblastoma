@@ -77,4 +77,6 @@ void defineEnvironment(ModelDescription& model, unsigned int CELL_COUNT) {
     env.newProperty<float>("R_cell", 11);
     env.newProperty<float>("V_tumour", ((float)CELL_COUNT)/ (env.getProperty<float>("rho_tumour") * env.getProperty<float>("cellularity")));
     env.newProperty<float>("R_tumour", (float)cbrt(env.getProperty<float>("V_tumour") * 0.75 / M_PI));
+    // Temporary var for controlling speed of birth
+    env.newProperty<float>("birth_speed", 1);
 }
