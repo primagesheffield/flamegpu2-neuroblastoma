@@ -73,8 +73,7 @@ model.newLayer().addSubModel(forceResolution);
 l2 = model.newLayer();
 l2.addAgentFunction(nb_cc);
 l2.addAgentFunction(sc_cc);
-step_logDensity = logDensity();
-model.addStepFunctionCallback(step_logDensity);
+model.addStepFunctionCallback(logDensity().__disown__());
 
 
 """

@@ -129,7 +129,6 @@ class calculate_convergence(pyflamegpu.HostFunctionConditionCallback):
             self.total_force = dummy_force;
             return pyflamegpu.CONTINUE;
 
-exit_calculate_convergence = calculate_convergence(); # Cannot put this line inside defineForceResolution() otherwise it gets garbage collected before model executes (which we can't detect/handle yet)
 """
    Define the force resolution submodel
 """
@@ -197,7 +196,7 @@ def defineForceResolution(model):
     l4 = force_resolution.newLayer();
     l4.addAgentFunction(nb3);
     l4.addAgentFunction(sc3);
-    force_resolution.addExitConditionCallback(exit_calculate_convergence);
+    force_resolution.addExitConditionCallback(calculate_convergence().__disown__());
 
     smd = model.newSubModel("force resolution", force_resolution);
     smd.bindAgent("Neuroblastoma", "Neuroblastoma", True);
