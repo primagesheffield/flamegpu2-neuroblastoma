@@ -91,6 +91,7 @@ int main(int argc, const char ** argv) {
     ModelVis &m_vis = cuda_model.getVisualisation();
     {
         const float INIT_CAM = 1000 * 1.25F;
+        // m_vis.setBeginPaused(true);
         m_vis.setInitialCameraLocation(INIT_CAM, INIT_CAM, INIT_CAM);
         m_vis.setCameraSpeed(0.1f);
         auto& nb_agt = m_vis.addAgent("Neuroblastoma");
