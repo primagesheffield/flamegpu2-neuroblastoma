@@ -2,6 +2,9 @@
 *.xml
 *.bin
 
+# Visualisation screenshots
+*.png
+
 # GoogleTest directories (handled by CMake)
 googletest-build/
 googletest-download/

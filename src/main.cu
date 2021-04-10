@@ -1,5 +1,4 @@
 #define _USE_MATH_DEFINES
-#define NOMINMAX
 #include <cmath>
 #include "header.h"
 FLAMEGPU_AGENT_FUNCTION(temp_cell_cycle, MsgNone, MsgNone) {
