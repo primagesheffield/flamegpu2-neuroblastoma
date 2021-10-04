@@ -3,7 +3,7 @@
  * integration with imaging biomarkers
  * @todo This is unfinished, need to consider how RNG components will be seeded
  */
-void data_layer_0(ModelDescription& model) {
+void data_layer_0(flamegpu::ModelDescription& model) {
     auto& env = model.Environment();
     // Initial volume of tumour (cubic micron).
     env.newProperty<float>("V_tumour", 2e6);
@@ -46,7 +46,7 @@ void data_layer_0(ModelDescription& model) {
 
     // Derived values    
 }
-void mechanical_model_parameters(ModelDescription& model) {
+void mechanical_model_parameters(flamegpu::ModelDescription& model) {
     auto& env = model.Environment();
     // Minimum overlap below which two cells cannot interact, given in m (Pathmanathan et al., 2009), converted to microns.
     // However, it was decided that it should be reset to zero so that when two cells are just touching, they stop interacting immediately, i.e. no bouncing off.
@@ -66,7 +66,7 @@ void mechanical_model_parameters(ModelDescription& model) {
 }
 #define _USE_MATH_DEFINES
 #include <math.h>
-void defineEnvironment(ModelDescription& model, unsigned int CELL_COUNT) {
+void defineEnvironment(flamegpu::ModelDescription& model, unsigned int CELL_COUNT) {
     // data_layer_0(model);
     mechanical_model_parameters(model);
     // Temporary additional environment components required for force resolution submodel

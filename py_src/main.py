@@ -3,7 +3,7 @@ import math, sys
 import numpy as np
 
 temp_cell_cycle = """
-FLAMEGPU_AGENT_FUNCTION(temp_cell_cycle, MsgNone, MsgNone) {
+FLAMEGPU_AGENT_FUNCTION(temp_cell_cycle, flamegpu::MessageNone, flamegpu::MessageNone) {
     float age = FLAMEGPU->getVariable<float>("age");
     const float SPEED = FLAMEGPU->environment.getProperty<float>("birth_speed");
     age += SPEED;
@@ -17,7 +17,7 @@ FLAMEGPU_AGENT_FUNCTION(temp_cell_cycle, MsgNone, MsgNone) {
         FLAMEGPU->agent_out.setVariable<float>("z", FLAMEGPU->getVariable<float>("z") + (FLAMEGPU->random.uniform<float>() * 10.0f) - 5.0f);
     }
     FLAMEGPU->setVariable<float>("age", age);
-    return ALIVE;
+    return flamegpu::ALIVE;
 }
 """
 class logDensity(pyflamegpu.HostFunctionCallback):
@@ -131,7 +131,7 @@ if pyflamegpu.VISUALISATION:
 """
    Initialisation
 """
-if (not cuda_model.getSimulationConfig().input_file):
+if (not cuda_model.SimulationConfig().input_file):
     t_count_calc = env.getPropertyFloat("rho_tumour") * env.getPropertyFloat("V_tumour") * env.getPropertyFloat("cellularity");
     NB_COUNT = int(math.ceil(t_count_calc * (1 - env.getPropertyFloat("theta_sc"))));
     SC_COUNT = int(math.ceil(t_count_calc * env.getPropertyFloat("theta_sc")));

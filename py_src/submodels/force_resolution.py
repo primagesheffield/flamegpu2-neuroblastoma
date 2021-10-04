@@ -3,24 +3,24 @@ from environment import *
 
 apply_force = """
 // Used by both Neuroblastoma and Schwann
-FLAMEGPU_AGENT_FUNCTION(apply_force, MsgNone, MsgNone) {
+FLAMEGPU_AGENT_FUNCTION(apply_force, flamegpu::MessageNone, flamegpu::MessageNone) {
     //Apply Force (don't bother with dummy, directly clamp inside location)
     const float force_mod = FLAMEGPU->environment.getProperty<float>("dt_computed") / FLAMEGPU->environment.getProperty<float>("mu_eff");
     FLAMEGPU->setVariable<float>("x", FLAMEGPU->getVariable<float>("x") + force_mod * FLAMEGPU->getVariable<float>("fx"));
     FLAMEGPU->setVariable<float>("y", FLAMEGPU->getVariable<float>("y") + force_mod * FLAMEGPU->getVariable<float>("fy"));
     FLAMEGPU->setVariable<float>("z", FLAMEGPU->getVariable<float>("z") + force_mod * FLAMEGPU->getVariable<float>("fz"));
-    return ALIVE;
+    return flamegpu::ALIVE;
 }
 """
 output_location = """
 // Used by both Neuroblastoma and Schwann
-FLAMEGPU_AGENT_FUNCTION(output_location, MsgNone, MsgSpatial3D) {
+FLAMEGPU_AGENT_FUNCTION(output_location, flamegpu::MessageNone, flamegpu::MessageSpatial3D) {
     FLAMEGPU->message_out.setLocation(
         FLAMEGPU->getVariable<float>("x"),
         FLAMEGPU->getVariable<float>("y"),
         FLAMEGPU->getVariable<float>("z"));
     FLAMEGPU->message_out.setVariable<unsigned int>("id", 0);  // Currently unused, FGPU2 will have auto agent ids in future
-    return ALIVE;
+    return flamegpu::ALIVE;
 }
 """
 calculate_force = """
@@ -29,7 +29,7 @@ FLAMEGPU_DEVICE_FUNCTION float length(const float &x, const float &y, const floa
 
     return rtn;
 }
-FLAMEGPU_AGENT_FUNCTION(calculate_force, MsgSpatial3D, MsgNone) {
+FLAMEGPU_AGENT_FUNCTION(calculate_force, flamegpu::MessageSpatial3D, flamegpu::MessageNone) {
     // Load location
     const float i_x = FLAMEGPU->getVariable<float>("x");
     const float i_y = FLAMEGPU->getVariable<float>("y");
@@ -91,7 +91,7 @@ FLAMEGPU_AGENT_FUNCTION(calculate_force, MsgSpatial3D, MsgNone) {
     FLAMEGPU->setVariable<float>("fz", i_fz);
     FLAMEGPU->setVariable<float>("overlap", i_overlap);
     FLAMEGPU->setVariable<float>("force_magnitude", length(i_fx, i_fy, i_fz));
-    return ALIVE;
+    return flamegpu::ALIVE;
 }
 """
 

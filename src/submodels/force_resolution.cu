@@ -1,22 +1,22 @@
 #include "header.h"
 
 // Used by both Neuroblastoma and Schwann
-FLAMEGPU_AGENT_FUNCTION(apply_force, MsgNone, MsgNone) {
+FLAMEGPU_AGENT_FUNCTION(apply_force, flamegpu::MessageNone, flamegpu::MessageNone) {
     //Apply Force (don't bother with dummy, directly clamp inside location)
     const float force_mod = FLAMEGPU->environment.getProperty<float>("dt_computed") / FLAMEGPU->environment.getProperty<float>("mu_eff");
     FLAMEGPU->setVariable<float>("x", FLAMEGPU->getVariable<float>("x") + force_mod * FLAMEGPU->getVariable<float>("fx"));
     FLAMEGPU->setVariable<float>("y", FLAMEGPU->getVariable<float>("y") + force_mod * FLAMEGPU->getVariable<float>("fy"));
     FLAMEGPU->setVariable<float>("z", FLAMEGPU->getVariable<float>("z") + force_mod * FLAMEGPU->getVariable<float>("fz"));
-    return ALIVE;
+    return flamegpu::ALIVE;
 }
 // Used by both Neuroblastoma and Schwann
-FLAMEGPU_AGENT_FUNCTION(output_location, MsgNone, MsgSpatial3D) {
+FLAMEGPU_AGENT_FUNCTION(output_location, flamegpu::MessageNone, flamegpu::MessageSpatial3D) {
     FLAMEGPU->message_out.setLocation(
         FLAMEGPU->getVariable<float>("x"),
         FLAMEGPU->getVariable<float>("y"),
         FLAMEGPU->getVariable<float>("z"));
     FLAMEGPU->message_out.setVariable<unsigned int>("id", 0);  // Currently unused, FGPU2 will have auto agent ids in future
-    return ALIVE;
+    return flamegpu::ALIVE;
 }
 FLAMEGPU_DEVICE_FUNCTION float length(const float &x, const float &y, const float &z) {
     const float rtn = sqrt(x*x + y*y + z*z);
@@ -27,7 +27,7 @@ FLAMEGPU_DEVICE_FUNCTION float length(const float &x, const float &y, const floa
 #endif
     return rtn;
 }
-FLAMEGPU_AGENT_FUNCTION(calculate_force, MsgSpatial3D, MsgNone) {
+FLAMEGPU_AGENT_FUNCTION(calculate_force, flamegpu::MessageSpatial3D, flamegpu::MessageNone) {
     // Load location
     const float i_x = FLAMEGPU->getVariable<float>("x");
     const float i_y = FLAMEGPU->getVariable<float>("y");
@@ -89,7 +89,7 @@ FLAMEGPU_AGENT_FUNCTION(calculate_force, MsgSpatial3D, MsgNone) {
     FLAMEGPU->setVariable<float>("fz", i_fz);
     FLAMEGPU->setVariable<float>("overlap", i_overlap);
     FLAMEGPU->setVariable<float>("force_magnitude", length(i_fx, i_fy, i_fz));
-    return ALIVE;
+    return flamegpu::ALIVE;
 }
 FLAMEGPU_CUSTOM_REDUCTION(Max, a, b) {
     return a > b ? a : b;
@@ -113,24 +113,24 @@ FLAMEGPU_EXIT_CONDITION(calculate_convergence) {
         // Force resolution must always run at least 2 steps, maybe more
         // First pass step counter == 0, 2nd == 1 etc
         total_force = dummy_force;
-        return CONTINUE;
+        return flamegpu::CONTINUE;
     } else if(FLAMEGPU->agent("Neuroblastoma").count() + FLAMEGPU->agent("Schwann").count() < 2) {
-        return EXIT;
+        return flamegpu::EXIT;
     } else if (abs(dummy_force) < 2e-07) {
-        return EXIT;
+        return flamegpu::EXIT;
     } else if (100 * abs((total_force - dummy_force) / total_force) < FLAMEGPU->environment.getProperty<float>("thres_converge")) {
-        return EXIT;
+        return flamegpu::EXIT;
     } else {
         total_force = dummy_force;
-        return CONTINUE;
+        return flamegpu::CONTINUE;
     }
 }
 
 /**
  * Define the force resolution submodel
  */
-SubModelDescription& defineForceResolution(ModelDescription& model) {
-    ModelDescription force_resolution("force resolution");
+flamegpu::SubModelDescription& defineForceResolution(flamegpu::ModelDescription& model) {
+    flamegpu::ModelDescription force_resolution("force resolution");
 
     auto &env = force_resolution.Environment();
     env.newProperty<float>("R_cell", 11);
@@ -145,7 +145,7 @@ SubModelDescription& defineForceResolution(ModelDescription& model) {
     env.newProperty<float>("dt_computed", 36);
     env.newProperty<unsigned int>("min_force_resolution_steps", 2);
 
-    auto &loc = force_resolution.newMessage<MsgSpatial3D>("Location");
+    auto &loc = force_resolution.newMessage<flamegpu::MessageSpatial3D>("Location");
     loc.setMin(-1000, -1000, -1000);
     loc.setMax(1000, 1000, 1000);
     loc.setRadius(20);
@@ -198,7 +198,7 @@ SubModelDescription& defineForceResolution(ModelDescription& model) {
     l4.addAgentFunction(sc3);
     force_resolution.addExitCondition(calculate_convergence);
 
-    SubModelDescription& smd = model.newSubModel("force resolution", force_resolution);
+    flamegpu::SubModelDescription& smd = model.newSubModel("force resolution", force_resolution);
     smd.bindAgent("Neuroblastoma", "Neuroblastoma", true);
     smd.bindAgent("Schwann", "Schwann", true);
     smd.SubEnvironment(true);

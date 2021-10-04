@@ -1,6 +1,6 @@
 #include "header.h"
 
-AgentDescription& defineNeuroblastoma(ModelDescription& model) {
+flamegpu::AgentDescription& defineNeuroblastoma(flamegpu::ModelDescription& model) {
     auto& nb = model.newAgent("Neuroblastoma");
     nb.newVariable<float>("x");
     nb.newVariable<float>("y");

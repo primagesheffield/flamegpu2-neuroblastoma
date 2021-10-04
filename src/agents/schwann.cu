@@ -1,6 +1,6 @@
 #include "header.h"
 
-AgentDescription &defineSchwann(ModelDescription& model) {
+flamegpu::AgentDescription &defineSchwann(flamegpu::ModelDescription& model) {
     auto& sc = model.newAgent("Schwann");
     sc.newVariable<float>("x");
     sc.newVariable<float>("y");
