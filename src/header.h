@@ -15,6 +15,11 @@ void defineEnvironment(flamegpu::ModelDescription &model, unsigned int CELL_COUN
  * Define the Neuroblastoma agent properties
  */
 flamegpu::AgentDescription& defineNeuroblastoma(flamegpu::ModelDescription& model);
+/**
+ * Allocate and init all neuroblastoma agents
+ * @note This must follow derived environment initialisation
+ */
+void initNeuroblastoma(flamegpu::HostAPI& FLAMEGPU);
 
 /**
  * Define the Schwann agent properties
