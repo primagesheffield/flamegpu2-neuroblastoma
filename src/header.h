@@ -25,6 +25,11 @@ void initNeuroblastoma(flamegpu::HostAPI& FLAMEGPU);
  * Define the Schwann agent properties
  */
 flamegpu::AgentDescription& defineSchwann(flamegpu::ModelDescription& model);
+/**
+ * Allocate and init all neuroblastoma agents
+ * @note This must follow derived environment initialisation
+ */
+void initSchwann(flamegpu::HostAPI& FLAMEGPU);
 
 /**
  * Define the force resolution submodel
