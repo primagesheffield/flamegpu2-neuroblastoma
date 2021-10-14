@@ -28,6 +28,7 @@ SET(ALL_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/environment.cu
     ${CMAKE_CURRENT_SOURCE_DIR}/src/agents/neuroblastoma.cu
     ${CMAKE_CURRENT_SOURCE_DIR}/src/agents/schwann.cu
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/agents/grid.cu
     ${CMAKE_CURRENT_SOURCE_DIR}/src/submodels/force_resolution.cu
     ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cu
 )

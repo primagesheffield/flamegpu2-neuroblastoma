@@ -1,94 +1,215 @@
 #include "header.h"
 
-// Used by both Neuroblastoma and Schwann
-FLAMEGPU_AGENT_FUNCTION(apply_force, flamegpu::MessageNone, flamegpu::MessageNone) {
-    //Apply Force (don't bother with dummy, directly clamp inside location)
-    const float force_mod = FLAMEGPU->environment.getProperty<float>("dt_computed") / FLAMEGPU->environment.getProperty<float>("mu_eff");
-    FLAMEGPU->setVariable<float>("x", FLAMEGPU->getVariable<float>("x") + force_mod * FLAMEGPU->getVariable<float>("fx"));
-    FLAMEGPU->setVariable<float>("y", FLAMEGPU->getVariable<float>("y") + force_mod * FLAMEGPU->getVariable<float>("fy"));
-    FLAMEGPU->setVariable<float>("z", FLAMEGPU->getVariable<float>("z") + force_mod * FLAMEGPU->getVariable<float>("fz"));
-    return flamegpu::ALIVE;
+/**
+ * Converts a continuous location to a discrete grid position
+ */
+__device__ __forceinline__  glm::ivec3 toGrid(flamegpu::DeviceAPI<flamegpu::MessageNone, flamegpu::MessageNone> *FLAMEGPU, glm::vec3 &location) {
+    const float R_voxel = FLAMEGPU->environment.getProperty<float>("R_voxel");
+    const glm::uvec3 grid_dims = FLAMEGPU->environment.getProperty<glm::uvec3>("grid_dims");
+    const glm::vec3 span = grid_dims * FLAMEGPU->environment.getProperty<float>("dt_computed") * 2.0f;
+    const glm::uvec3 grid_origin = FLAMEGPU->environment.getProperty<glm::uvec3>("grid_origin");
+    return glm::ivec3(
+        grid_origin.x + floor((location.x + span.x / 2.0f) / R_voxel / 2.0f),
+        grid_origin.y + floor((location.y + span.y / 2.0f) / R_voxel / 2.0f),
+        grid_origin.z + floor((location.z + span.z / 2.0f) / R_voxel / 2.0f)
+    );
 }
-// Used by both Neuroblastoma and Schwann
-FLAMEGPU_AGENT_FUNCTION(output_location, flamegpu::MessageNone, flamegpu::MessageSpatial3D) {
-    FLAMEGPU->message_out.setLocation(
-        FLAMEGPU->getVariable<float>("x"),
-        FLAMEGPU->getVariable<float>("y"),
-        FLAMEGPU->getVariable<float>("z"));
-    FLAMEGPU->message_out.setVariable<unsigned int>("id", 0);  // Currently unused, FGPU2 will have auto agent ids in future
-    return flamegpu::ALIVE;
-}
-FLAMEGPU_DEVICE_FUNCTION float length(const float &x, const float &y, const float &z) {
-    const float rtn = sqrt(x*x + y*y + z*z);
-#if !defined(SEATBELTS) || SEATBELTS
-    if (isnan(rtn)) {
-        DTHROW("length(%f, %f, %f) == NaN\n", x, y, z);
+/**
+ * Updates the passed location by applying boundary forces to it
+ */
+__device__ __forceinline__ void boundary_conditions(flamegpu::DeviceAPI<flamegpu::MessageNone, flamegpu::MessageNone>* FLAMEGPU, glm::vec3& location) {
+    const glm::vec3 bc_minus = FLAMEGPU->environment.getProperty<glm::vec3>("bc_minus");
+    const glm::vec3 bc_plus = FLAMEGPU->environment.getProperty<glm::vec3>("bc_plus");
+    const glm::vec3 displace = FLAMEGPU->environment.getProperty<glm::vec3>("displace");
+    if (location.x < bc_minus.x) {
+        location.x += displace.x * (bc_minus.x - location.x);
+    } else if (location.x > bc_plus.x) {
+        location.x -= displace.x * (location.x - bc_plus.x);
     }
-#endif
-    return rtn;
+    if (location.y < bc_minus.y) {
+        location.y += displace.y * (bc_minus.y - location.y);
+    } else if (location.y > bc_plus.y) {
+        location.y -= displace.y * (location.y - bc_plus.y);
+    }
+    if (location.z < bc_minus.z) {
+        location.z += displace.z * (bc_minus.z - location.z);
+    } else if (location.z > bc_plus.z) {
+        location.z -= displace.z * (location.z - bc_plus.z);
+    }
+}
+/**
+ * Notify the NB tracking grid counters of the passed cell's state
+ */
+__device__ void increment_grid_nb(flamegpu::DeviceAPI<flamegpu::MessageNone, flamegpu::MessageNone>* FLAMEGPU, const glm::ivec3 &gid) {
+    // Notify that we are present
+    ++FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nnb_grid")[gid.x][gid.y][gid.z];
+    if (FLAMEGPU->getVariable<int>("apop") == 1) {
+        // ++FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nnba_grid")[gid.x][gid.y][gid.z];
+    }else if (FLAMEGPU->getVariable<int>("necro") == 1) {
+        ++FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nnbn_grid")[gid.x][gid.y][gid.z];
+    } else {
+        ++FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nnbl_grid")[gid.x][gid.y][gid.z];
+    }
+}
+FLAMEGPU_AGENT_FUNCTION(apply_force_nb, flamegpu::MessageNone, flamegpu::MessageNone) {
+    // Access vectors in self, as vectors
+    glm::vec3 location = FLAMEGPU->getVariable<glm::vec3>("xyz");
+    const glm::vec3 force = FLAMEGPU->getVariable<glm::vec3>("Fxyz");
+    // Decide our voxel
+    const glm::ivec3 gid = toGrid(FLAMEGPU, location);
+    // Apply Force
+    const float mu = FLAMEGPU->environment.getProperty<float>("mu");
+    const float matrix = FLAMEGPU->environment.getMacroProperty<float, GMD, GMD, GMD>("matrix_grid")[gid.x][gid.y][gid.z];
+    const float mu_eff = (1.0f + matrix) * mu;
+    const float dt = FLAMEGPU->environment.getProperty<float>("dt");
+    location += force * dt / mu_eff;
+    // Apply boundary conditions
+    boundary_conditions(FLAMEGPU, location);
+    // Begin CAexpand with new data
+    increment_grid_nb(FLAMEGPU, gid);
+
+    // Set updated agent variables
+    FLAMEGPU->setVariable<glm::vec3>("xyz", location);
+
+    // VALIDATION: Calculate distance moved
+    const glm::vec3 old_location = FLAMEGPU->getVariable<glm::vec3>("old_xyz");
+    FLAMEGPU->setVariable("move_dist", glm::distance(location, old_location));
+
+    return flamegpu::ALIVE;
+}
+/**
+ * Notify the SC tracking grid counters of the passed cell's state
+ */
+__device__ void increment_grid_sc(flamegpu::DeviceAPI<flamegpu::MessageNone, flamegpu::MessageNone>* FLAMEGPU, const glm::ivec3& gid) {
+    // Notify that we are present
+    ++FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nsc_grid")[gid.x][gid.y][gid.z];
+    if (FLAMEGPU->getVariable<int>("apop") == 1) {
+        // ++FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nsca_grid")[gid.x][gid.y][gid.z];
+    } else if (FLAMEGPU->getVariable<int>("necro") == 1) {
+        ++FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nnscn_grid")[gid.x][gid.y][gid.z];
+    } else {
+        ++FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nnscl_grid")[gid.x][gid.y][gid.z];
+        if (FLAMEGPU->getVariable<int>("neighbours") < FLAMEGPU->environment.getProperty<int>("N_neighbours")) {
+            ++FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nscl_col_grid")[gid.x][gid.y][gid.z];
+        }
+    }
+}
+FLAMEGPU_AGENT_FUNCTION(apply_force_sc, flamegpu::MessageNone, flamegpu::MessageNone) {
+    // Access vectors in self, as vectors
+    glm::vec3 location = FLAMEGPU->getVariable<glm::vec3>("xyz");
+    const glm::vec3 force = FLAMEGPU->getVariable<glm::vec3>("Fxyz");
+    // Decide our voxel
+    const glm::ivec3 gid = toGrid(FLAMEGPU, location);
+    // Apply Force
+    const float mu = FLAMEGPU->environment.getProperty<float>("mu");
+    const float matrix = FLAMEGPU->environment.getMacroProperty<float, GMD, GMD, GMD>("matrix_grid")[gid.x][gid.y][gid.z];
+    const float mu_eff = (1.0f + matrix) * mu;
+    const float dt = FLAMEGPU->environment.getProperty<float>("dt");
+    location += force * dt / mu_eff;
+    // Apply boundary conditions
+    boundary_conditions(FLAMEGPU, location);
+    // Begin CAexpand with new data
+    increment_grid_sc(FLAMEGPU, gid);
+
+    // Set updated agent variables
+    FLAMEGPU->setVariable<glm::vec3>("xyz", location);
+
+    return flamegpu::ALIVE;
+}
+template<typename M1, typename M2>
+__forceinline__ __device__ float calc_R(flamegpu::DeviceAPI<M1, M2>*FLAMEGPU) {
+    // The math here isn't as dynamic as in the python model
+    // Cycle is tracked differently in each version, which makes tracking the dynamic maths more expensive here
+    // Cycle stages haven't changed since the model was first created, so we're probably safe.
+    const unsigned int cycle = FLAMEGPU->getVariable<unsigned int>("cycle");
+    const glm::uvec4 cycle_stages = FLAMEGPU->environment.getProperty<glm::uvec4>("cycle_stages");
+    float Ri;
+    if (cycle < cycle_stages[0])
+        // Ri = <0-1> * 12 / (12 + 4) = <0-0.75>
+        Ri = cycle * 0.75f / 12.0f;
+    else if (cycle < cycle_stages[1])
+        // Ri = 12 / (12 + 4) = 0.75
+        Ri = 0.75f;
+    else if (cycle < cycle_stages[2])
+        // Ri = (12 + (<2-3> - 2) * 4) / (12 + 4) = <12-16> / 16  = <0.75-0.1>
+        Ri = 0.75f + (0.25f * (cycle - 18) / (22.0f - 18.0f));
+    else
+        // Ri = (12 + 4) / (12 + 4) = 1
+        Ri = 1.0f;
+    return Ri;
+}
+FLAMEGPU_AGENT_FUNCTION(output_location_nb, flamegpu::MessageNone, flamegpu::MessageSpatial3D) {
+   const glm::vec3 loc = FLAMEGPU->getVariable<glm::vec3>("xyz");
+    FLAMEGPU->message_out.setLocation(loc.x, loc.y, loc.z);
+    FLAMEGPU->message_out.setVariable<flamegpu::id_t>("id", FLAMEGPU->getID());
+    FLAMEGPU->message_out.setVariable<float>("Rj", calc_R(FLAMEGPU));
+
+    // VALIDATION: Set old location on it 0
+    if (FLAMEGPU->environment.getProperty<unsigned int>("force_resolution_steps") == 0) {
+        FLAMEGPU->setVariable<glm::vec3>("old_xyz", loc);
+    }
+    return flamegpu::ALIVE;
+}
+FLAMEGPU_AGENT_FUNCTION(output_location, flamegpu::MessageNone, flamegpu::MessageSpatial3D) {
+    const glm::vec3 loc = FLAMEGPU->getVariable<glm::vec3>("xyz");
+    FLAMEGPU->message_out.setLocation(loc.x, loc.y, loc.z);
+    FLAMEGPU->message_out.setVariable<flamegpu::id_t>("id", FLAMEGPU->getID());
+    FLAMEGPU->message_out.setVariable<float>("Rj", calc_R(FLAMEGPU));
+
+    return flamegpu::ALIVE;
 }
 FLAMEGPU_AGENT_FUNCTION(calculate_force, flamegpu::MessageSpatial3D, flamegpu::MessageNone) {
     // Load location
-    const float i_x = FLAMEGPU->getVariable<float>("x");
-    const float i_y = FLAMEGPU->getVariable<float>("y");
-    const float i_z = FLAMEGPU->getVariable<float>("z");
-    const float i_radius = FLAMEGPU->environment.getProperty<float>("R_cell");  // Eventually this might vary based on the cell
+    const glm::vec3 i_xyz = FLAMEGPU->getVariable<glm::vec3>("xyz");
+    const flamegpu::id_t i_id = FLAMEGPU->getID();
+    const float Ri = calc_R(FLAMEGPU);
+    const float R_cell = FLAMEGPU->environment.getProperty<float>("R_cell");  // Eventually this might vary based on the cell
     // unsigned int i_id = FLAMEGPU->getVariable<unsigned int>("id");  // Id mechanics are not currently setup
     // Init force to 0 (old force doesn't matter)
-    float i_fx = 0;
-    float i_fy = 0;
-    float i_fz = 0;
+    glm::vec3 i_Fxyz = glm::vec3(0);
     float i_overlap = 0;
+    int i_neighbours = 1;  // We wouldn't normally count ourself, so begin at 1
     // Load env once
     const float MIN_OVERLAP = FLAMEGPU->environment.getProperty<float>("min_overlap");
-    const float CRIT_OVERLAP = FLAMEGPU->environment.getProperty<float>("crit_overlap");
     const float K1 = FLAMEGPU->environment.getProperty<float>("k1");
     const float ALPHA = FLAMEGPU->environment.getProperty<float>("alpha");
-    for (auto j : FLAMEGPU->message_in(i_x, i_y, i_z)) {
-        // if (j->getVariable<unsigned int>("id") != i_id)  // Id mechanics are not currently setup
-        {
-            const float j_x = j.getVariable<float>("x");
-            const float j_y = j.getVariable<float>("y");
-            const float j_z = j.getVariable<float>("z");
-            const float j_radius = FLAMEGPU->environment.getProperty<float>("R_cell");  // Eventually this might vary based on the cell
+    for (auto j : FLAMEGPU->message_in(i_xyz.x, i_xyz.y, i_xyz.z)) {
+        if (j.getVariable<unsigned int>("id") != i_id) {  // Id mechanics are not currently setup
+            glm::vec3 j_xyz = glm::vec3(
+                j.getVariable<float>("x"),
+                j.getVariable<float>("y"),
+                j.getVariable<float>("z"));
+            const float Rj = j.getVariable<float>("Rj");
             // Displacement
-            const float ij_x = i_x - j_x;
-            const float ij_y = i_y - j_y;
-            const float ij_z = i_z - j_z;
-            const float distance_ij = length(ij_x, ij_y, ij_z);
-            if (distance_ij != 0) {  // This may need to be replaced by ID check later?
-                if (distance_ij <= FLAMEGPU->message_in.radius()) {
-                    // Displacement
-                    const float ij_dx = ij_x / distance_ij;
-                    const float ij_dy = ij_y / distance_ij;
-                    const float ij_dz = ij_z / distance_ij;
-                    float overlap_ij = i_radius + j_radius - distance_ij;
-                    float Fij = 0;
-                    if (overlap_ij == i_radius + j_radius) {
-                        // This case is redundant, should be covered by j != i
-                        overlap_ij = 0;
-                    } else if (overlap_ij < MIN_OVERLAP) {
-                        //float Fij = 0;
-                        //force_i += Fij*direction_ij;
-                    } else if (overlap_ij < CRIT_OVERLAP) {
-                        Fij = K1 * overlap_ij;
-                    } else {
-                        Fij = K1 * CRIT_OVERLAP * exp(ALPHA * (overlap_ij / CRIT_OVERLAP - 1));
-                    }
-                    i_fx += Fij * ij_dx;
-                    i_fy += Fij * ij_dy;
-                    i_fz += Fij * ij_dz;
+            const glm::vec3 ij_xyz = i_xyz - j_xyz;
+            const float distance_ij = glm::length(ij_xyz);
+            if (distance_ij < FLAMEGPU->environment.getProperty<unsigned int>("R_neighbours"))
+                i_neighbours++;
+            if (distance_ij <= FLAMEGPU->message_in.radius()) {
+                const glm::vec3 direction_ij = ij_xyz / distance_ij;
+                const float overlap_ij = 2 * R_cell + (Ri + Rj) * R_cell - distance_ij;
+                if (overlap_ij == 2 * R_cell + (Ri + Rj) * R_cell) {
+                    // overlap_ij = 0;
+                    // force_i = glm::vec3(0);
+                } else if (overlap_ij < MIN_OVERLAP) {
+                    //float Fij = 0;
+                    //force_i += Fij*direction_ij;
+                } else {
+                    const float Fij = K1 * overlap_ij;
+                    i_Fxyz += Fij * direction_ij;
                     i_overlap += overlap_ij;
                 }
             }
         }
     }
+    if (i_neighbours > FLAMEGPU->environment.getProperty<int>("N_neighbours") && FLAMEGPU->getVariable<int>("mobile") == 1) {
+        i_Fxyz *= FLAMEGPU->environment.getProperty<float>("k_locom");
+    }
     // Set outputs
-    FLAMEGPU->setVariable<float>("fx", i_fx);
-    FLAMEGPU->setVariable<float>("fy", i_fy);
-    FLAMEGPU->setVariable<float>("fz", i_fz);
+    FLAMEGPU->setVariable<glm::vec3>("Fxyz", i_Fxyz);
     FLAMEGPU->setVariable<float>("overlap", i_overlap);
-    FLAMEGPU->setVariable<float>("force_magnitude", length(i_fx, i_fy, i_fz));
+    FLAMEGPU->setVariable<float>("force_magnitude", length(i_Fxyz));
+    FLAMEGPU->setVariable<int>("neighbours", i_neighbours);
     return flamegpu::ALIVE;
 }
 FLAMEGPU_CUSTOM_REDUCTION(Max, a, b) {
@@ -96,33 +217,41 @@ FLAMEGPU_CUSTOM_REDUCTION(Max, a, b) {
 }
 FLAMEGPU_EXIT_CONDITION(calculate_convergence) {
     //Local static, so value is maintained between function calls
-    static float total_force = 0;
+    static unsigned int force_resolution_steps = 0;  // iteration_resforce
+    force_resolution_steps++;
+    //Each cellLifecycle->convergence is a single iteration.
+    //Execution starts with init via convergence which is not counted as an iteration
 
-    //Reduce force and overlap
-    const float dummy_force = FLAMEGPU->agent("Neuroblastoma").sum<float>("force_magnitude") + FLAMEGPU->agent("Schwann").sum<float>("force_magnitude");
-    const float max_force = std::max<float>(FLAMEGPU->agent("Neuroblastoma").reduce<float>("force_magnitude", Max, 0), FLAMEGPU->agent("Schwann").reduce<float>("force_magnitude", Max, 0));
-    const float R_CELL = FLAMEGPU->environment.getProperty<float>("R_cell");
-    const float MU_EFF = FLAMEGPU->environment.getProperty<float>("mu_eff");
-    const float DT_MAX = FLAMEGPU->environment.getProperty<float>("dt_max");
-    const float new_dt = std::min<float>((R_CELL / max_force) * MU_EFF, DT_MAX);
-    FLAMEGPU->environment.setProperty<float>("dt_computed", new_dt);
+    //Reduce overlap
+    const int max_neighbours = glm::max(FLAMEGPU->agent("Neuroblastoma").max<int>("neighbours"), FLAMEGPU->agent("Schwann").max<int>("neighbours"));
+    const float max_overlap = glm::max(FLAMEGPU->agent("Neuroblastoma").max<float>("overlap"), FLAMEGPU->agent("Schwann").max<float>("overlap"));
     //Unused currently
-    //float dummy_overlap = FLAMEGPU->agent("Neuroblastoma").sum<float>("overlap");
+    //float dummy_overlap = reduce_Neuroblastoma_default_overlap_variable();
+
+    const int N_neighbours = FLAMEGPU->environment.getProperty<int>("N_neighbours");
+    const float R_cell = FLAMEGPU->environment.getProperty<float>("R_cell");
+    const float dt = FLAMEGPU->environment.getProperty<float>("dt");
+    const unsigned int step_size = FLAMEGPU->environment.getProperty<unsigned int>("step_size");
 
     if (FLAMEGPU->getStepCounter() + 1 < FLAMEGPU->environment.getProperty<unsigned int>("min_force_resolution_steps")) {
         // Force resolution must always run at least 2 steps, maybe more
         // First pass step counter == 0, 2nd == 1 etc
-        total_force = dummy_force;
         return flamegpu::CONTINUE;
-    } else if(FLAMEGPU->agent("Neuroblastoma").count() + FLAMEGPU->agent("Schwann").count() < 2) {
-        return flamegpu::EXIT;
-    } else if (abs(dummy_force) < 2e-07) {
-        return flamegpu::EXIT;
-    } else if (100 * abs((total_force - dummy_force) / total_force) < FLAMEGPU->environment.getProperty<float>("thres_converge")) {
+    } else if ((FLAMEGPU->agent("Neuroblastoma").count() + FLAMEGPU->agent("Schwann").count() < 2) ||
+        (max_neighbours <= N_neighbours) ||
+        (max_overlap < 0.15f * R_cell) ||
+        (static_cast<float>(force_resolution_steps) > static_cast<float>(step_size) * 3600.0f / dt)) {
         return flamegpu::EXIT;
     } else {
-        total_force = dummy_force;
-        return flamegpu::CONTINUE;
+        // Force resolution is stuck, log details to stderr
+        if ((force_resolution_steps >= 1000 && force_resolution_steps < 1100) ||
+            (force_resolution_steps >= 2000 && force_resolution_steps < 2200)) {
+            fprintf(stderr, "Force Resolution Stuck@Model Step %u, Fr: %u\n", FLAMEGPU->getStepCounter(), force_resolution_steps);
+            fprintf(stderr, "(%u + %u < 2) == %s\n", FLAMEGPU->agent("Neuroblastoma").count(), FLAMEGPU->agent("Schwann").count(), (FLAMEGPU->agent("Neuroblastoma").count() + FLAMEGPU->agent("Schwann").count() < 2) ? "true" : "false");
+            fprintf(stderr, "(%d < %d) == %s\n", max_neighbours, N_neighbours, (max_neighbours < N_neighbours) ? "true" : "false");
+            fprintf(stderr, "(%f < %f) == %s\n", max_overlap, 0.15f * R_cell, (max_overlap < 0.15f *R_cell) ? "true" : "false");
+            fprintf(stderr, "(%u > %u * 3600 /  %f) == %s\n", force_resolution_steps, step_size, dt, (static_cast<float>(force_resolution_steps) > static_cast<float>(step_size) * 3600.0f / dt) ? "true" : "false");
+        }
     }
 }
 
@@ -133,52 +262,69 @@ flamegpu::SubModelDescription& defineForceResolution(flamegpu::ModelDescription&
     flamegpu::ModelDescription force_resolution("force resolution");
 
     auto &env = force_resolution.Environment();
-    env.newProperty<float>("R_cell", 11);
-    env.newProperty<float>("min_overlap", (float)(-4e-6 * 1e6 * 0));
-    env.newProperty<float>("crit_overlap", (float)(2e-6 * 1e6));
-    env.newProperty<float>("k1", (float)(2.2e-3));
-    env.newProperty<float>("alpha", 1);
-    env.newProperty<float>("dt_max", 36);
-    env.newProperty<float>("thres_converge", 10);
-    // Internal/derived
-    env.newProperty<float>("mu_eff", 0.4f);
-    env.newProperty<float>("dt_computed", 36);
-    env.newProperty<unsigned int>("min_force_resolution_steps", 2);
+    env.newProperty<float>("R_voxel", 0);
+    env.newProperty<glm::uvec3>("grid_dims", glm::uvec3(0));
+    env.newProperty<float>("dt_computed", 0);
+    env.newProperty<glm::uvec3>("grid_origin", glm::uvec3(0));
+    env.newProperty<glm::vec3>("bc_minus", glm::vec3(0));
+    env.newProperty<glm::vec3>("bc_plus", glm::vec3(0));
+    env.newProperty<glm::vec3>("displace", glm::vec3(0));
+    env.newProperty<float>("mu", 0.0f);
+    env.newProperty<float>("dt", 0.0f);
+    env.newProperty<glm::uvec4>("cycle_stages", glm::uvec4(0));
+    env.newProperty<unsigned int>("force_resolution_steps", 0);
+    env.newProperty<float>("R_cell", 0);
+    env.newProperty<float>("min_overlap", 0);
+    env.newProperty<float>("k1", 0);
+    env.newProperty<float>("alpha", 0);
+    env.newProperty<unsigned int>("R_neighbours", 0);
+    env.newProperty<int>("N_neighbours", 0);
+    env.newProperty<float>("k_locom", 0);
+    env.newProperty<unsigned int>("step_size", 0);
+    env.newProperty<unsigned int>("min_force_resolution_steps", 0);
+
+    model.Environment().newMacroProperty<unsigned int, GMD, GMD, GMD>("Nnb_grid");
+    model.Environment().newMacroProperty<unsigned int, GMD, GMD, GMD>("Nsc_grid");
+    // model.Environment().newMacroProperty<unsigned int, GMD, GMD, GMD>("Nsca_grid");  // Location of all SC cells with apop == 1
+    // model.Environment().newMacroProperty<unsigned int, GMD, GMD, GMD>("Nnba_grid");  // Location of all NB cells with apop == 1
+    model.Environment().newMacroProperty<unsigned int, GMD, GMD, GMD>("Nnbn_grid");
+    model.Environment().newMacroProperty<unsigned int, GMD, GMD, GMD>("Nscn_grid");
+    model.Environment().newMacroProperty<unsigned int, GMD, GMD, GMD>("Nnbl_grid");
+    model.Environment().newMacroProperty<unsigned int, GMD, GMD, GMD>("Nscl_grid");
+    model.Environment().newMacroProperty<unsigned int, GMD, GMD, GMD>("Nscl_col_grid");
+    model.Environment().newMacroProperty<float, GMD, GMD, GMD>("matrix_grid");
 
     auto &loc = force_resolution.newMessage<flamegpu::MessageSpatial3D>("Location");
-    loc.setMin(-1000, -1000, -1000);
-    loc.setMax(1000, 1000, 1000);
-    loc.setRadius(20);
+    loc.setMin(-2000, -2000, -2000);
+    loc.setMax(2000, 2000, 2000);
+    loc.setRadius(25);
     // loc.newVariable<float>("x");
     // loc.newVariable<float>("y");
     // loc.newVariable<float>("z");
+    loc.newVariable<float>("Rj");
     loc.newVariable<unsigned int>("id");
     auto &nb = force_resolution.newAgent("Neuroblastoma");
-    nb.newVariable<float>("x");
-    nb.newVariable<float>("y");
-    nb.newVariable<float>("z");
-    nb.newVariable<float>("fx", 0);
-    nb.newVariable<float>("fy", 0);
-    nb.newVariable<float>("fz", 0);
+    nb.newVariable<glm::vec3>("xyz");
+    nb.newVariable<glm::vec3>("Fxyz");
+    nb.newVariable<int>("neighbours");
     nb.newVariable<float>("overlap");
     nb.newVariable<float>("force_magnitude");
-    auto &nb1 = nb.newFunction("nb_apply_force", apply_force);
-    auto &nb2 = nb.newFunction("nb_output_location", output_location);
-    auto &nb3 = nb.newFunction("nb_calculate_force", calculate_force);
+    nb.newVariable<float>("move_dist");
+    nb.newVariable<glm::vec3>("old_xyz");
+    auto &nb1 = nb.newFunction("apply_force_nb", apply_force_nb);  // Version with added validation
+    auto &nb2 = nb.newFunction("output_location_nb", output_location_nb);  // Version with added validation
+    auto &nb3 = nb.newFunction("calculate_force_nb", calculate_force);
     nb2.setMessageOutput(loc);
     nb3.setMessageInput(loc);
     auto &sc = force_resolution.newAgent("Schwann");
-    sc.newVariable<float>("x");
-    sc.newVariable<float>("y");
-    sc.newVariable<float>("z");
-    sc.newVariable<float>("fx", 0);
-    sc.newVariable<float>("fy", 0);
-    sc.newVariable<float>("fz", 0);
+    sc.newVariable<glm::vec3>("xyz");
+    sc.newVariable<glm::vec3>("Fxyz");
+    sc.newVariable<int>("neighbours");
     sc.newVariable<float>("overlap");
     sc.newVariable<float>("force_magnitude");
-    auto &sc1 = sc.newFunction("sc_apply_force", apply_force);
-    auto &sc2 = sc.newFunction("sc_output_location", output_location);
-    auto &sc3 = sc.newFunction("sc_calculate_force", calculate_force);
+    auto &sc1 = sc.newFunction("apply_force_sc", apply_force_sc);
+    auto &sc2 = sc.newFunction("output_location_sc", output_location);
+    auto &sc3 = sc.newFunction("calculate_force_sc", calculate_force);
     sc2.setMessageOutput(loc);
     sc3.setMessageInput(loc);
 

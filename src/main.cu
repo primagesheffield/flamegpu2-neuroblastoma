@@ -49,15 +49,24 @@ FLAMEGPU_STEP_FUNCTION(logDensity) {
     printf("|%u|%g|%u|%g|%s|\n", FLAMEGPU->getStepCounter(), tumour_volume, nb.count() + sc.count(), tumour_density, tumour_density > 1.91e-3 ? "Too Dense?" : "");
 }
 
+FLAMEGPU_INIT_FUNCTION(ModelInit) {
+    // With pete's change, these could be split into separate init functions that run in order
+    // defineEnviornment procs init env
+    initNeuroblastoma(*FLAMEGPU);
+    initSchwann(*FLAMEGPU);
+    initGrid(*FLAMEGPU);
+}
+
+
 int main(int argc, const char ** argv) {
     const unsigned int CELL_COUNT = 1024;
     flamegpu::ModelDescription model("PRIMAGE: Neuroblastoma");
 
+    // Define environment and agents (THE ORDER HERE IS FIXED, AS THEY ADD INIT FUNCTIONS, ENV MUST COME FIRST)
     defineEnvironment(model, CELL_COUNT);
-    auto& env = model.Environment();
-
     flamegpu::AgentDescription& nb = defineNeuroblastoma(model);
     flamegpu::AgentDescription& sc = defineSchwann(model);
+    flamegpu::AgentDescription& gc = defineGrid(model);
 
     auto& nb_cc = nb.newFunction("nb_cell_cycle", temp_cell_cycle);
     nb_cc.setAgentOutput(nb);
@@ -69,8 +78,9 @@ int main(int argc, const char ** argv) {
 
     /**
      * Control flow
-     */     
+     */
     {   // Attach init/step/exit functions and exit condition
+        model.addInitFunction(ModelInit);
         model.newLayer().addSubModel(forceResolution);
         auto &l2 = model.newLayer();
         l2.addAgentFunction(nb_cc);
@@ -138,57 +148,13 @@ int main(int argc, const char ** argv) {
      * Initialisation
      */
     if (cuda_model.getSimulationConfig().input_file.empty()) {
-        const float t_count_calc = env.getProperty<float>("rho_tumour") * env.getProperty<float>("V_tumour") * env.getProperty<float>("cellularity");
-        const unsigned int NB_COUNT = (unsigned int)ceil(t_count_calc * (1 - env.getProperty<float>("theta_sc")));
-        const unsigned int SC_COUNT = (unsigned int)ceil(t_count_calc * env.getProperty<float>("theta_sc"));
-        // Currently population has not been init, so generate an agent population on the fly
-        std::default_random_engine rng;
-        std::uniform_real_distribution<float> uniform_dist(0.0f, 1.0f);
-        std::uniform_real_distribution<float> age_dist(0.0f, 24.0f);
-        std::normal_distribution<float> normal_dist;
-        flamegpu::AgentVector nb_pop(model.Agent("Neuroblastoma"), NB_COUNT);
-        flamegpu::AgentVector sc_pop(model.Agent("Schwann"), SC_COUNT);
-        for (auto instance: nb_pop) {
-            const float u = uniform_dist(rng) * pow(env.getProperty<float>("R_tumour"), 3.0F);
-            float x1 = normal_dist(rng);
-            float x2 = normal_dist(rng);
-            float x3 = normal_dist(rng);
-
-            const float mag = sqrt(x1 * x1 + x2 * x2 + x3 * x3);
-            x1 /= mag; x2 /= mag; x3 /= mag;
-            const float c = cbrt(u);
-            instance.setVariable<float>("x", c * x1);
-            instance.setVariable<float>("y", c * x2);
-            instance.setVariable<float>("z", c * x3);
-            instance.setVariable<float>("age", age_dist(rng));
-        }
-        for (auto instance : sc_pop) {
-            const float u = uniform_dist(rng) * pow(env.getProperty<float>("R_tumour"), 3.0F);
-            float x1 = normal_dist(rng);
-            float x2 = normal_dist(rng);
-            float x3 = normal_dist(rng);
-
-            const float mag = sqrt(x1 * x1 + x2 * x2 + x3 * x3);
-            x1 /= mag; x2 /= mag; x3 /= mag;
-            const float c = cbrt(u);
-            instance.setVariable<float>("x", c * x1);
-            instance.setVariable<float>("y", c * x2);
-            instance.setVariable<float>("z", c * x3);
-            instance.setVariable<float>("age", age_dist(rng));
-        }
-        cuda_model.setPopulationData(nb_pop);
-        cuda_model.setPopulationData(sc_pop);
+        // Not sure if a default init is necessary yet
     }
 
     /**
      * Execution
      */
     cuda_model.simulate();
-
-    /**
-     * Export Pop
-     */
-    cuda_model.exportData("end.xml");
 
 #ifdef VISUALISATION
     m_vis.join();

@@ -40,9 +40,7 @@ void data_layer_0(flamegpu::ModelDescription& model) {
     // Sensitivity of the boundary displacement field to invasion into the boundary
     // Note that this is illustrative and unrealistic.
     // The orchestrator must provide the parameters of a displacement function.
-    env.newProperty<float>("x_displace", 2);
-    env.newProperty<float>("y_displace", 2);
-    env.newProperty<float>("z_displace", 2);
+    env.newProperty<glm::vec3>("displace", glm::vec3(2));
 }
 /**
  * integration with genetic/molecular biomarkers of neuroblasts
@@ -243,7 +241,7 @@ void mechanical_model_parameters(flamegpu::ModelDescription& model) {
     env.newProperty<float>("R_neighbours", 1.05f * (2.0f * 1.5f * env.getProperty<float>("R_cell")));  // @todo: Confirm msg radius > this
     //Number of other cells allowed within a cell's search distance before contact inhibition activates.
     //Assumed.
-    env.newProperty<float>("N_neighbours", 2);
+    env.newProperty<int>("N_neighbours", 2);
     // Factor by which a cell magnifies the force acting on it upon contact inhibition.
     // Assumed.
     env.newProperty<float>("k_locom", 2.0f);
@@ -325,16 +323,18 @@ void internal_derived(flamegpu::ModelDescription& model) {
     // DERIVED: Initial tumour radius (microns)
     env.newProperty<float>("R_tumour", 0);
     // DERIVED: Tumour boundary's (microns)
-    env.newProperty<float>("x_bc_minus", 0);
-    env.newProperty<float>("x_bc_plus", 0);
-    env.newProperty<float>("y_bc_minus", 0);
-    env.newProperty<float>("y_bc_plus", 0);
-    env.newProperty<float>("z_bc_minus", 0);
-    env.newProperty<float>("z_bc_plus", 0);
+    env.newProperty<glm::vec3>("bc_minus", glm::vec3(0));
+    env.newProperty<glm::vec3>("bc_plus", glm::vec3(0));
     // DERIVED: Grid element or voxel volume (cubic microns).
     env.newProperty<float>("V_grid", 0);
     // DERIVED: Grid element or voxel side area (square microns).
     env.newProperty<float>("A_grid", 0);
+    // Current size of the active/virtual O2grid
+    env.newProperty<glm::uvec3>("grid_dims", glm::uvec3(0));
+    // Span kind of acts as the radius(ignoring the center cell)
+    env.newProperty<glm::uvec3>("grid_span", glm::uvec3(0));
+    // If this is different to grid_dims, then different cells perform CAexpand operation to init their value inside alter()
+    env.newProperty<glm::uvec3>("grid_span_old", glm::uvec3(0));
     // This variable acts as a switch to lock P_O2v to 0
     env.newProperty<int>("P_O2v_OFF", 0);
     // DERIVED: This variable represents vasculature()
@@ -350,6 +350,8 @@ void internal_derived(flamegpu::ModelDescription& model) {
     // These two values are consumed by Neuroblastoma_sense()
     env.newProperty<unsigned int>("Nnbl_count", 0);
     env.newProperty<unsigned int>("Nscl_count", 0);
+    // VALIDATION:
+    env.newProperty<unsigned int>("force_resolution_steps", 0);
 }
 FLAMEGPU_INIT_FUNCTION(InitDerivedEnvironment) {
     /**
@@ -496,12 +498,8 @@ FLAMEGPU_INIT_FUNCTION(InitDerivedEnvironment) {
     const float R_tumour = (float)(0.5 * pow(V_tumour, (1.0 / 3.0)));
     FLAMEGPU->environment.setProperty<float>("R_tumour", R_tumour);
     // Tumour boundary's (microns)
-    FLAMEGPU->environment.setProperty<float>("x_bc_minus", -boundary_max * R_tumour);
-    FLAMEGPU->environment.setProperty<float>("x_bc_plus", boundary_max * R_tumour);
-    FLAMEGPU->environment.setProperty<float>("y_bc_minus", -boundary_max * R_tumour);
-    FLAMEGPU->environment.setProperty<float>("y_bc_plus", boundary_max * R_tumour);
-    FLAMEGPU->environment.setProperty<float>("z_bc_minus", -boundary_max * R_tumour);
-    FLAMEGPU->environment.setProperty<float>("z_bc_plus", boundary_max * R_tumour);
+    FLAMEGPU->environment.setProperty<glm::vec3>("bc_minus", glm::vec3(-boundary_max * R_tumour));
+    FLAMEGPU->environment.setProperty<glm::vec3>("bc_plus", glm::vec3(boundary_max * R_tumour));
     // Grid element or voxel volume (cubic microns).
     FLAMEGPU->environment.setProperty<float>("V_grid", (float)pow(2.0 * R_voxel, 3.0f));
     // Grid element or voxel side area (square microns).

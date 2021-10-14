@@ -1,18 +1,30 @@
 #include "header.h"
 
+FLAMEGPU_AGENT_FUNCTION(sc_cell_lifecycle, flamegpu::MessageNone, flamegpu::MessageNone) {
+    // @todo 
+}
+FLAMEGPU_AGENT_FUNCTION(apply_sc_force, flamegpu::MessageNone, flamegpu::MessageNone) {
+    // @todo 
+}
+FLAMEGPU_AGENT_FUNCTION(output_sc_location, flamegpu::MessageNone, flamegpu::MessageSpatial3D) {
+    // @todo 
+}
+FLAMEGPU_AGENT_FUNCTION(calculate_sc_force, flamegpu::MessageSpatial3D, flamegpu::MessageNone) {
+    // @todo 
+}
+FLAMEGPU_AGENT_FUNCTION(output_matrix_grid_cell, flamegpu::MessageNone, flamegpu::MessageNone) {
+    // @todo 
+}
+
 flamegpu::AgentDescription &defineSchwann(flamegpu::ModelDescription& model) {
     auto& sc = model.newAgent("Schwann");
     // Data Layer 0 (integration with imaging biomarkers)
     {
-        sc.newVariable<float>("x");
-        sc.newVariable<float>("y");
-        sc.newVariable<float>("z");
+        sc.newVariable<glm::vec3>("xyz");
     }
     // Initial Conditions.
     {
-        sc.newVariable<float>("Fx");
-        sc.newVariable<float>("Fy");
-        sc.newVariable<float>("Fz");
+        sc.newVariable<glm::vec3>("Fxyz");
         sc.newVariable<float>("overlap");
         // neighbours is the number of cells within the cell's search distance.
         sc.newVariable<int>("neighbours");
@@ -69,13 +81,12 @@ void initSchwann(flamegpu::HostAPI &FLAMEGPU) {
     for (unsigned int i = 0; i < SC_COUNT; ++i) {
         auto agt = SC.newAgent();
         // Data Layer 0 (integration with imaging biomarkers).
-        agt.setVariable<float>("x", -R_tumour + (FLAMEGPU.random.uniform<float>() * 2 * R_tumour));
-        agt.setVariable<float>("y", -R_tumour + (FLAMEGPU.random.uniform<float>() * 2 * R_tumour));
-        agt.setVariable<float>("z", -R_tumour + (FLAMEGPU.random.uniform<float>() * 2 * R_tumour));
+        agt.setVariable<glm::vec3>("xyz",
+            glm::vec3(-R_tumour + (FLAMEGPU.random.uniform<float>() * 2 * R_tumour),
+                -R_tumour + (FLAMEGPU.random.uniform<float>() * 2 * R_tumour),
+                -R_tumour + (FLAMEGPU.random.uniform<float>() * 2 * R_tumour)));
         // Initial conditions.
-        agt.setVariable<float>("Fx", 0);
-        agt.setVariable<float>("Fy", 0);
-        agt.setVariable<float>("Fz", 0);
+        agt.setVariable<glm::vec3>("Fxyz", glm::vec3(0));
         agt.setVariable<float>("overlap", 0);
         agt.setVariable<int>("neighbours", 0);
         agt.setVariable<int>("mobile", 1);

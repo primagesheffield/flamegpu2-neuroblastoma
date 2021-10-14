@@ -1,12 +1,27 @@
 #include "header.h"
 
+FLAMEGPU_AGENT_FUNCTION(nb_cell_lifecycle, flamegpu::MessageNone, flamegpu::MessageNone) {
+   // @todo 
+}
+FLAMEGPU_AGENT_FUNCTION(apply_nb_force, flamegpu::MessageNone, flamegpu::MessageNone) {
+    // @todo 
+}
+FLAMEGPU_AGENT_FUNCTION(output_nb_location, flamegpu::MessageNone, flamegpu::MessageSpatial3D) {
+    // @todo 
+}
+FLAMEGPU_AGENT_FUNCTION(calculate_nb_force, flamegpu::MessageSpatial3D, flamegpu::MessageNone) {
+    // @todo 
+}
+FLAMEGPU_AGENT_FUNCTION(output_oxygen_cell, flamegpu::MessageNone, flamegpu::MessageNone) {
+    // @todo 
+}
+
+
 flamegpu::AgentDescription& defineNeuroblastoma(flamegpu::ModelDescription& model) {
     auto& nb = model.newAgent("Neuroblastoma");
     // Spatial coordinates (integration with imaging biomarkers).
     {
-        nb.newVariable<float>("x");
-        nb.newVariable<float>("y");
-        nb.newVariable<float>("z");
+        nb.newVariable<glm::vec3>("xyz");
     }
     // Data Layer 1 (integration with molecular biomarkers).
     {
@@ -51,9 +66,7 @@ flamegpu::AgentDescription& defineNeuroblastoma(flamegpu::ModelDescription& mode
     // Initial Conditions
     {
         // Fx, Fy, and Fz are forces in independent directions (kg s-2 micron).
-        nb.newVariable<float>("Fx");
-        nb.newVariable<float>("Fy");
-        nb.newVariable<float>("Fz");
+        nb.newVariable<glm::vec3>("Fxyz");
         // overlap is the cell's overlap with its neighbouring cells.
         nb.newVariable<float>("overlap");
         // neighbours is the number of cells within the cell's search distance.
@@ -121,9 +134,7 @@ flamegpu::AgentDescription& defineNeuroblastoma(flamegpu::ModelDescription& mode
         // This is used to provide the dummy_force reduction.
         nb.newVariable<float>("force_magnitude");
         // Old x/y/z and move_dist are used for validating max distance moved.
-        nb.newVariable<float>("old_x");
-        nb.newVariable<float>("old_y");
-        nb.newVariable<float>("old_z");
+        nb.newVariable<glm::vec3>("old_xyz");
         nb.newVariable<float>("move_dist");
     }
     return nb;
@@ -186,9 +197,10 @@ void initNeuroblastoma(flamegpu::HostAPI &FLAMEGPU) {
     for (unsigned int i = 0; i < NB_COUNT; ++i) {
         auto agt = NB.newAgent();
         // Spatial coordinates (integration with imaging biomarkers).
-        agt.setVariable<float>("x", -R_tumour + (FLAMEGPU.random.uniform<float>() * 2 * R_tumour));
-        agt.setVariable<float>("y", -R_tumour + (FLAMEGPU.random.uniform<float>() * 2 * R_tumour));
-        agt.setVariable<float>("z", -R_tumour + (FLAMEGPU.random.uniform<float>() * 2 * R_tumour));
+        agt.setVariable<glm::vec3>("xyz", 
+            glm::vec3(-R_tumour + (FLAMEGPU.random.uniform<float>() * 2 * R_tumour),
+                -R_tumour + (FLAMEGPU.random.uniform<float>() * 2 * R_tumour),
+                -R_tumour + (FLAMEGPU.random.uniform<float>() * 2 * R_tumour)));
         // Data Layer 1 (integration with genetic/molecular biomarkers).
         agt.setVariable<int>("MYCN_amp", MYCN_amp < 0 ? static_cast<int>(FLAMEGPU.random.uniform<float>() < 0.5) : MYCN_amp);
         agt.setVariable<int>("TERT_rarngm", TERT_rarngm < 0 ? static_cast<int>(FLAMEGPU.random.uniform<float>() < 0.5) : TERT_rarngm);
@@ -242,9 +254,7 @@ void initNeuroblastoma(flamegpu::HostAPI &FLAMEGPU) {
         agt.setVariable<float>("Bcl2_Bclxl_fn", Bcl2_Bclxl_fn < 0 ? FLAMEGPU.random.uniform<float>() : Bcl2_Bclxl_fn);
         agt.setVariable<float>("VEGF_fn", VEGF_fn < 0 ? FLAMEGPU.random.uniform<float>() : VEGF_fn);
         //Initial conditions.
-        agt.setVariable<float>("Fx", 0);
-        agt.setVariable<float>("Fy", 0);
-        agt.setVariable<float>("Fz", 0);
+        agt.setVariable<glm::vec3>("Fxyz", glm::vec3(0));
         agt.setVariable<float>("overlap", 0);
         agt.setVariable<int>("neighbours", 0);
         agt.setVariable<int>("mobile", 1);
