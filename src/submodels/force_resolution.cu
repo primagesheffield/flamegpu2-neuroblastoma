@@ -39,7 +39,7 @@ FLAMEGPU_AGENT_FUNCTION(apply_force_nb, flamegpu::MessageNone, flamegpu::Message
     // Apply boundary conditions
     boundary_conditions(FLAMEGPU, location);
     // Begin CAexpand with new data
-    increment_grid_nb(FLAMEGPU, gid);
+    // increment_grid_nb(FLAMEGPU, gid);
 
     // Set updated agent variables
     FLAMEGPU->setVariable<glm::vec3>("xyz", location);
@@ -65,7 +65,7 @@ FLAMEGPU_AGENT_FUNCTION(apply_force_sc, flamegpu::MessageNone, flamegpu::Message
     // Apply boundary conditions
     boundary_conditions(FLAMEGPU, location);
     // Begin CAexpand with new data
-    increment_grid_sc(FLAMEGPU, gid);
+    // increment_grid_sc(FLAMEGPU, gid);
 
     // Set updated agent variables
     FLAMEGPU->setVariable<glm::vec3>("xyz", location);
@@ -167,9 +167,7 @@ FLAMEGPU_AGENT_FUNCTION(calculate_force, flamegpu::MessageSpatial3D, flamegpu::M
     FLAMEGPU->setVariable<int>("neighbours", i_neighbours);
     return flamegpu::ALIVE;
 }
-FLAMEGPU_CUSTOM_REDUCTION(Max, a, b) {
-    return a > b ? a : b;
-}
+
 FLAMEGPU_EXIT_CONDITION(calculate_convergence) {
     //Reduce overlap
     const int max_neighbours = glm::max(FLAMEGPU->agent("Neuroblastoma").max<int>("neighbours"), FLAMEGPU->agent("Schwann").max<int>("neighbours"));
@@ -214,7 +212,6 @@ flamegpu::SubModelDescription& defineForceResolution(flamegpu::ModelDescription&
     auto &env = force_resolution.Environment();
     env.newProperty<float>("R_voxel", 0);
     env.newProperty<unsigned int, 3>("grid_dims", {0, 0, 0});
-    env.newProperty<float>("dt_computed", 0);
     env.newProperty<unsigned int, 3>("grid_origin", { 0, 0, 0 });
     env.newProperty<float, 3>("bc_minus", { 0, 0, 0 });
     env.newProperty<float, 3>("bc_plus", { 0, 0, 0 });
@@ -233,16 +230,16 @@ flamegpu::SubModelDescription& defineForceResolution(flamegpu::ModelDescription&
     env.newProperty<unsigned int>("step_size", 0);
     env.newProperty<unsigned int>("min_force_resolution_steps", 0);
 
-    model.Environment().newMacroProperty<unsigned int, GMD, GMD, GMD>("Nnb_grid");
-    model.Environment().newMacroProperty<unsigned int, GMD, GMD, GMD>("Nsc_grid");
-    // model.Environment().newMacroProperty<unsigned int, GMD, GMD, GMD>("Nsca_grid");  // Location of all SC cells with apop == 1
-    // model.Environment().newMacroProperty<unsigned int, GMD, GMD, GMD>("Nnba_grid");  // Location of all NB cells with apop == 1
-    model.Environment().newMacroProperty<unsigned int, GMD, GMD, GMD>("Nnbn_grid");
-    model.Environment().newMacroProperty<unsigned int, GMD, GMD, GMD>("Nscn_grid");
-    model.Environment().newMacroProperty<unsigned int, GMD, GMD, GMD>("Nnbl_grid");
-    model.Environment().newMacroProperty<unsigned int, GMD, GMD, GMD>("Nscl_grid");
-    model.Environment().newMacroProperty<unsigned int, GMD, GMD, GMD>("Nscl_col_grid");
-    model.Environment().newMacroProperty<float, GMD, GMD, GMD>("matrix_grid");
+    env.newMacroProperty<unsigned int, GMD, GMD, GMD>("Nnb_grid");
+    env.newMacroProperty<unsigned int, GMD, GMD, GMD>("Nsc_grid");
+    // env.newMacroProperty<unsigned int, GMD, GMD, GMD>("Nsca_grid");  // Location of all SC cells with apop == 1
+    // env.newMacroProperty<unsigned int, GMD, GMD, GMD>("Nnba_grid");  // Location of all NB cells with apop == 1
+    env.newMacroProperty<unsigned int, GMD, GMD, GMD>("Nnbn_grid");
+    env.newMacroProperty<unsigned int, GMD, GMD, GMD>("Nscn_grid");
+    env.newMacroProperty<unsigned int, GMD, GMD, GMD>("Nnbl_grid");
+    env.newMacroProperty<unsigned int, GMD, GMD, GMD>("Nscl_grid");
+    env.newMacroProperty<unsigned int, GMD, GMD, GMD>("Nscl_col_grid");
+    env.newMacroProperty<float, GMD, GMD, GMD>("matrix_grid");
 
     auto &loc = force_resolution.newMessage<flamegpu::MessageSpatial3D>("Location");
     loc.setMin(-2000, -2000, -2000);
@@ -257,6 +254,7 @@ flamegpu::SubModelDescription& defineForceResolution(flamegpu::ModelDescription&
     nb.newVariable<float, 3>("xyz");
     nb.newVariable<float, 3>("Fxyz");
     nb.newVariable<int>("neighbours");
+    nb.newVariable<unsigned int>("cycle");
     nb.newVariable<float>("overlap");
     nb.newVariable<float>("force_magnitude");
     nb.newVariable<float>("move_dist");
@@ -270,6 +268,7 @@ flamegpu::SubModelDescription& defineForceResolution(flamegpu::ModelDescription&
     sc.newVariable<float, 3>("xyz");
     sc.newVariable<float, 3>("Fxyz");
     sc.newVariable<int>("neighbours");
+    sc.newVariable<unsigned int>("cycle");
     sc.newVariable<float>("overlap");
     sc.newVariable<float>("force_magnitude");
     auto &sc1 = sc.newFunction("apply_force_sc", apply_force_sc);
@@ -278,20 +277,22 @@ flamegpu::SubModelDescription& defineForceResolution(flamegpu::ModelDescription&
     sc2.setMessageOutput(loc);
     sc3.setMessageInput(loc);
 
-    // Apply force
-    auto &l1 = force_resolution.newLayer();
-    l1.addAgentFunction(nb1);
-    l1.addAgentFunction(sc1);
-    // Output location nb
+    // Output location
     auto &l2 = force_resolution.newLayer();
     l2.addAgentFunction(nb2);
-    // Output location sc
     auto &l3 = force_resolution.newLayer();
     l3.addAgentFunction(sc2);
     // Calculate force
     auto &l4 = force_resolution.newLayer();
     l4.addAgentFunction(nb3);
     l4.addAgentFunction(sc3);
+    // Reset grids?
+    // Apply force (and output oxygen/matrix grid)
+    auto& l1 = force_resolution.newLayer();
+    l1.addAgentFunction(nb1);
+    l1.addAgentFunction(sc1);
+    // FResolve CAexpand?
+    // Calculate convergence
     force_resolution.addExitCondition(calculate_convergence);
 
     flamegpu::SubModelDescription& smd = model.newSubModel("force resolution", force_resolution);

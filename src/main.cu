@@ -1,39 +1,24 @@
-#define _USE_MATH_DEFINES
-#include <cmath>
+#include <glm/ext/scalar_constants.hpp>
+
 #include "header.h"
-FLAMEGPU_AGENT_FUNCTION(temp_cell_cycle, flamegpu::MessageNone, flamegpu::MessageNone) {
-    float age = FLAMEGPU->getVariable<float>("age");
-    const float SPEED = FLAMEGPU->environment.getProperty<float>("birth_speed");
-    age += SPEED;
-    if (age >= 24.0f) {
-        // Reset age
-        age = FLAMEGPU->random.uniform<float>();
-        // birth new agent;
-        FLAMEGPU->agent_out.setVariable<float>("age", age);
-        FLAMEGPU->agent_out.setVariable<float>("x", FLAMEGPU->getVariable<float>("x") + (FLAMEGPU->random.uniform<float>() * 10.0f) - 5.0f);
-        FLAMEGPU->agent_out.setVariable<float>("y", FLAMEGPU->getVariable<float>("y") + (FLAMEGPU->random.uniform<float>() * 10.0f) - 5.0f);
-        FLAMEGPU->agent_out.setVariable<float>("z", FLAMEGPU->getVariable<float>("z") + (FLAMEGPU->random.uniform<float>() * 10.0f) - 5.0f);
-    }
-    FLAMEGPU->setVariable<float>("age", age);
-    return flamegpu::ALIVE;
+
+FLAMEGPU_CUSTOM_REDUCTION(glm_min2, a, b) {
+    return glm::min(a, b);
 }
-FLAMEGPU_CUSTOM_REDUCTION(ReduceMin, a, b) {
-    return a < b ? a : b;
-}
-FLAMEGPU_CUSTOM_REDUCTION(ReduceMax, a, b) {
-    return a > b ? a : b;
+FLAMEGPU_CUSTOM_REDUCTION(glm_max2, a, b) {
+    return glm::max(a, b);
 }
 FLAMEGPU_STEP_FUNCTION(logDensity) {
     auto nb = FLAMEGPU->agent("Neuroblastoma");
     auto sc = FLAMEGPU->agent("Schwann");
     // Calculate spherical tumour volume
-    const float min_pos_x = std::min<float>(nb.min<float>("x"), sc.min<float>("x"));
-    const float min_pos_y = std::min<float>(nb.min<float>("y"), sc.min<float>("y"));
-    const float min_pos_z = std::min<float>(nb.min<float>("z"), sc.min<float>("z"));
-    const float max_pos_x = std::max<float>(nb.max<float>("x"), sc.max<float>("x"));
-    const float max_pos_y = std::max<float>(nb.max<float>("y"), sc.max<float>("y"));
-    const float max_pos_z = std::max<float>(nb.max<float>("z"), sc.max<float>("z"));
-    const float tumour_volume = 4.0f / 3.0f * M_PI * ((max_pos_x - min_pos_x) / 2.0f) * ((max_pos_y - min_pos_y) / 2.0f) * ((max_pos_z - min_pos_z) / 2.0f);
+    const glm::vec3 min_pos = min(
+        nb.reduce<glm::vec3>("xyz", glm_min2, glm::vec3(std::numeric_limits<float>().max())),
+        sc.reduce<glm::vec3>("xyz", glm_min2, glm::vec3(std::numeric_limits<float>().max())));
+    const glm::vec3 max_pos = max(
+        nb.reduce<glm::vec3>("xyz", glm_max2, glm::vec3(-std::numeric_limits<float>().max())),
+        sc.reduce<glm::vec3>("xyz", glm_max2, glm::vec3(-std::numeric_limits<float>().max())));
+    const float tumour_volume = 4.0f / 3.0f * glm::pi<float>() * ((max_pos.x - min_pos.x) / 2.0f) * ((max_pos.y - min_pos.y) / 2.0f) * ((max_pos.z - min_pos.z) / 2.0f);
     // Calculate cells per cubic micron
     const float tumour_density = tumour_volume >  0? (nb.count() + sc.count()) / tumour_volume : 0;
     // 1.91e-3 cells per cubic micron (Louis and Shohet, 2015).
@@ -51,7 +36,7 @@ FLAMEGPU_STEP_FUNCTION(logDensity) {
 
 FLAMEGPU_INIT_FUNCTION(ModelInit) {
     // With pete's change, these could be split into separate init functions that run in order
-    // defineEnviornment procs init env
+    // defineEnvironment procs init env
     initNeuroblastoma(*FLAMEGPU);
     initSchwann(*FLAMEGPU);
     initGrid(*FLAMEGPU);
@@ -64,16 +49,11 @@ int main(int argc, const char ** argv) {
 
     // Define environment and agents (THE ORDER HERE IS FIXED, AS THEY ADD INIT FUNCTIONS, ENV MUST COME FIRST)
     defineEnvironment(model, CELL_COUNT);
-    flamegpu::AgentDescription& nb = defineNeuroblastoma(model);
-    flamegpu::AgentDescription& sc = defineSchwann(model);
-    flamegpu::AgentDescription& gc = defineGrid(model);
+    const flamegpu::AgentDescription& nb = defineNeuroblastoma(model);
+    const flamegpu::AgentDescription& sc = defineSchwann(model);
+    const flamegpu::AgentDescription& gc = defineGrid(model);
 
-    auto& nb_cc = nb.newFunction("nb_cell_cycle", temp_cell_cycle);
-    nb_cc.setAgentOutput(nb);
-    auto& sc_cc = sc.newFunction("sc_cell_cycle", temp_cell_cycle);
-    sc_cc.setAgentOutput(sc);
-
-    flamegpu::SubModelDescription& forceResolution = defineForceResolution(model);
+    const flamegpu::SubModelDescription& forceResolution = defineForceResolution(model);
 
 
     /**
@@ -81,10 +61,24 @@ int main(int argc, const char ** argv) {
      */
     {   // Attach init/step/exit functions and exit condition
         model.addInitFunction(ModelInit);
+        // Force resolution
         model.newLayer().addSubModel(forceResolution);
-        auto &l2 = model.newLayer();
-        l2.addAgentFunction(nb_cc);
-        l2.addAgentFunction(sc_cc);
+        // Reset grid
+        model.newLayer().addHostFunction(reset_grids);
+        // Output oxygen/matrix grid
+        auto& l_output_grid = model.newLayer();
+        l_output_grid.addAgentFunction(nb.getFunction("output_oxygen_cell"));
+        l_output_grid.addAgentFunction(sc.getFunction("output_matrix_grid_cell"));
+        // Vasculature
+        model.newLayer().addHostFunction(vasculature);
+        // Alter
+        model.newLayer().addAgentFunction(gc.getFunction("alter"));
+        model.newLayer().addHostFunction(alter2);
+        // Cell cycle
+        auto& l_cycle = model.newLayer();
+        l_cycle.addAgentFunction(nb.getFunction("cell_lifecycle"));
+        l_cycle.addAgentFunction(sc.getFunction("cell_lifecycle"));
+        // Step logging etc (optional)
         model.addStepFunction(logDensity);
     }
 
@@ -103,43 +97,45 @@ int main(int argc, const char ** argv) {
         // m_vis.setBeginPaused(true);
         m_vis.setInitialCameraLocation(INIT_CAM, INIT_CAM, INIT_CAM);
         m_vis.setCameraSpeed(0.1f);
+        m_vis.setViewClips(10.0f, 6000.0f);
         auto& nb_agt = m_vis.addAgent("Neuroblastoma");
         auto &sc_agt = m_vis.addAgent("Schwann");
-        // Position vars are named x, y, z; so they are used by default
+        nb_agt.setXYZVariable("xyz");
         nb_agt.setModel(flamegpu::visualiser::Stock::Models::ICOSPHERE);
-        nb_agt.setModelScale(22); // 2 * env::R_CELL
+        nb_agt.setModelScale(model.getEnvironment().getProperty<float>("R_cell") * 2.0f); // Could improve this in future to use the dynamic rad
+        sc_agt.setXYZVariable("xyz");
         sc_agt.setModel(flamegpu::visualiser::Stock::Models::ICOSPHERE);
-        sc_agt.setModelScale(22); // 2 * env::R_CELL
+        nb_agt.setModelScale(model.getEnvironment().getProperty<float>("R_cell") * 2.0f); // Could improve this in future to use the dynamic rad
         // Render the messaging bounding box, -1000 - 1000 each dimension
         {
             auto pen = m_vis.newLineSketch(1, 1, 1, 0.2f);  // white
             // X lines
-            pen.addVertex(-1000,  1000,  1000);
-            pen.addVertex( 1000,  1000,  1000);
-            pen.addVertex(-1000,  1000, -1000);
-            pen.addVertex( 1000,  1000, -1000);
-            pen.addVertex(-1000, -1000,  1000);
-            pen.addVertex( 1000, -1000,  1000);
-            pen.addVertex(-1000, -1000, -1000);
-            pen.addVertex( 1000, -1000, -1000);
+            pen.addVertex(-2000,  2000,  2000);
+            pen.addVertex( 2000,  2000,  2000);
+            pen.addVertex(-2000,  2000, -2000);
+            pen.addVertex( 2000,  2000, -2000);
+            pen.addVertex(-2000, -2000,  2000);
+            pen.addVertex( 2000, -2000,  2000);
+            pen.addVertex(-2000, -2000, -2000);
+            pen.addVertex( 2000, -2000, -2000);
             // Y lines
-            pen.addVertex( 1000, -1000,  1000);
-            pen.addVertex( 1000,  1000,  1000);
-            pen.addVertex( 1000, -1000, -1000);
-            pen.addVertex( 1000,  1000, -1000);
-            pen.addVertex(-1000, -1000,  1000);
-            pen.addVertex(-1000,  1000,  1000);
-            pen.addVertex(-1000, -1000, -1000);
-            pen.addVertex(-1000,  1000, -1000);
+            pen.addVertex( 2000, -2000,  2000);
+            pen.addVertex( 2000,  2000,  2000);
+            pen.addVertex( 2000, -2000, -2000);
+            pen.addVertex( 2000,  2000, -2000);
+            pen.addVertex(-2000, -2000,  2000);
+            pen.addVertex(-2000,  2000,  2000);
+            pen.addVertex(-2000, -2000, -2000);
+            pen.addVertex(-2000,  2000, -2000);
             // Z lines
-            pen.addVertex( 1000,  1000, -1000);
-            pen.addVertex( 1000,  1000,  1000);
-            pen.addVertex( 1000, -1000, -1000);
-            pen.addVertex( 1000, -1000,  1000);
-            pen.addVertex(-1000,  1000, -1000);
-            pen.addVertex(-1000,  1000,  1000);
-            pen.addVertex(-1000, -1000, -1000);
-            pen.addVertex(-1000, -1000,  1000);
+            pen.addVertex( 2000,  2000, -2000);
+            pen.addVertex( 2000,  2000,  2000);
+            pen.addVertex( 2000, -2000, -2000);
+            pen.addVertex( 2000, -2000,  2000);
+            pen.addVertex(-2000,  2000, -2000);
+            pen.addVertex(-2000,  2000,  2000);
+            pen.addVertex(-2000, -2000, -2000);
+            pen.addVertex(-2000, -2000,  2000);
         }
     }
     m_vis.activate();

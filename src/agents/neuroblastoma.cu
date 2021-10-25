@@ -594,7 +594,6 @@ flamegpu::AgentDescription& defineNeuroblastoma(flamegpu::ModelDescription& mode
         nb.newVariable<int>("MYCN");
         nb.newVariable<int>("MAPK_RAS");
         nb.newVariable<int>("JAB1");
-        nb.newVariable<int>("JAB1");
         nb.newVariable<int>("CHK1");
         nb.newVariable<int>("HIF");
         nb.newVariable<int>("p53");
@@ -618,6 +617,13 @@ flamegpu::AgentDescription& defineNeuroblastoma(flamegpu::ModelDescription& mode
         // Old x/y/z and move_dist are used for validating max distance moved.
         nb.newVariable<float, 3>("old_xyz");
         nb.newVariable<float>("move_dist");
+    }
+    // Agent functions
+    {
+        nb.newFunction("output_oxygen_cell", output_oxygen_cell);
+        auto &t = nb.newFunction("cell_lifecycle", nb_cell_lifecycle);
+        t.setAllowAgentDeath(true);
+        t.setAgentOutput(nb);
     }
     return nb;
 }
@@ -814,32 +820,32 @@ void initNeuroblastoma(flamegpu::HostAPI &FLAMEGPU) {
         const float a_CHK1_fn = agt.getVariable<float>("CHK1_fn");
         const int a_DNA_damage = agt.getVariable<int>("DNA_damage");
         const int a_MYCN = agt.getVariable<int>("MYCN");
-        const int a_CDS1_fn = agt.getVariable<int>("CDS1_fn");
+        const float a_CDS1_fn = agt.getVariable<float>("CDS1_fn");
         const int a_DNA_unreplicated = agt.getVariable<int>("DNA_unreplicated");
-        const int a_CDC25C_fn = agt.getVariable<int>("CDC25C_fn");
+        const float a_CDC25C_fn = agt.getVariable<float>("CDC25C_fn");
         const int a_CDS1 = agt.getVariable<int>("CDS1");
         const int a_CHK1 = agt.getVariable<int>("CHK1");
-        const int a_ID2_fn = agt.getVariable<int>("ID2_fn");
-        const int a_IAP2_fn = agt.getVariable<int>("IAP2_fn");
+        const float a_ID2_fn = agt.getVariable<float>("ID2_fn");
+        const float a_IAP2_fn = agt.getVariable<float>("IAP2_fn");
         const int a_hypoxia = agt.getVariable<int>("hypoxia");
-        const int a_HIF_fn = agt.getVariable<int>("HIF_fn");
-        const int a_BNIP3_fn = agt.getVariable<int>("BNIP3_fn");
+        const float a_HIF_fn = agt.getVariable<float>("HIF_fn");
+        const float a_BNIP3_fn = agt.getVariable<float>("BNIP3_fn");
         const int a_HIF = agt.getVariable<int>("HIF");
-        const int a_VEGF_fn = agt.getVariable<int>("VEGF_fn");
-        const int a_p53_fn = agt.getVariable<int>("p53_fn");
+        const float a_VEGF_fn = agt.getVariable<float>("VEGF_fn");
+        const float a_p53_fn = agt.getVariable<float>("p53_fn");
         const int a_JAB1 = agt.getVariable<int>("JAB1");
         const int a_p53 = agt.getVariable<int>("p53");
         const int a_p73 = agt.getVariable<int>("p73");
         const int a_MYCN_amp = agt.getVariable<int>("MYCN_amp");
-        const int a_p73_fn = agt.getVariable<int>("p73_fn");
-        const int a_p21_fn = agt.getVariable<int>("p21_fn");
+        const float a_p73_fn = agt.getVariable<float>("p73_fn");
+        const float a_p21_fn = agt.getVariable<float>("p21_fn");
         const int a_MAPK_RAS = agt.getVariable<int>("MAPK_RAS");
-        const int a_p27_fn = agt.getVariable<int>("p27_fn");
-        const int a_Bcl2_Bclxl_fn = agt.getVariable<int>("Bcl2_Bclxl_fn");
+        const float a_p27_fn = agt.getVariable<float>("p27_fn");
+        const float a_Bcl2_Bclxl_fn = agt.getVariable<float>("Bcl2_Bclxl_fn");
         const int a_BNIP3 = agt.getVariable<int>("BNIP3");
-        const int a_BAK_BAX_fn = agt.getVariable<int>("BAK_BAX_fn");
+        const float a_BAK_BAX_fn = agt.getVariable<float>("BAK_BAX_fn");
         const int a_IAP2 = agt.getVariable<int>("IAP2");
-        const int a_CAS_fn = agt.getVariable<int>("CAS_fn");
+        const float a_CAS_fn = agt.getVariable<float>("CAS_fn");
         const int a_BAK_BAX = agt.getVariable<int>("BAK_BAX");
         const int a_ATP = agt.getVariable<int>("ATP");
         const int a_Bcl2_Bclxl = agt.getVariable<int>("Bcl2_Bclxl");

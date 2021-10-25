@@ -354,6 +354,13 @@ flamegpu::AgentDescription &defineSchwann(flamegpu::ModelDescription& model) {
         // This is used to provide the dummy_force reduction.
         sc.newVariable<float>("force_magnitude");
     }
+    // Agent functions
+    {
+        sc.newFunction("output_matrix_grid_cell", output_matrix_grid_cell);
+        auto &t = sc.newFunction("cell_lifecycle", sc_cell_lifecycle);
+        t.setAllowAgentDeath(true);
+        t.setAgentOutput(sc);
+    }
     return sc;
 }
 

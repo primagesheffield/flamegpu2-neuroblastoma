@@ -57,7 +57,7 @@ __device__ __forceinline__ glm::ivec3 toGrid(flamegpu::DeviceAPI<Mi, Mo>* FLAMEG
     const flamegpu::DeviceEnvironment &env = FLAMEGPU->environment;  // Have to split this out otherwise template keyword required before getProperty
     const float R_voxel = env.getProperty<float>("R_voxel");
     const glm::uvec3 grid_dims = env.getProperty<glm::uvec3>("grid_dims");
-    const glm::vec3 span = glm::vec3(grid_dims) * env.getProperty<float>("dt_computed") * 2.0f;
+    const glm::vec3 span = glm::vec3(grid_dims) * R_voxel * 2.0f;
     const glm::uvec3 grid_origin = env.getProperty<glm::uvec3>("grid_origin");
     return glm::ivec3(
         grid_origin.x + floor((location.x + span.x / 2.0f) / R_voxel / 2.0f),
@@ -92,9 +92,9 @@ __device__ void increment_grid_sc(flamegpu::DeviceAPI<Mi, Mo>* FLAMEGPU, const g
     if (FLAMEGPU->template getVariable<int>("apop") == 1) {
         // ++env.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nsca_grid")[gid.x][gid.y][gid.z];
     } else if (FLAMEGPU->template getVariable<int>("necro") == 1) {
-        ++env.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nnscn_grid")[gid.x][gid.y][gid.z];
+        ++env.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nscn_grid")[gid.x][gid.y][gid.z];
     } else {
-        ++env.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nnscl_grid")[gid.x][gid.y][gid.z];
+        ++env.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nscl_grid")[gid.x][gid.y][gid.z];
         if (FLAMEGPU->template getVariable<int>("neighbours") < env.getProperty<int>("N_neighbours")) {
             ++env.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nscl_col_grid")[gid.x][gid.y][gid.z];
         }
@@ -135,6 +135,12 @@ __device__ __forceinline__ bool getChemoState(flamegpu::DeviceAPI<Mi, Mo>* FLAME
     return false;
     //return (FLAMEGPU->getStepCounter() % 504) < 24;
 }
+
+// Hostfn prototypes
+extern flamegpu::FLAMEGPU_HOST_FUNCTION_POINTER vasculature;
+extern flamegpu::FLAMEGPU_HOST_FUNCTION_POINTER reset_grids;
+extern flamegpu::FLAMEGPU_HOST_FUNCTION_POINTER alter2;
+extern flamegpu::FLAMEGPU_HOST_FUNCTION_POINTER CAexpand;
 
 
 #endif  // SRC_HEADER_H

@@ -3,7 +3,7 @@ cmake_policy(SET CMP0079 NEW)
 
 # If a FLAMEGPU_VERSION has not been defined, set it to the default option.
 if(NOT DEFINED FLAMEGPU_VERSION OR FLAMEGPU_VERSION STREQUAL "")
-    set(FLAMEGPU_VERSION "master" CACHE STRING "Git branch or tag to use")
+    set(FLAMEGPU_VERSION "host_env_glm" CACHE STRING "Git branch or tag to use")
 endif()
 
 # Allow users to switch to forks with relative ease.

@@ -40,7 +40,7 @@ void data_layer_0(flamegpu::ModelDescription& model) {
     // Sensitivity of the boundary displacement field to invasion into the boundary
     // Note that this is illustrative and unrealistic.
     // The orchestrator must provide the parameters of a displacement function.
-    env.newProperty<glm::vec3>("displace", glm::vec3(2));
+    env.newProperty<float, 3>("displace", {2, 2, 2});
 }
 /**
  * integration with genetic/molecular biomarkers of neuroblasts
@@ -167,21 +167,21 @@ void cell_death_parameters(flamegpu::ModelDescription& model) {
     env.newProperty<float>("P_unrepDNArp", 0.871531954f); // Calibration LHC#147
     //Probability of the immune system triggering a necrotic signal in a living cell per necrotic cell present per hour.
     //Assumed to be 1 % .
-    env.newProperty<float>("P_necroIS ", 0.393895701f); // Calibration LHC#147
+    env.newProperty<float>("P_necroIS", 0.393895701f); // Calibration LHC#147
     //Probability of secondary necrosis in an hour (Dunster, Byrne, King 2014).
-    env.newProperty<float>("P_2ndnecro ", 0.2f);
+    env.newProperty<float>("P_2ndnecro", 0.2f);
     //Probability of gaining one unit of telomere in an hour, when telomerase or ALT is active..
     //Assumed to be 1 % .
-    env.newProperty<float>("P_telorp ", 0.068383864f); // Calibration LHC#147
+    env.newProperty<float>("P_telorp", 0.068383864f); // Calibration LHC#147
     //Probability of gaining an apoptotic signal due to chemotherapy in an hour.
     //Assumed to be 10 % .
-    env.newProperty<float>("P_apopChemo ", 0.219394318f); // Calibration LHC#147
+    env.newProperty<float>("P_apopChemo", 0.219394318f); // Calibration LHC#147
     //Probability of losing an apoptotic signal in an unstressed cell in an hour.
     //Assumed to be 1 % .
-    env.newProperty<float>("P_apoprp ", 0.814669799f); // Calibration LHC#147
+    env.newProperty<float>("P_apoprp", 0.814669799f); // Calibration LHC#147
     //Probability of losing a necrotic signal in an unstressed cell in an hour.
     //Assumed to be 1 % .
-    env.newProperty<float>("P_necrorp ", 0.301734721f); // Calibration LHC#147
+    env.newProperty<float>("P_necrorp", 0.301734721f); // Calibration LHC#147
 }
 void schwann_cell_parameters(flamegpu::ModelDescription& model) {
     auto& env = model.Environment();
@@ -297,7 +297,7 @@ void sc_initial_conditions(flamegpu::ModelDescription& model) {
     auto& env = model.Environment();
     // A flag (continuous, 0 to 4) indicating the cell's position in the cell cycle.
     // default (-1) means random initialisation.
-    env.newProperty<float>("cycle", -1);
+    env.newProperty<float>("cycle_sc", -1);
     // A flag (Boolean variable) indicating if the cell is apoptotic.
     // default (-1) means it is not apoptotic (0).
     env.newProperty<int>("apop_sc", -1);
@@ -323,18 +323,21 @@ void internal_derived(flamegpu::ModelDescription& model) {
     // DERIVED: Initial tumour radius (microns)
     env.newProperty<float>("R_tumour", 0);
     // DERIVED: Tumour boundary's (microns)
-    env.newProperty<glm::vec3>("bc_minus", glm::vec3(0));
-    env.newProperty<glm::vec3>("bc_plus", glm::vec3(0));
+    env.newProperty<float, 3>("bc_minus", { 0, 0, 0 });
+    env.newProperty<float, 3>("bc_plus", { 0, 0, 0 });
     // DERIVED: Grid element or voxel volume (cubic microns).
     env.newProperty<float>("V_grid", 0);
     // DERIVED: Grid element or voxel side area (square microns).
     env.newProperty<float>("A_grid", 0);
+    // Add this before accessing O2grid
+    // It's the location of the virtual/active grid origin within the full grid
+    env.newProperty<unsigned int, 3>("grid_origin", { 0, 0, 0 });
     // Current size of the active/virtual O2grid
-    env.newProperty<glm::uvec3>("grid_dims", glm::uvec3(0));
+    env.newProperty<unsigned int, 3>("grid_dims", { 0, 0, 0 });
     // Span kind of acts as the radius(ignoring the center cell)
-    env.newProperty<glm::uvec3>("grid_span", glm::uvec3(0));
+    env.newProperty<unsigned int, 3>("grid_span", { 0, 0, 0 });
     // If this is different to grid_dims, then different cells perform CAexpand operation to init their value inside alter()
-    env.newProperty<glm::uvec3>("grid_span_old", glm::uvec3(0));
+    env.newProperty<unsigned int, 3>("grid_span_old", { 0, 0, 0 });
     // This variable acts as a switch to lock P_O2v to 0
     env.newProperty<int>("P_O2v_OFF", 0);
     // DERIVED: This variable represents vasculature()
@@ -525,15 +528,5 @@ void defineEnvironment(flamegpu::ModelDescription& model, unsigned int CELL_COUN
     nb_initial_conditions(model);
     sc_initial_conditions(model);
     internal_derived(model);
-    // Temporary additional environment components required for force resolution submodel
-    auto& env = model.Environment();
-    env.newProperty<float>("rho_tumour", (float)9.39e-05);
-    env.newProperty<float>("cellularity", 0.5f);  // anywhere in range 0.5-1 depending on histology/gradiff
-    env.newProperty<float>("theta_sc", 0.5f);  // anywhere in range 0-1 depending on histology/gradiff
-    env.newProperty<float>("R_cell", 11);
-    env.newProperty<float>("V_tumour", ((float)CELL_COUNT)/ (env.getProperty<float>("rho_tumour") * env.getProperty<float>("cellularity")));
-    env.newProperty<float>("R_tumour", (float)cbrt(env.getProperty<float>("V_tumour") * 0.75 / M_PI));
-    // Temporary var for controlling speed of birth
-    env.newProperty<float>("birth_speed", 1);
     model.addInitFunction(InitDerivedEnvironment);
 }

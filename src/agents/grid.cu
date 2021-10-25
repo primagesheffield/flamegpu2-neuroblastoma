@@ -109,16 +109,17 @@ FLAMEGPU_AGENT_FUNCTION(fresolve_CAexpand_device, flamegpu::MessageNone, flamegp
             matrix_value = FLAMEGPU->environment.getProperty<float>("matrix_dummy");
         }
     }
-    const unsigned int Nnbl_grid = FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nnbl_grid").exchange(0);  // These reset here during force resolution
-    const unsigned int Nscl_grid = FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nscl_grid").exchange(0);  // These reset here during force resolution 
-    unsigned int s_Nnbl_grid = Nnbl_grid[location.x][location.y][location.z];
-    unsigned int s_Nscl_grid = Nscl_grid[location.x][location.y][location.z];
+    auto Nnbl_grid = FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nnbl_grid");
+    auto Nscl_grid = FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nscl_grid");
+    unsigned int s_Nnbl_grid = Nnbl_grid[location.x][location.y][location.z].exchange(0);  // These reset here during force resolution;
+    unsigned int s_Nscl_grid = Nscl_grid[location.x][location.y][location.z].exchange(0);  // These reset here during force resolution;
     FLAMEGPU->setVariable<unsigned int>("Nnbl_grid", s_Nnbl_grid);
     FLAMEGPU->setVariable<unsigned int>("Nscl_grid", s_Nscl_grid);
     FLAMEGPU->setVariable<unsigned int>("N_l_grid", s_Nnbl_grid + s_Nscl_grid);  // This is kind of redundant, could reduce and sum both vals
-    const auto Nnb_grid = FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nnb_grid").exchange(0);  // Count has been consumed, reset to 0
-    const auto Nsc_grid = FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nsc_grid").exchange(0);  // Count has been consumed, reset to 0
-    const unsigned int s_N_grid = Nnb_grid[location.x][location.y][location.z] + Nsc_grid[location.x][location.y][location.z];
+    const auto Nnb_grid = FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nnb_grid");
+    const auto Nsc_grid = FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nsc_grid");
+    // Count has been consumed, reset to 0
+    const unsigned int s_N_grid = Nnb_grid[location.x][location.y][location.z].exchange(0) + Nsc_grid[location.x][location.y][location.z].exchange(0);
     FLAMEGPU->setVariable<unsigned int>("N_grid", s_N_grid);
     auto N_grid = FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("N_grid");
     N_grid[location.x][location.y][location.z].exchange(s_N_grid);
@@ -143,6 +144,10 @@ flamegpu::AgentDescription &defineGrid(flamegpu::ModelDescription& model) {
         gc.newVariable<unsigned int>("N_l_grid");
         gc.newVariable<float>("matrix_value");
         gc.newVariable<unsigned int>("N_grid");
+    }
+    // Agent Functions
+    {
+        gc.newFunction("alter", alter);
     }
     // Nnb and Nsc are used by CAexpand and to calculate d_N_grid_VolEx, this includes migration_CAexpand_device() and alter() after force-resolution submodel
     // They are incremented by migrate_nb(), migrate_sc(), output_oxygen_cell()[and init version], output_matrix_grid_cell()[and init version] respectively
@@ -199,14 +204,34 @@ void initGrid(flamegpu::HostAPI &FLAMEGPU) {
         agt.setVariable<unsigned int>("Nscl_grid", 0);
         agt.setVariable<unsigned int>("N_l_grid", 0);
         agt.setVariable<float>("matrix_value", 1.0f - cellularity);
-        agt.setVariable<unsigned int>("N_grid", cellularity);
+        agt.setVariable<unsigned int>("N_grid", 0);
     }
+    auto matrix_grid = FLAMEGPU.environment.getMacroProperty<float, GMD, GMD, GMD>("matrix_grid");
     for (unsigned int x = 0; x < GRID_MAX_DIMENSIONS; ++x) {
         for (unsigned int y = 0; y < GRID_MAX_DIMENSIONS; ++y) {
             for (unsigned int z = 0; z < GRID_MAX_DIMENSIONS; ++z) {
-                FLAMEGPU.environment.getMacroProperty<float, GMD, GMD, GMD>("matrix_grid")[x][y][z] = 1.0f - cellularity;
+                matrix_grid[x][y][z] = 1.0f - cellularity;
                 // Other values all default init to 0
             }
         }
     }
+    // Perform CAExpand to init grid environment properties
+    // Except we can't run that now, as agent's don't yet exist on device.
+    // CAexpand(&FLAMEGPU);
+    const glm::uvec3 oldspan = FLAMEGPU.environment.getProperty<glm::uvec3>("grid_span");
+    FLAMEGPU.environment.setProperty<glm::uvec3>("grid_span_old", oldspan);
+    const float R_voxel = FLAMEGPU.environment.getProperty<float>("R_voxel");
+    const float R_tumour = FLAMEGPU.environment.getProperty<float>("R_tumour");
+    glm::uvec3 newspan = glm::uvec3(glm::ceil((R_tumour / R_voxel / 2.0f) + 0.5f));
+    // clamp span (i don't think the python algorithm lets o2 grid shrink)
+    const glm::uvec3 newspan_u = max(oldspan, newspan);
+    FLAMEGPU.environment.setProperty<glm::uvec3>("grid_span", newspan_u);
+    const glm::uvec3 new_grid_dims = (newspan_u * 2u) - glm::uvec3(1);
+    FLAMEGPU.environment.setProperty<glm::uvec3>("grid_dims", new_grid_dims);
+    if (new_grid_dims.x > GRID_MAX_DIMENSIONS || new_grid_dims.y > GRID_MAX_DIMENSIONS || new_grid_dims.z > GRID_MAX_DIMENSIONS) {
+        fprintf(stderr, "grid has grown too large (%u, %u, %u), recompile with bigger!\n", new_grid_dims.x, new_grid_dims.y, new_grid_dims.z);
+        throw std::runtime_error("grid has grown too large, recompile with bigger\n");
+    }
+    glm::uvec3 grid_origin = (glm::uvec3(GRID_MAX_DIMENSIONS) - new_grid_dims) / 2u;
+    FLAMEGPU.environment.setProperty<glm::uvec3>("grid_origin", grid_origin);
 }
