@@ -159,7 +159,6 @@ __device__ __forceinline__ void Schwann_cell_cycle(flamegpu::DeviceAPI<flamegpu:
 
     // Decide our voxel
     const glm::ivec3 gid = toGrid(FLAMEGPU, FLAMEGPU->getVariable<glm::vec3>("xyz"));
-
     // Count the neuroblasts and Schwann cells in the 3D von Neumann neighbourhood.
     const glm::uvec3 grid_origin = FLAMEGPU->environment.getProperty<glm::uvec3>("grid_origin");
     const glm::uvec3 grid_dims = FLAMEGPU->environment.getProperty<glm::uvec3>("grid_dims");
@@ -357,7 +356,7 @@ flamegpu::AgentDescription &defineSchwann(flamegpu::ModelDescription& model) {
     // Agent functions
     {
         sc.newFunction("output_matrix_grid_cell", output_matrix_grid_cell);
-        auto &t = sc.newFunction("cell_lifecycle", sc_cell_lifecycle);
+        auto &t = sc.newFunction("sc_cell_lifecycle", sc_cell_lifecycle);
         t.setAllowAgentDeath(true);
         t.setAgentOutput(sc);
     }
@@ -386,7 +385,6 @@ void initSchwann(flamegpu::HostAPI &FLAMEGPU) {
     const float theta_sc = FLAMEGPU.environment.getProperty<float>("theta_sc");
 
     const unsigned int SC_COUNT = (unsigned int)ceil(rho_tumour * V_tumour * cellularity * theta_sc);
-
     for (unsigned int i = 0; i < SC_COUNT; ++i) {
         auto agt = SC.newAgent();
         // Data Layer 0 (integration with imaging biomarkers).

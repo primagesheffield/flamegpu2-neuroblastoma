@@ -621,7 +621,7 @@ flamegpu::AgentDescription& defineNeuroblastoma(flamegpu::ModelDescription& mode
     // Agent functions
     {
         nb.newFunction("output_oxygen_cell", output_oxygen_cell);
-        auto &t = nb.newFunction("cell_lifecycle", nb_cell_lifecycle);
+        auto &t = nb.newFunction("nb_cell_lifecycle", nb_cell_lifecycle);
         t.setAllowAgentDeath(true);
         t.setAgentOutput(nb);
     }

@@ -95,7 +95,7 @@ __forceinline__ __device__ float calc_R(flamegpu::DeviceAPI<M1, M2>*FLAMEGPU) {
     return Ri;
 }
 FLAMEGPU_AGENT_FUNCTION(output_location_nb, flamegpu::MessageNone, flamegpu::MessageSpatial3D) {
-   const glm::vec3 loc = FLAMEGPU->getVariable<glm::vec3>("xyz");
+    const glm::vec3 loc = FLAMEGPU->getVariable<glm::vec3>("xyz");
     FLAMEGPU->message_out.setLocation(loc.x, loc.y, loc.z);
     FLAMEGPU->message_out.setVariable<flamegpu::id_t>("id", FLAMEGPU->getID());
     FLAMEGPU->message_out.setVariable<float>("Rj", calc_R(FLAMEGPU));
@@ -129,7 +129,7 @@ FLAMEGPU_AGENT_FUNCTION(calculate_force, flamegpu::MessageSpatial3D, flamegpu::M
     const float MIN_OVERLAP = FLAMEGPU->environment.getProperty<float>("min_overlap");
     const float K1 = FLAMEGPU->environment.getProperty<float>("k1");
     for (auto j : FLAMEGPU->message_in(i_xyz.x, i_xyz.y, i_xyz.z)) {
-        if (j.getVariable<unsigned int>("id") != i_id) {  // Id mechanics are not currently setup
+        if (j.getVariable<flamegpu::id_t>("id") != i_id) {
             glm::vec3 j_xyz = glm::vec3(
                 j.getVariable<float>("x"),
                 j.getVariable<float>("y"),
@@ -138,7 +138,7 @@ FLAMEGPU_AGENT_FUNCTION(calculate_force, flamegpu::MessageSpatial3D, flamegpu::M
             // Displacement
             const glm::vec3 ij_xyz = i_xyz - j_xyz;
             const float distance_ij = glm::length(ij_xyz);
-            if (distance_ij < FLAMEGPU->environment.getProperty<unsigned int>("R_neighbours"))
+            if (distance_ij < FLAMEGPU->environment.getProperty<float>("R_neighbours"))
                 i_neighbours++;
             if (distance_ij <= FLAMEGPU->message_in.radius()) {
                 const glm::vec3 direction_ij = ij_xyz / distance_ij;
@@ -188,6 +188,7 @@ FLAMEGPU_EXIT_CONDITION(calculate_convergence) {
         (max_neighbours <= N_neighbours) ||
         (max_overlap < 0.15f * R_cell) ||
         (static_cast<float>(FLAMEGPU->getStepCounter()) > static_cast<float>(step_size) * 3600.0f / dt)) {
+        printf("Force res complete with %u steps\n", FLAMEGPU->getStepCounter());
         return flamegpu::EXIT;
     } else {
         // Force resolution is stuck, log details to stderr
@@ -224,7 +225,7 @@ flamegpu::SubModelDescription& defineForceResolution(flamegpu::ModelDescription&
     env.newProperty<float>("min_overlap", 0);
     env.newProperty<float>("k1", 0);
     env.newProperty<float>("alpha", 0);
-    env.newProperty<unsigned int>("R_neighbours", 0);
+    env.newProperty<float>("R_neighbours", 0);
     env.newProperty<int>("N_neighbours", 0);
     env.newProperty<float>("k_locom", 0);
     env.newProperty<unsigned int>("step_size", 0);
@@ -255,6 +256,7 @@ flamegpu::SubModelDescription& defineForceResolution(flamegpu::ModelDescription&
     nb.newVariable<float, 3>("Fxyz");
     nb.newVariable<int>("neighbours");
     nb.newVariable<unsigned int>("cycle");
+    nb.newVariable<int>("mobile");
     nb.newVariable<float>("overlap");
     nb.newVariable<float>("force_magnitude");
     nb.newVariable<float>("move_dist");
@@ -269,6 +271,7 @@ flamegpu::SubModelDescription& defineForceResolution(flamegpu::ModelDescription&
     sc.newVariable<float, 3>("Fxyz");
     sc.newVariable<int>("neighbours");
     sc.newVariable<unsigned int>("cycle");
+    sc.newVariable<int>("mobile");
     sc.newVariable<float>("overlap");
     sc.newVariable<float>("force_magnitude");
     auto &sc1 = sc.newFunction("apply_force_sc", apply_force_sc);

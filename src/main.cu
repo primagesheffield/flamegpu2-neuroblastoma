@@ -76,8 +76,8 @@ int main(int argc, const char ** argv) {
         model.newLayer().addHostFunction(alter2);
         // Cell cycle
         auto& l_cycle = model.newLayer();
-        l_cycle.addAgentFunction(nb.getFunction("cell_lifecycle"));
-        l_cycle.addAgentFunction(sc.getFunction("cell_lifecycle"));
+        l_cycle.addAgentFunction(nb.getFunction("nb_cell_lifecycle"));
+        l_cycle.addAgentFunction(sc.getFunction("sc_cell_lifecycle"));
         // Step logging etc (optional)
         model.addStepFunction(logDensity);
     }
@@ -105,7 +105,7 @@ int main(int argc, const char ** argv) {
         nb_agt.setModelScale(model.getEnvironment().getProperty<float>("R_cell") * 2.0f); // Could improve this in future to use the dynamic rad
         sc_agt.setXYZVariable("xyz");
         sc_agt.setModel(flamegpu::visualiser::Stock::Models::ICOSPHERE);
-        nb_agt.setModelScale(model.getEnvironment().getProperty<float>("R_cell") * 2.0f); // Could improve this in future to use the dynamic rad
+        sc_agt.setModelScale(model.getEnvironment().getProperty<float>("R_cell") * 2.0f); // Could improve this in future to use the dynamic rad
         // Render the messaging bounding box, -1000 - 1000 each dimension
         {
             auto pen = m_vis.newLineSketch(1, 1, 1, 0.2f);  // white

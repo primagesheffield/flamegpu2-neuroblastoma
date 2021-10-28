@@ -222,7 +222,7 @@ void initGrid(flamegpu::HostAPI &FLAMEGPU) {
     FLAMEGPU.environment.setProperty<glm::uvec3>("grid_span_old", oldspan);
     const float R_voxel = FLAMEGPU.environment.getProperty<float>("R_voxel");
     const float R_tumour = FLAMEGPU.environment.getProperty<float>("R_tumour");
-    glm::uvec3 newspan = glm::uvec3(glm::ceil((R_tumour / R_voxel / 2.0f) + 0.5f));
+    glm::uvec3 newspan = glm::uvec3(static_cast<unsigned int>(glm::ceil((R_tumour / R_voxel / 2.0f) + 0.5f)));
     // clamp span (i don't think the python algorithm lets o2 grid shrink)
     const glm::uvec3 newspan_u = max(oldspan, newspan);
     FLAMEGPU.environment.setProperty<glm::uvec3>("grid_span", newspan_u);
