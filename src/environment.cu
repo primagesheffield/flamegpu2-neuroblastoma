@@ -513,7 +513,7 @@ FLAMEGPU_INIT_FUNCTION(InitDerivedEnvironment) {
 }
 #define _USE_MATH_DEFINES
 #include <math.h>
-void defineEnvironment(flamegpu::ModelDescription& model, unsigned int CELL_COUNT) {
+void defineEnvironment(flamegpu::ModelDescription& model) {
     data_layer_0(model);
     data_layer_1(model);
     data_layer_2(model);

@@ -9,9 +9,20 @@
 #define GMD GRID_MAX_DIMENSIONS
 
 /**
+ * Define model
+ */
+void defineModel(flamegpu::ModelDescription &model);
+#ifdef VISUALISATION
+/**
+ * Define visualisation
+ */
+flamegpu::visualiser::ModelVis& defineVisualisation(flamegpu::ModelDescription& model, flamegpu::CUDASimulation& sim);
+#endif
+
+/**
  * Define all environment properties
  */
-void defineEnvironment(flamegpu::ModelDescription &model, unsigned int CELL_COUNT);
+void defineEnvironment(flamegpu::ModelDescription &model);
 
 /**
  * Define the Neuroblastoma agent properties
