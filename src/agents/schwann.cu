@@ -412,7 +412,7 @@ void initSchwann(flamegpu::HostAPI &FLAMEGPU) {
         agt.setVariable<int>("apop_signal", apop_signal_sc < 0 ? 0 : apop_signal_sc);
         agt.setVariable<int>("necro", necro_sc < 0 ? 0 : necro_sc);
         agt.setVariable<int>("necro_signal", necro_signal_sc < 0 ? 0 : necro_signal_sc);
-        agt.setVariable<int>("telo_count", FLAMEGPU.random.uniform<int>(3, 168)); // Random int in range [3, 168]
+        agt.setVariable<int>("necro_critical", FLAMEGPU.random.uniform<int>(3, 168)); // Random int in range [3, 168]
         agt.setVariable<int>("telo_count", telo_count_sc < 0 ? FLAMEGPU.random.uniform<int>(25, 35) : telo_count_sc); // Random int in range [25, 35]
         // Attribute Layer 1
         agt.setVariable<int>("hypoxia", 0);
