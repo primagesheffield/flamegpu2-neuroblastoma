@@ -64,7 +64,7 @@ flamegpu::SubModelDescription& defineForceResolution(flamegpu::ModelDescription&
  * Converts a continuous location to a discrete grid position
  */
 template<typename Mi, typename Mo>
-__device__ __forceinline__ glm::ivec3 toGrid(flamegpu::DeviceAPI<Mi, Mo>* FLAMEGPU, glm::vec3& location) {
+__device__ __forceinline__ glm::ivec3 toGrid(flamegpu::DeviceAPI<Mi, Mo>* FLAMEGPU, const glm::vec3& location) {
     const flamegpu::DeviceEnvironment &env = FLAMEGPU->environment;  // Have to split this out otherwise template keyword required before getProperty
     const float R_voxel = env.getProperty<float>("R_voxel");
     const glm::uvec3 grid_dims = env.getProperty<glm::uvec3>("grid_dims");
