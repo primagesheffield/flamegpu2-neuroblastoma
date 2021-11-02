@@ -104,7 +104,7 @@ __device__ __forceinline__ void Schwann_sense(flamegpu::DeviceAPI<flamegpu::Mess
         const float P_apopChemo = FLAMEGPU->environment.getProperty<float>("P_apopChemo");
         const float P_apoprp = FLAMEGPU->environment.getProperty<float>("P_apoprp");
         int s_apop_signal = FLAMEGPU->getVariable<int>("apop_signal");
-        const float s_cycle = FLAMEGPU->getVariable<float>("cycle");
+        const float s_cycle = FLAMEGPU->getVariable<unsigned int>("cycle");
         const int s_ATP = FLAMEGPU->getVariable<int>("ATP");
         stress = 0;
         if ((s_DNA_damage == 1 || s_hypoxia == 1) && s_ATP == 1) {

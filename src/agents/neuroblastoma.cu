@@ -214,7 +214,7 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
         const float P_apopChemo = FLAMEGPU->environment.getProperty<float>("P_apopChemo");
         const float P_apoprp = FLAMEGPU->environment.getProperty<float>("P_apoprp");
         int s_apop_signal = FLAMEGPU->getVariable<int>("apop_signal");
-        const float s_cycle = FLAMEGPU->getVariable<float>("cycle");
+        const float s_cycle = FLAMEGPU->getVariable<unsigned int>("cycle");
         stress = 0;
         if (s_CAS == 1) {
             s_apop_signal += 1 * step_size;
