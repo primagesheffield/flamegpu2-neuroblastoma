@@ -32,7 +32,8 @@ FLAMEGPU_AGENT_FUNCTION(apply_force_nb, flamegpu::MessageNone, flamegpu::Message
     const glm::ivec3 gid = toGrid(FLAMEGPU, location);
     // Apply Force
     const float mu = FLAMEGPU->environment.getProperty<float>("mu");
-    const float matrix = FLAMEGPU->environment.getMacroProperty<float, GMD, GMD, GMD>("matrix_grid")[gid.x][gid.y][gid.z];
+    float matrix = FLAMEGPU->environment.getMacroProperty<float, GMD, GMD, GMD>("matrix_grid")[gid.x][gid.y][gid.z];
+    matrix = matrix == 0.0f ? FLAMEGPU->environment.getProperty<float>("matrix_dummy") : matrix;
     const float mu_eff = (1.0f + matrix) * mu;
     const float dt = FLAMEGPU->environment.getProperty<float>("dt");
     location += force * dt / mu_eff;
@@ -58,7 +59,8 @@ FLAMEGPU_AGENT_FUNCTION(apply_force_sc, flamegpu::MessageNone, flamegpu::Message
     const glm::ivec3 gid = toGrid(FLAMEGPU, location);
     // Apply Force
     const float mu = FLAMEGPU->environment.getProperty<float>("mu");
-    const float matrix = FLAMEGPU->environment.getMacroProperty<float, GMD, GMD, GMD>("matrix_grid")[gid.x][gid.y][gid.z];
+    float matrix = FLAMEGPU->environment.getMacroProperty<float, GMD, GMD, GMD>("matrix_grid")[gid.x][gid.y][gid.z];
+    matrix = matrix == 0.0f ? FLAMEGPU->environment.getProperty<float>("matrix_dummy") : matrix;
     const float mu_eff = (1.0f + matrix) * mu;
     const float dt = FLAMEGPU->environment.getProperty<float>("dt");
     location += force * dt / mu_eff;
@@ -120,7 +122,6 @@ FLAMEGPU_AGENT_FUNCTION(calculate_force, flamegpu::MessageSpatial3D, flamegpu::M
     const flamegpu::id_t i_id = FLAMEGPU->getID();
     const float Ri = calc_R(FLAMEGPU);
     const float R_cell = FLAMEGPU->environment.getProperty<float>("R_cell");  // Eventually this might vary based on the cell
-    // unsigned int i_id = FLAMEGPU->getVariable<unsigned int>("id");  // Id mechanics are not currently setup
     // Init force to 0 (old force doesn't matter)
     glm::vec3 i_Fxyz = glm::vec3(0);
     float i_overlap = 0;
@@ -188,20 +189,10 @@ FLAMEGPU_EXIT_CONDITION(calculate_convergence) {
         (max_neighbours <= N_neighbours) ||
         (max_overlap < 0.15f * R_cell) ||
         (static_cast<float>(FLAMEGPU->getStepCounter()) > static_cast<float>(step_size) * 3600.0f / dt)) {
-        printf("Force res complete with %u steps\n", FLAMEGPU->getStepCounter());
+        //printf("Force res complete with %u steps\n", FLAMEGPU->getStepCounter());
         return flamegpu::EXIT;
-    } else {
-        // Force resolution is stuck, log details to stderr
-        if ((FLAMEGPU->getStepCounter() >= 1000 && FLAMEGPU->getStepCounter() < 1100) ||
-            (FLAMEGPU->getStepCounter() >= 2000 && FLAMEGPU->getStepCounter() < 2200)) {
-            fprintf(stderr, "Force Resolution Stuck@FR Step %u\n", FLAMEGPU->getStepCounter());
-            fprintf(stderr, "(%u + %u < 2) == %s\n", FLAMEGPU->agent("Neuroblastoma").count(), FLAMEGPU->agent("Schwann").count(), (FLAMEGPU->agent("Neuroblastoma").count() + FLAMEGPU->agent("Schwann").count() < 2) ? "true" : "false");
-            fprintf(stderr, "(%d < %d) == %s\n", max_neighbours, N_neighbours, (max_neighbours < N_neighbours) ? "true" : "false");
-            fprintf(stderr, "(%f < %f) == %s\n", max_overlap, 0.15f * R_cell, (max_overlap < 0.15f *R_cell) ? "true" : "false");
-            fprintf(stderr, "(%u > %u * 3600 /  %f) == %s\n", FLAMEGPU->getStepCounter(), step_size, dt, (static_cast<float>(FLAMEGPU->getStepCounter()) > static_cast<float>(step_size) * 3600.0f / dt) ? "true" : "false");
-        }
-        return flamegpu::CONTINUE;
     }
+    return flamegpu::CONTINUE;
 }
 
 /**
@@ -224,12 +215,12 @@ flamegpu::SubModelDescription& defineForceResolution(flamegpu::ModelDescription&
     env.newProperty<float>("R_cell", 0);
     env.newProperty<float>("min_overlap", 0);
     env.newProperty<float>("k1", 0);
-    env.newProperty<float>("alpha", 0);
+    env.newProperty<float>("alpha", 0);  // Required in force res?
     env.newProperty<float>("R_neighbours", 0);
     env.newProperty<int>("N_neighbours", 0);
     env.newProperty<float>("k_locom", 0);
     env.newProperty<unsigned int>("step_size", 0);
-    env.newProperty<unsigned int>("min_force_resolution_steps", 0);
+    env.newProperty<int>("min_force_resolution_steps", 0);
 
     env.newMacroProperty<unsigned int, GMD, GMD, GMD>("Nnb_grid");
     env.newMacroProperty<unsigned int, GMD, GMD, GMD>("Nsc_grid");
@@ -250,7 +241,7 @@ flamegpu::SubModelDescription& defineForceResolution(flamegpu::ModelDescription&
     // loc.newVariable<float>("y");
     // loc.newVariable<float>("z");
     loc.newVariable<float>("Rj");
-    loc.newVariable<unsigned int>("id");
+    loc.newVariable<flamegpu::id_t>("id");
     auto &nb = force_resolution.newAgent("Neuroblastoma");
     nb.newVariable<float, 3>("xyz");
     nb.newVariable<float, 3>("Fxyz");
