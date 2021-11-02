@@ -42,14 +42,12 @@ int main(int argc, const char ** argv) {
             step_log_cfg.agent("Neuroblastoma").logCount();
             step_log_cfg.agent("Neuroblastoma").logMean<int>("apop");
             step_log_cfg.agent("Neuroblastoma").logMean<int>("necro");
-            step_log_cfg.agent("Neuroblastoma").logMean<float>("P_lysis");
             step_log_cfg.agent("Neuroblastoma").logMean<int>("necro_signal");
             step_log_cfg.agent("Neuroblastoma").logMean<int>("apop_signal");
             step_log_cfg.agent("Neuroblastoma").logMean<float>("cycle");
             step_log_cfg.agent("Schwann").logCount();
             step_log_cfg.agent("Schwann").logMean<int>("apop");
             step_log_cfg.agent("Schwann").logMean<int>("necro");
-            step_log_cfg.agent("Schwann").logMean<float>("P_lysis");
             step_log_cfg.agent("Schwann").logMean<int>("necro_signal");
             step_log_cfg.agent("Schwann").logMean<int>("apop_signal");
             step_log_cfg.agent("Schwann").logMean<float>("cycle");
