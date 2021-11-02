@@ -214,7 +214,7 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
         const float P_apopChemo = FLAMEGPU->environment.getProperty<float>("P_apopChemo");
         const float P_apoprp = FLAMEGPU->environment.getProperty<float>("P_apoprp");
         int s_apop_signal = FLAMEGPU->getVariable<int>("apop_signal");
-        const float s_cycle = FLAMEGPU->getVariable<unsigned int>("cycle");
+        const unsigned int s_cycle = FLAMEGPU->getVariable<unsigned int>("cycle");
         stress = 0;
         if (s_CAS == 1) {
             s_apop_signal += 1 * step_size;
@@ -311,7 +311,7 @@ __device__ __forceinline__ void Neuroblastoma_cell_cycle(flamegpu::DeviceAPI<fla
     const int N_neighbours = FLAMEGPU->environment.getProperty<int>("N_neighbours");
     const unsigned int step_size = FLAMEGPU->environment.getProperty<unsigned int>("step_size");
 
-    float s_cycle = FLAMEGPU->getVariable<float>("cycle");
+    unsigned int s_cycle = FLAMEGPU->getVariable<unsigned int>("cycle");
     const int s_neighbours = FLAMEGPU->getVariable<int>("neighbours");
     const int s_ATP = FLAMEGPU->getVariable<int>("ATP");
     const int s_apop = FLAMEGPU->getVariable<int>("apop");
@@ -364,7 +364,7 @@ __device__ __forceinline__ void Neuroblastoma_cell_cycle(flamegpu::DeviceAPI<fla
             s_cycle += step_size;
         }
     }
-    FLAMEGPU->setVariable<float>("cycle", s_cycle);
+    FLAMEGPU->setVariable<unsigned int>("cycle", s_cycle);
 }
 __device__ __forceinline__ bool Neuroblastoma_divide(flamegpu::DeviceAPI<flamegpu::MessageNone, flamegpu::MessageNone>* FLAMEGPU) {
     const int s_apop = FLAMEGPU->getVariable<int>("apop");
@@ -376,7 +376,7 @@ __device__ __forceinline__ bool Neuroblastoma_divide(flamegpu::DeviceAPI<flamegp
     //  2. At the end of the cell cycle, the cell divides.
     //      (a)Move it back to the beginning of the cycle.
     //      (b)If it has at least one telomere unit, shorten its telomere.
-    const float s_cycle = FLAMEGPU->getVariable<float>("cycle");
+    const unsigned int s_cycle = FLAMEGPU->getVariable<unsigned int>("cycle");
     int s_telo_count = FLAMEGPU->getVariable<int>("telo_count");
     const int s_telo = FLAMEGPU->getVariable<int>("telo");
     const int s_ALT = FLAMEGPU->getVariable<int>("ALT");
@@ -392,7 +392,7 @@ __device__ __forceinline__ bool Neuroblastoma_divide(flamegpu::DeviceAPI<flamegp
         }
     }
     if (s_cycle >= cycle_stages[3]) {
-        FLAMEGPU->setVariable<float>("cycle", 0);
+        FLAMEGPU->setVariable<unsigned int>("cycle", 0);
         if (s_telo_count > 0)
             s_telo_count -= 1;
         FLAMEGPU->setVariable<int>("telo_count", s_telo_count);
@@ -664,7 +664,7 @@ void initNeuroblastoma(flamegpu::HostAPI &FLAMEGPU) {
     const float BAK_BAX_fn = FLAMEGPU.environment.getProperty<float>("BAK_BAX_fn");
     const float CAS_fn = FLAMEGPU.environment.getProperty<float>("CAS_fn");
     const float VEGF_fn = FLAMEGPU.environment.getProperty<float>("VEGF_fn");
-    const float cycle = FLAMEGPU.environment.getProperty<float>("cycle");
+    const int cycle = FLAMEGPU.environment.getProperty<int>("cycle");
     const std::array<unsigned int, 4> cycle_stages = FLAMEGPU.environment.getProperty<unsigned int, 4>("cycle_stages");
     const int apop = FLAMEGPU.environment.getProperty<int>("apop");
     const int apop_signal = FLAMEGPU.environment.getProperty<int>("apop_signal");

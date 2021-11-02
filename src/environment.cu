@@ -273,7 +273,7 @@ void nb_initial_conditions(flamegpu::ModelDescription& model) {
     auto& env = model.Environment();
     // A flag (continuous, 0 to 4) indicating the cell's position in the cell cycle.
     // default (-1) means random initialisation.
-    env.newProperty<float>("cycle", -1);
+    env.newProperty<int>("cycle", -1);
     // A flag (Boolean variable) indicating if the cell is apoptotic.
     // default (-1) means it is not apoptotic (0).
     env.newProperty<int>("apop", -1);
@@ -297,7 +297,7 @@ void sc_initial_conditions(flamegpu::ModelDescription& model) {
     auto& env = model.Environment();
     // A flag (continuous, 0 to 4) indicating the cell's position in the cell cycle.
     // default (-1) means random initialisation.
-    env.newProperty<float>("cycle_sc", -1);
+    env.newProperty<int>("cycle_sc", -1);
     // A flag (Boolean variable) indicating if the cell is apoptotic.
     // default (-1) means it is not apoptotic (0).
     env.newProperty<int>("apop_sc", -1);

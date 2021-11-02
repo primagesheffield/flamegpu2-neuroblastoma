@@ -104,7 +104,7 @@ __device__ __forceinline__ void Schwann_sense(flamegpu::DeviceAPI<flamegpu::Mess
         const float P_apopChemo = FLAMEGPU->environment.getProperty<float>("P_apopChemo");
         const float P_apoprp = FLAMEGPU->environment.getProperty<float>("P_apoprp");
         int s_apop_signal = FLAMEGPU->getVariable<int>("apop_signal");
-        const float s_cycle = FLAMEGPU->getVariable<unsigned int>("cycle");
+        const unsigned int s_cycle = FLAMEGPU->getVariable<unsigned int>("cycle");
         const int s_ATP = FLAMEGPU->getVariable<int>("ATP");
         stress = 0;
         if ((s_DNA_damage == 1 || s_hypoxia == 1) && s_ATP == 1) {
@@ -213,7 +213,7 @@ __device__ __forceinline__ void Schwann_cell_cycle(flamegpu::DeviceAPI<flamegpu:
 
     //In the cell cycle, 0[12] = G0, 1[6] = G1/S, 2[4] = S/G2, 3[2] = G2/M, 4[0] = division.
     //In the cell cycle, 0-11 = G0, 12-17 = G1/S, 18-21 = S/G2, 22-23 = G2/M, 24+ = division.
-    float s_cycle = FLAMEGPU->getVariable<float>("cycle");
+    unsigned int s_cycle = FLAMEGPU->getVariable<unsigned int>("cycle");
     const int s_neighbours = FLAMEGPU->getVariable<int>("neighbours");
     const int s_ATP = FLAMEGPU->getVariable<int>("ATP");
     const int s_apop = FLAMEGPU->getVariable<int>("apop");
@@ -252,7 +252,7 @@ __device__ __forceinline__ void Schwann_cell_cycle(flamegpu::DeviceAPI<flamegpu:
             s_cycle += step_size;
         }
     }
-    FLAMEGPU->setVariable<float>("cycle", s_cycle);
+    FLAMEGPU->setVariable<unsigned int>("cycle", s_cycle);
 }
 __device__ __forceinline__ bool Schwann_divide(flamegpu::DeviceAPI<flamegpu::MessageNone, flamegpu::MessageNone>* FLAMEGPU) {
     const int s_apop = FLAMEGPU->getVariable<int>("apop");
@@ -263,11 +263,11 @@ __device__ __forceinline__ bool Schwann_divide(flamegpu::DeviceAPI<flamegpu::Mes
     // At the end of the cell cycle, the cell divides.
     //    (a)Move it back to the beginning of the cycle.
     //    (b)If it has at least one telomere unit, shorten its telomere.
-    const float s_cycle = FLAMEGPU->getVariable<float>("cycle");
+    const unsigned int s_cycle = FLAMEGPU->getVariable<unsigned int>("cycle");
     const int s_telo_count = FLAMEGPU->getVariable<int>("telo_count");
     const glm::uvec4 cycle_stages = FLAMEGPU->environment.getProperty<glm::uvec4>("cycle_stages");
     if (s_cycle >= cycle_stages[3]) {
-        FLAMEGPU->setVariable<float>("cycle", 0);
+        FLAMEGPU->setVariable<unsigned int>("cycle", 0);
         if (s_telo_count > 0)
             FLAMEGPU->setVariable<int>("telo_count", s_telo_count - 1);
         return true;
@@ -370,7 +370,7 @@ void initSchwann(flamegpu::HostAPI &FLAMEGPU) {
 
     // Env properties required for initialising NB agents
     const float R_tumour = FLAMEGPU.environment.getProperty<float>("R_tumour");
-    const float cycle_sc = FLAMEGPU.environment.getProperty<float>("cycle_sc");
+    const int cycle_sc = FLAMEGPU.environment.getProperty<int>("cycle_sc");
     const std::array<unsigned int, 4> cycle_stages = FLAMEGPU.environment.getProperty<unsigned int, 4>("cycle_stages");
     const int apop_sc = FLAMEGPU.environment.getProperty<int>("apop_sc");
     const int apop_signal_sc = FLAMEGPU.environment.getProperty<int>("apop_signal_sc");
