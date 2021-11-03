@@ -51,6 +51,11 @@ int main(int argc, const char ** argv) {
             step_log_cfg.agent("Schwann").logMean<int>("necro_signal");
             step_log_cfg.agent("Schwann").logMean<int>("apop_signal");
             step_log_cfg.agent("Schwann").logMean<unsigned int>("cycle");
+            step_log_cfg.agent("Schwann").logMean<int>("hypoxia");
+            step_log_cfg.agent("Schwann").logMean<int>("DNA_damage");
+            step_log_cfg.agent("Schwann").logMean<int>("ATP");
+            step_log_cfg.agent("Schwann").logMean<int>("nutrient");
+            step_log_cfg.agent("Schwann").logMean<int>("telo_count");
         }
         /**
          * Create Model Runner

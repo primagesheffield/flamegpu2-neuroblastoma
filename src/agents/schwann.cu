@@ -80,17 +80,14 @@ __device__ __forceinline__ void Schwann_sense(flamegpu::DeviceAPI<flamegpu::Mess
                 FLAMEGPU->setVariable<int>("ATP", 1);
                 if (s_necro_signal > 0 && (FLAMEGPU->random.uniform<float>() < P_necrorp * step_size) && stress == 0)
                     s_necro_signal -= 1 * step_size;
-            }
-            else if (FLAMEGPU->random.uniform<float>() < glycoEff) {
+            } else if (FLAMEGPU->random.uniform<float>() < glycoEff) {
                 FLAMEGPU->setVariable<int>("ATP", 1);
                 s_necro_signal += 1 * step_size;
-            }
-            else {
+            } else {
                 FLAMEGPU->setVariable<int>("ATP", 0);
                 s_necro_signal += 2 * step_size;
             }
-        }
-        else {
+        } else {
             FLAMEGPU->setVariable<int>("ATP", 0);
             s_necro_signal += 1 * step_size;
         }
@@ -105,7 +102,7 @@ __device__ __forceinline__ void Schwann_sense(flamegpu::DeviceAPI<flamegpu::Mess
         const float P_apoprp = FLAMEGPU->environment.getProperty<float>("P_apoprp");
         int s_apop_signal = FLAMEGPU->getVariable<int>("apop_signal");
         const unsigned int s_cycle = FLAMEGPU->getVariable<unsigned int>("cycle");
-        const int s_ATP = FLAMEGPU->getVariable<int>("ATP");
+        const int s_ATP = FLAMEGPU->getVariable<int>("ATP"); // Could set this above, rather than get
         stress = 0;
         if ((s_DNA_damage == 1 || s_hypoxia == 1) && s_ATP == 1) {
             s_apop_signal += 1 * step_size;
