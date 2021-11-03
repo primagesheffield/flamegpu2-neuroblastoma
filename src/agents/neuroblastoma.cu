@@ -819,54 +819,55 @@ void initNeuroblastoma(flamegpu::HostAPI &FLAMEGPU) {
         const float a_JAB1_fn = agt.getVariable<float>("JAB1_fn");
         const float a_CHK1_fn = agt.getVariable<float>("CHK1_fn");
         const int a_DNA_damage = agt.getVariable<int>("DNA_damage");
-        const int a_MYCN = agt.getVariable<int>("MYCN");
         const float a_CDS1_fn = agt.getVariable<float>("CDS1_fn");
         const int a_DNA_unreplicated = agt.getVariable<int>("DNA_unreplicated");
         const float a_CDC25C_fn = agt.getVariable<float>("CDC25C_fn");
-        const int a_CDS1 = agt.getVariable<int>("CDS1");
-        const int a_CHK1 = agt.getVariable<int>("CHK1");
         const float a_ID2_fn = agt.getVariable<float>("ID2_fn");
         const float a_IAP2_fn = agt.getVariable<float>("IAP2_fn");
         const int a_hypoxia = agt.getVariable<int>("hypoxia");
         const float a_HIF_fn = agt.getVariable<float>("HIF_fn");
         const float a_BNIP3_fn = agt.getVariable<float>("BNIP3_fn");
-        const int a_HIF = agt.getVariable<int>("HIF");
         const float a_VEGF_fn = agt.getVariable<float>("VEGF_fn");
         const float a_p53_fn = agt.getVariable<float>("p53_fn");
-        const int a_JAB1 = agt.getVariable<int>("JAB1");
-        const int a_p53 = agt.getVariable<int>("p53");
-        const int a_p73 = agt.getVariable<int>("p73");
         const int a_MYCN_amp = agt.getVariable<int>("MYCN_amp");
         const float a_p73_fn = agt.getVariable<float>("p73_fn");
         const float a_p21_fn = agt.getVariable<float>("p21_fn");
-        const int a_MAPK_RAS = agt.getVariable<int>("MAPK_RAS");
         const float a_p27_fn = agt.getVariable<float>("p27_fn");
         const float a_Bcl2_Bclxl_fn = agt.getVariable<float>("Bcl2_Bclxl_fn");
-        const int a_BNIP3 = agt.getVariable<int>("BNIP3");
         const float a_BAK_BAX_fn = agt.getVariable<float>("BAK_BAX_fn");
-        const int a_IAP2 = agt.getVariable<int>("IAP2");
         const float a_CAS_fn = agt.getVariable<float>("CAS_fn");
-        const int a_BAK_BAX = agt.getVariable<int>("BAK_BAX");
         const int a_ATP = agt.getVariable<int>("ATP");
         const int a_Bcl2_Bclxl = agt.getVariable<int>("Bcl2_Bclxl");
 
-        agt.setVariable<int>("MYCN", FLAMEGPU.random.uniform<float>() < a_MYCN_fn ? 1 : 0);
-        agt.setVariable<int>("MAPK_RAS", FLAMEGPU.random.uniform<float>() < a_MAPK_RAS_fn ? 1 : 0);
-        agt.setVariable<int>("JAB1", FLAMEGPU.random.uniform<float>() < a_JAB1_fn ? 1 : 0);
-        agt.setVariable<int>("CHK1", (FLAMEGPU.random.uniform<float>() < a_CHK1_fn && a_DNA_damage == 1) || (a_MYCN == 1 && FLAMEGPU.random.uniform<float>() < a_CHK1_fn && a_DNA_damage == 1) ? 1 : 0);  // Unusual case here, if MYCN is on, second chance
-        agt.setVariable<int>("CDS1", (FLAMEGPU.random.uniform<float>() < a_CDS1_fn && a_DNA_unreplicated == 1) ? 1 : 0);
+        const int a_MYCN = FLAMEGPU.random.uniform<float>() < a_MYCN_fn ? 1 : 0;
+        const int a_MAPK_RAS = FLAMEGPU.random.uniform<float>() < a_MAPK_RAS_fn ? 1 : 0;
+        const int a_JAB1 = FLAMEGPU.random.uniform<float>() < a_JAB1_fn ? 1 : 0;
+        const int a_CHK1 = (FLAMEGPU.random.uniform<float>() < a_CHK1_fn && a_DNA_damage == 1) || (a_MYCN == 1 && FLAMEGPU.random.uniform<float>() < a_CHK1_fn && a_DNA_damage == 1) ? 1 : 0;  // Unusual case here, if MYCN is on, second chance
+        const int a_CDS1 = (FLAMEGPU.random.uniform<float>() < a_CDS1_fn && a_DNA_unreplicated == 1) ? 1 : 0;
+        const int a_IAP2 = (FLAMEGPU.random.uniform<float>() < a_IAP2_fn && a_hypoxia == 1) ? 1 : 0;
+        const int a_HIF = ((FLAMEGPU.random.uniform<float>() < a_HIF_fn && a_hypoxia == 1) || (FLAMEGPU.random.uniform<float>() < a_HIF_fn && a_hypoxia == 1 && a_JAB1 == 1)) && !(agt.getVariable<int>("p53") == 1 || agt.getVariable<int>("p73") == 1) ? 1 : 0;  // Unusual case here, if JAB1 is on, second chance
+        const int a_BNIP3 = (FLAMEGPU.random.uniform<float>() < a_BNIP3_fn && a_HIF == 1) ? 1 : 0;
+        const int a_p53 = ((FLAMEGPU.random.uniform<float>() < a_p53_fn && a_DNA_damage == 1) || (FLAMEGPU.random.uniform<float>() < a_p53_fn && a_DNA_damage == 1 && a_MYCN == 1) || (FLAMEGPU.random.uniform<float>() < a_p53_fn && a_HIF == 1) || (FLAMEGPU.random.uniform<float>() < a_p53_fn && a_HIF == 1 && a_MYCN == 1)) && !(a_MYCN == 1 && a_MYCN_amp == 1) ? 1 : 0;
+        const int a_p73 = ((FLAMEGPU.random.uniform<float>() < a_p73_fn && a_CHK1 == 1) || (FLAMEGPU.random.uniform<float>() < a_p73_fn && a_HIF == 1)) ? 1 : 0;
+        const int a_BAK_BAX = (((FLAMEGPU.random.uniform<float>() < a_BAK_BAX_fn && a_hypoxia == 1) || (FLAMEGPU.random.uniform<float>() < a_BAK_BAX_fn && a_p53 == 1) || (FLAMEGPU.random.uniform<float>() < a_BAK_BAX_fn && a_p73 == 1)) && !(a_Bcl2_Bclxl == 1 || a_IAP2 == 1)) ? 1 : 0;
+
+        agt.setVariable<int>("MYCN", a_MYCN);
+        agt.setVariable<int>("MAPK_RAS", a_MAPK_RAS);
+        agt.setVariable<int>("JAB1", a_JAB1);
+        agt.setVariable<int>("CHK1", a_CHK1);
+        agt.setVariable<int>("CDS1", a_CDS1);
         agt.setVariable<int>("CDC25C", (FLAMEGPU.random.uniform<float>() < a_CDC25C_fn && !(a_CDS1 == 1 || a_CHK1 == 1)) ? 1 : 0);
         agt.setVariable<int>("ID2", (FLAMEGPU.random.uniform<float>() < a_ID2_fn && a_MYCN == 1) ? 1 : 0);
-        agt.setVariable<int>("IAP2", (FLAMEGPU.random.uniform<float>() < a_IAP2_fn && a_hypoxia == 1) ? 1 : 0);
-        agt.setVariable<int>("HIF", ((FLAMEGPU.random.uniform<float>() < a_HIF_fn && a_hypoxia == 1) || (FLAMEGPU.random.uniform<float>() < a_HIF_fn && a_hypoxia == 1 && a_JAB1 == 1)) && !(a_p53 == 1 || a_p73 == 1) ? 1 : 0);  // Unusual case here, if JAB1 is on, second chance
-        agt.setVariable<int>("BNIP3", (FLAMEGPU.random.uniform<float>() < a_BNIP3_fn && a_HIF == 1) ? 1 : 0);
+        agt.setVariable<int>("IAP2", a_IAP2);
+        agt.setVariable<int>("HIF", a_HIF);
+        agt.setVariable<int>("BNIP3", a_BNIP3);
         agt.setVariable<int>("VEGF", (FLAMEGPU.random.uniform<float>() < a_VEGF_fn && a_HIF == 1) ? 1 : 0);
-        agt.setVariable<int>("p53", ((FLAMEGPU.random.uniform<float>() < a_p53_fn && a_DNA_damage == 1) || (FLAMEGPU.random.uniform<float>() < a_p53_fn && a_DNA_damage == 1 && a_MYCN == 1) || (FLAMEGPU.random.uniform<float>() < a_p53_fn && a_HIF == 1) || (FLAMEGPU.random.uniform<float>() < a_p53_fn && a_HIF == 1 && a_MYCN == 1)) && !(a_MYCN == 1 && a_MYCN_amp == 1) ? 1 : 0);
-        agt.setVariable<int>("p73", ((FLAMEGPU.random.uniform<float>() < a_p73_fn && a_CHK1 == 1) || (FLAMEGPU.random.uniform<float>() < a_p73_fn && a_HIF == 1)) ? 1 : 0);
+        agt.setVariable<int>("p53", a_p53);
+        agt.setVariable<int>("p73", a_p73);
         agt.setVariable<int>("p21", (((FLAMEGPU.random.uniform<float>() < a_p21_fn && a_HIF == 1) || (FLAMEGPU.random.uniform<float>() < a_p21_fn && a_p53 == 1)) && !(a_MAPK_RAS == 1 || a_MYCN == 1)) ? 1 : 0);
         agt.setVariable<int>("p27", (((FLAMEGPU.random.uniform<float>() < a_p27_fn && a_HIF == 1) || (FLAMEGPU.random.uniform<float>() < a_p27_fn && a_p53 == 1)) && !(a_MAPK_RAS == 1 || a_MYCN == 1)) ? 1 : 0);
         agt.setVariable<int>("Bcl2_Bclxl", (FLAMEGPU.random.uniform<float>() < a_Bcl2_Bclxl_fn && !(a_BNIP3 == 1 || a_p53 == 1 || a_p73 == 1)) ? 1 : 0);
-        agt.setVariable<int>("BAK_BAX", (((FLAMEGPU.random.uniform<float>() < a_BAK_BAX_fn && a_hypoxia == 1) || (FLAMEGPU.random.uniform<float>() < a_BAK_BAX_fn && a_p53 == 1) || (FLAMEGPU.random.uniform<float>() < a_BAK_BAX_fn && a_p73 == 1)) && !(a_Bcl2_Bclxl == 1 || a_IAP2 == 1)) ? 1 : 0);
+        agt.setVariable<int>("BAK_BAX", a_BAK_BAX);
         agt.setVariable<int>("CAS", ((FLAMEGPU.random.uniform<float>() < a_CAS_fn && a_BAK_BAX == 1) || (FLAMEGPU.random.uniform<float>() < a_CAS_fn && a_hypoxia == 1)) && a_ATP == 1 ? 1 : 0);
 
         // Internal.
