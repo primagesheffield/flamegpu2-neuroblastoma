@@ -39,6 +39,15 @@ int main(int argc, const char ** argv) {
         flamegpu::StepLoggingConfig step_log_cfg(model);
         {
             step_log_cfg.setFrequency(1);
+            step_log_cfg.logEnvironment("O2");
+            step_log_cfg.logEnvironment("Cs_02");
+            step_log_cfg.logEnvironment("C50_necro");
+            step_log_cfg.logEnvironment("telo_critical");
+            step_log_cfg.logEnvironment("P_DNA_damageHypo");
+            step_log_cfg.logEnvironment("P_DNA_damagerp");
+            step_log_cfg.logEnvironment("step_size");
+            step_log_cfg.logEnvironment("glycoEff");
+            step_log_cfg.logEnvironment("apop_critical");
             step_log_cfg.agent("Neuroblastoma").logCount();
             step_log_cfg.agent("Neuroblastoma").logMean<int>("apop");
             step_log_cfg.agent("Neuroblastoma").logMean<int>("necro");
