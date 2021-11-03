@@ -40,7 +40,7 @@ int main(int argc, const char ** argv) {
         {
             step_log_cfg.setFrequency(1);
             step_log_cfg.logEnvironment("O2");
-            step_log_cfg.logEnvironment("Cs_02");
+            step_log_cfg.logEnvironment("Cs_O2");
             step_log_cfg.logEnvironment("C50_necro");
             step_log_cfg.logEnvironment("telo_critical");
             step_log_cfg.logEnvironment("P_DNA_damageHypo");
