@@ -3,11 +3,10 @@
 FLAMEGPU_AGENT_FUNCTION(alter, flamegpu::MessageNone, flamegpu::MessageNone) {
     const glm::uvec3 location = FLAMEGPU->getVariable<glm::uvec3>("xyz");
     const glm::uvec3 grid_origin = FLAMEGPU->environment.getProperty<glm::uvec3>("grid_origin");
-    const glm::uvec3 grid_dims = FLAMEGPU->environment.getProperty<glm::uvec3>("grid_dims");  // GRID_MAX_DIMENSIONS
     // Skip inactive agents
-    if (location.x < grid_origin.x || location.x >= grid_dims.x - grid_origin.x ||
-        location.y < grid_origin.y || location.y >= grid_dims.y - grid_origin.y ||
-        location.z < grid_origin.z || location.z >= grid_dims.z - grid_origin.z) {
+    if (location.x < grid_origin.x || location.x >= GMD - grid_origin.x ||
+        location.y < grid_origin.y || location.y >= GMD - grid_origin.y ||
+        location.z < grid_origin.z || location.z >= GMD - grid_origin.z) {
         FLAMEGPU->setVariable<unsigned int>("Nnbl_grid", 0);
         FLAMEGPU->setVariable<unsigned int>("Nscl_grid", 0);
         FLAMEGPU->setVariable<unsigned int>("N_l_grid", 0);
