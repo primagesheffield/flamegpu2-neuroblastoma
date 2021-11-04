@@ -102,6 +102,7 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
         const float s_Bcl2_Bclxl_fn = FLAMEGPU->getVariable<float>("Bcl2_Bclxl_fn");
         const float s_BAK_BAX_fn = FLAMEGPU->getVariable<float>("BAK_BAX_fn");
         const float s_CAS_fn = FLAMEGPU->getVariable<float>("CAS_fn");
+        /*
         const int s_MYCN = FLAMEGPU->random.uniform<float>() < s_MYCN_fn ? 1 : 0;
         const int s_MAPK_RAS = FLAMEGPU->random.uniform<float>() < s_MAPK_RAS_fn ? 1 : 0;
         const int s_JAB1 = FLAMEGPU->random.uniform<float>() < s_JAB1_fn ? 1 : 0;
@@ -137,7 +138,11 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
         FLAMEGPU->setVariable<int>("p27", s_p27);
         FLAMEGPU->setVariable<int>("Bcl2_Bclxl", s_Bcl2_Bclxl);
         FLAMEGPU->setVariable<int>("BAK_BAX", s_BAK_BAX);
-        FLAMEGPU->setVariable<int>("CAS", s_CAS);
+        FLAMEGPU->setVariable<int>("CAS", s_CAS);*/
+        const int s_p53 = FLAMEGPU->getVariable<int>("s_p53");  //TEMP DEBUGGING
+        const int s_p73 = FLAMEGPU->getVariable<int>("s_p73");  //TEMP DEBUGGING
+        const int s_CAS = FLAMEGPU->getVariable<int>("s_CAS");  //TEMP DEBUGGING
+        const int s_CHK1 = FLAMEGPU->getVariable<int>("s_CHK1");  //TEMP DEBUGGING
 
         // Update attribute layer 1, part 2.
         // Detect the presence of stressors.
