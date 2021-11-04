@@ -739,7 +739,6 @@ void initNeuroblastoma(flamegpu::HostAPI &FLAMEGPU) {
         agt.setVariable<float>("Bcl2_Bclxl_fn", Bcl2_Bclxl_fn < 0 ? FLAMEGPU.random.uniform<float>() : Bcl2_Bclxl_fn);
         agt.setVariable<float>("BAK_BAX_fn", BAK_BAX_fn < 0 ? FLAMEGPU.random.uniform<float>() : BAK_BAX_fn);
         agt.setVariable<float>("CAS_fn", CAS_fn < 0 ? FLAMEGPU.random.uniform<float>() : CAS_fn);
-        agt.setVariable<float>("Bcl2_Bclxl_fn", Bcl2_Bclxl_fn < 0 ? FLAMEGPU.random.uniform<float>() : Bcl2_Bclxl_fn);
         agt.setVariable<float>("VEGF_fn", VEGF_fn < 0 ? FLAMEGPU.random.uniform<float>() : VEGF_fn);
         //Initial conditions.
         agt.setVariable<glm::vec3>("Fxyz", glm::vec3(0));

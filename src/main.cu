@@ -59,6 +59,17 @@ int main(int argc, const char ** argv) {
             step_log_cfg.agent("Neuroblastoma").logMean<int>("apop_signal");
             step_log_cfg.agent("Neuroblastoma").logMean<unsigned int>("cycle");
             step_log_cfg.agent("Neuroblastoma").logMean<int>("CAS");
+            step_log_cfg.agent("Neuroblastoma").logMean<float>("CAS_fn");
+            step_log_cfg.agent("Neuroblastoma").logMean<int>("BAK_BAX");
+            step_log_cfg.agent("Neuroblastoma").logMean<int>("hypoxia");
+            step_log_cfg.agent("Neuroblastoma").logMean<int>("ATP");
+            step_log_cfg.agent("Neuroblastoma").logMean<float>("BAK_BAX_fn");
+            step_log_cfg.agent("Neuroblastoma").logMean<int>("p53");
+            step_log_cfg.agent("Neuroblastoma").logMean<int>("p73");
+            step_log_cfg.agent("Neuroblastoma").logMean<int>("Bcl2_Bclxl");
+            step_log_cfg.agent("Neuroblastoma").logMean<int>("IAP2");
+            step_log_cfg.agent("Neuroblastoma").logMean<int>("MYCN");
+            step_log_cfg.agent("Neuroblastoma").logMean<float>("IAP2_fn");
             step_log_cfg.agent("Schwann").logCount();
             step_log_cfg.agent("Schwann").logMean<int>("apop");
             step_log_cfg.agent("Schwann").logMean<int>("necro");
