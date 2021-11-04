@@ -443,6 +443,8 @@ FLAMEGPU_AGENT_FUNCTION(nb_cell_lifecycle, flamegpu::MessageNone, flamegpu::Mess
         FLAMEGPU->agent_out.setVariable<float>("BNIP3_fn", FLAMEGPU->getVariable<float>("BNIP3_fn"));
         FLAMEGPU->agent_out.setVariable<float>("JAB1_fn", FLAMEGPU->getVariable<float>("JAB1_fn"));
         FLAMEGPU->agent_out.setVariable<float>("Bcl2_Bclxl_fn", FLAMEGPU->getVariable<float>("Bcl2_Bclxl_fn"));
+        FLAMEGPU->agent_out.setVariable<float>("BAK_BAX_fn", FLAMEGPU->getVariable<float>("BAK_BAX_fn"));
+        FLAMEGPU->agent_out.setVariable<float>("CAS_fn", FLAMEGPU->getVariable<float>("CAS_fn"));
         FLAMEGPU->agent_out.setVariable<float>("VEGF_fn", FLAMEGPU->getVariable<float>("VEGF_fn"));
         // Initial Conditions.
         FLAMEGPU->agent_out.setVariable<glm::vec3>("Fxyz", FLAMEGPU->getVariable<glm::vec3>("Fxyz"));  // This could be left to default init?
