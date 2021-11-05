@@ -28,7 +28,7 @@ int main(int argc, const char ** argv) {
         /**
          * Create a run plan
          */
-        flamegpu::RunPlanVector runs(model, 100);
+        flamegpu::RunPlanVector runs(model, 256);
         {
             runs.setSteps(100);
             runs.setRandomSimulationSeed(12, 1);
@@ -52,6 +52,11 @@ int main(int argc, const char ** argv) {
             step_log_cfg.logEnvironment("nbapop_para");
             step_log_cfg.logEnvironment("Nscl_count");
             step_log_cfg.logEnvironment("Nnbl_count");
+            step_log_cfg.logEnvironment("MYCN_amp");
+            step_log_cfg.logEnvironment("TERT_rarngm");
+            step_log_cfg.logEnvironment("ATRX_inact");
+            step_log_cfg.logEnvironment("ALT");
+            step_log_cfg.logEnvironment("ALK");
             step_log_cfg.agent("Neuroblastoma").logCount();
             step_log_cfg.agent("Neuroblastoma").logMean<int>("apop");
             step_log_cfg.agent("Neuroblastoma").logMean<int>("necro");
@@ -70,6 +75,15 @@ int main(int argc, const char ** argv) {
             step_log_cfg.agent("Neuroblastoma").logMean<int>("IAP2");
             step_log_cfg.agent("Neuroblastoma").logMean<int>("MYCN");
             step_log_cfg.agent("Neuroblastoma").logMean<float>("IAP2_fn");
+            step_log_cfg.agent("Neuroblastoma").logMean<int>("MYCN_amp");
+            step_log_cfg.agent("Neuroblastoma").logMean<int>("ALK");
+            step_log_cfg.agent("Neuroblastoma").logMean<float>("MYCN_fn");
+            step_log_cfg.agent("Neuroblastoma").logMean<int>("TERT_rarngm");
+            step_log_cfg.agent("Neuroblastoma").logMean<int>("ATRX_inact");
+            step_log_cfg.agent("Neuroblastoma").logMean<int>("BNIP3");
+            step_log_cfg.agent("Neuroblastoma").logMean<float>("BNIP3_fn");
+            step_log_cfg.agent("Neuroblastoma").logMean<int>("HIF");
+            step_log_cfg.agent("Neuroblastoma").logMean<float>("HIF_fn");
             step_log_cfg.agent("Schwann").logCount();
             step_log_cfg.agent("Schwann").logMean<int>("apop");
             step_log_cfg.agent("Schwann").logMean<int>("necro");
