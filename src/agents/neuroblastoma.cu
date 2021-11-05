@@ -122,8 +122,8 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
         const int s_p21 = ((FLAMEGPU->random.uniform<float>() < s_p21_fn && s_HIF == 1) || (FLAMEGPU->random.uniform<float>() < s_p21_fn && s_p53 == 1)) && !(s_MAPK_RAS == 1 || s_MYCN == 1) ? 1 : 0;
         const int s_p27 = ((FLAMEGPU->random.uniform<float>() < s_p27_fn && s_HIF == 1) || (FLAMEGPU->random.uniform<float>() < s_p27_fn && s_p53 == 1)) && !(s_MAPK_RAS == 1 || s_MYCN == 1) ? 1 : 0;
         const int s_Bcl2_Bclxl = (FLAMEGPU->random.uniform<float>() < s_Bcl2_Bclxl_fn && !(s_BNIP3 == 1 || s_p53 == 1 || s_p73 == 1)) ? 1 : 0;
-        /*const int s_BAK_BAX = ((FLAMEGPU->random.uniform<float>() < s_BAK_BAX_fn && s_hypoxia == 1) || (FLAMEGPU->random.uniform<float>() < s_BAK_BAX_fn && s_p53 == 1) || (FLAMEGPU->random.uniform<float>() < s_BAK_BAX_fn && s_p73 == 1)) && !(s_Bcl2_Bclxl == 1 || s_IAP2 == 1) ? 1 : 0;
-        const int s_ATP = FLAMEGPU->getVariable<int>("ATP");
+        const int s_BAK_BAX = ((FLAMEGPU->random.uniform<float>() < s_BAK_BAX_fn && s_hypoxia == 1) || (FLAMEGPU->random.uniform<float>() < s_BAK_BAX_fn && s_p53 == 1) || (FLAMEGPU->random.uniform<float>() < s_BAK_BAX_fn && s_p73 == 1)) && !(s_Bcl2_Bclxl == 1 || s_IAP2 == 1) ? 1 : 0;
+        /*const int s_ATP = FLAMEGPU->getVariable<int>("ATP");
         const int s_CAS = ((FLAMEGPU->random.uniform<float>() < s_CAS_fn && s_BAK_BAX == 1) || (FLAMEGPU->random.uniform<float>() < s_CAS_fn && s_hypoxia == 1)) && s_ATP == 1 ? 1 : 0;
         */
         FLAMEGPU->setVariable<int>("MYCN", s_MYCN);
@@ -140,8 +140,8 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
         FLAMEGPU->setVariable<int>("p21", s_p21);
         FLAMEGPU->setVariable<int>("p27", s_p27);
         FLAMEGPU->setVariable<int>("Bcl2_Bclxl", s_Bcl2_Bclxl);
-        /*FLAMEGPU->setVariable<int>("BAK_BAX", s_BAK_BAX);
-        FLAMEGPU->setVariable<int>("CAS", s_CAS);*/
+        FLAMEGPU->setVariable<int>("BAK_BAX", s_BAK_BAX);
+        /*FLAMEGPU->setVariable<int>("CAS", s_CAS);*/
        // const int s_p53 = FLAMEGPU->getVariable<int>("p53");  //TEMP DEBUGGING
         //const int s_p73 = FLAMEGPU->getVariable<int>("p73");  //TEMP DEBUGGING
         const int s_CAS = FLAMEGPU->getVariable<int>("CAS");  //TEMP DEBUGGING
