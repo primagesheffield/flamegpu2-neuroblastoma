@@ -701,7 +701,8 @@ void initNeuroblastoma(flamegpu::HostAPI &FLAMEGPU) {
         agt.setVariable<int>("TERT_rarngm", TERT_rarngm < 0 ? static_cast<int>(FLAMEGPU.random.uniform<float>() < 0.5) : TERT_rarngm);
         agt.setVariable<int>("ATRX_inact", ATRX_inact < 0 ? static_cast<int>(FLAMEGPU.random.uniform<float>() < 0.5) : ATRX_inact);
         agt.setVariable<int>("ALT", ALT < 0 ? static_cast<int>(FLAMEGPU.random.uniform<float>() < 0.5) : ALT);
-        agt.setVariable<int>("ALK", ALK < 0 ? FLAMEGPU.random.uniform<int>(0, 2) : ALK); // Random int in range [0, 2]
+        //agt.setVariable<int>("ALK", ALK < 0 ? FLAMEGPU.random.uniform<int>(0, 2) : ALK); // Random int in range [0, 2]
+        agt.setVariable<int>("ALK", ALK < 0 ? static_cast<int>(3 * (1.0 - FLAMEGPU.random.uniform<float>())) : ALK); // Random int in range [0, 2]
         // Data Layer 2 (integration with genetic/molecular biomarkers).
         agt.setVariable<float>("MYCN_fn00", MYCN_fn00 < 0 ? FLAMEGPU.random.uniform<float>() : MYCN_fn00);
         agt.setVariable<float>("MYCN_fn10", MYCN_fn10 < 0 ? FLAMEGPU.random.uniform<float>() : MYCN_fn10);
