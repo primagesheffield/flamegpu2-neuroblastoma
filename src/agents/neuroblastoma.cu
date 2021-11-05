@@ -131,12 +131,12 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
         FLAMEGPU->setVariable<int>("CHK1", s_CHK1);
         FLAMEGPU->setVariable<int>("ID2", s_ID2);
         FLAMEGPU->setVariable<int>("IAP2", s_IAP2);
-        /*FLAMEGPU->setVariable<int>("HIF", s_HIF);
+        FLAMEGPU->setVariable<int>("HIF", s_HIF);
         FLAMEGPU->setVariable<int>("BNIP3", s_BNIP3);
         FLAMEGPU->setVariable<int>("VEGF", s_VEGF);
         FLAMEGPU->setVariable<int>("p53", s_p53);
         FLAMEGPU->setVariable<int>("p73", s_p73);
-        FLAMEGPU->setVariable<int>("p21", s_p21);
+        /*FLAMEGPU->setVariable<int>("p21", s_p21);
         FLAMEGPU->setVariable<int>("p27", s_p27);
         FLAMEGPU->setVariable<int>("Bcl2_Bclxl", s_Bcl2_Bclxl);
         FLAMEGPU->setVariable<int>("BAK_BAX", s_BAK_BAX);
