@@ -109,7 +109,8 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
         const int s_CHK1 = (FLAMEGPU->random.uniform<float>() < s_CHK1_fn && s_DNA_damage == 1) || (FLAMEGPU->random.uniform<float>() < s_CHK1_fn && s_DNA_damage == 1 && s_MYCN == 1) ? 1 : 0;
         const int s_ID2 = FLAMEGPU->random.uniform<float>() < s_ID2_fn && s_MYCN == 1 ? 1 : 0;
         const int s_IAP2 = FLAMEGPU->random.uniform<float>() < s_IAP2_fn && s_hypoxia == 1 ? 1 : 0;
-        /*int s_p53 = FLAMEGPU->getVariable<int>("p53");
+        //
+        int s_p53 = FLAMEGPU->getVariable<int>("p53");
         int s_p73 = FLAMEGPU->getVariable<int>("p73");
         const int s_HIF = ((FLAMEGPU->random.uniform<float>() < s_HIF_fn && s_hypoxia == 1) || (FLAMEGPU->random.uniform<float>() < s_HIF_fn && s_hypoxia == 1 && s_JAB1 == 1)) && !(s_p53 == 1 || s_p73 == 1) ? 1 : 0;
         const int s_BNIP3 = FLAMEGPU->random.uniform<float>() < s_BNIP3_fn && s_HIF == 1 ? 1 : 0;
@@ -117,7 +118,7 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
         const int s_MYCN_amp = FLAMEGPU->getVariable<int>("MYCN_amp");
         s_p53 = ((FLAMEGPU->random.uniform<float>() < s_p53_fn && s_DNA_damage == 1) || (FLAMEGPU->random.uniform<float>() < s_p53_fn && s_DNA_damage == 1 && s_MYCN == 1) || (FLAMEGPU->random.uniform<float>() < s_p53_fn && s_HIF == 1) || (FLAMEGPU->random.uniform<float>() < s_p53_fn&& s_HIF == 1 && s_MYCN == 1)) && !(s_MYCN == 1 && s_MYCN_amp == 1) ? 1 : 0;
         s_p73 = (FLAMEGPU->random.uniform<float>() < s_p73_fn && s_CHK1 == 1) || (FLAMEGPU->random.uniform<float>() < s_p73_fn && s_HIF == 1) ? 1 : 0;
-        const int s_p21 = ((FLAMEGPU->random.uniform<float>() < s_p21_fn && s_HIF == 1) || (FLAMEGPU->random.uniform<float>() < s_p21_fn && s_p53 == 1)) && !(s_MAPK_RAS == 1 || s_MYCN == 1) ? 1 : 0;
+        /*const int s_p21 = ((FLAMEGPU->random.uniform<float>() < s_p21_fn && s_HIF == 1) || (FLAMEGPU->random.uniform<float>() < s_p21_fn && s_p53 == 1)) && !(s_MAPK_RAS == 1 || s_MYCN == 1) ? 1 : 0;
         const int s_p27 = ((FLAMEGPU->random.uniform<float>() < s_p27_fn && s_HIF == 1) || (FLAMEGPU->random.uniform<float>() < s_p27_fn && s_p53 == 1)) && !(s_MAPK_RAS == 1 || s_MYCN == 1) ? 1 : 0;
         const int s_Bcl2_Bclxl = (FLAMEGPU->random.uniform<float>() < s_Bcl2_Bclxl_fn && !(s_BNIP3 == 1 || s_p53 == 1 || s_p73 == 1)) ? 1 : 0;
         const int s_BAK_BAX = ((FLAMEGPU->random.uniform<float>() < s_BAK_BAX_fn && s_hypoxia == 1) || (FLAMEGPU->random.uniform<float>() < s_BAK_BAX_fn && s_p53 == 1) || (FLAMEGPU->random.uniform<float>() < s_BAK_BAX_fn && s_p73 == 1)) && !(s_Bcl2_Bclxl == 1 || s_IAP2 == 1) ? 1 : 0;
@@ -140,8 +141,8 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
         FLAMEGPU->setVariable<int>("Bcl2_Bclxl", s_Bcl2_Bclxl);
         FLAMEGPU->setVariable<int>("BAK_BAX", s_BAK_BAX);
         FLAMEGPU->setVariable<int>("CAS", s_CAS);*/
-        const int s_p53 = FLAMEGPU->getVariable<int>("p53");  //TEMP DEBUGGING
-        const int s_p73 = FLAMEGPU->getVariable<int>("p73");  //TEMP DEBUGGING
+       // const int s_p53 = FLAMEGPU->getVariable<int>("p53");  //TEMP DEBUGGING
+        //const int s_p73 = FLAMEGPU->getVariable<int>("p73");  //TEMP DEBUGGING
         const int s_CAS = FLAMEGPU->getVariable<int>("CAS");  //TEMP DEBUGGING
         //const int s_CHK1 = FLAMEGPU->getVariable<int>("CHK1");  //TEMP DEBUGGING
 
