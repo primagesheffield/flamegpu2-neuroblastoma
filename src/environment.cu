@@ -365,7 +365,7 @@ FLAMEGPU_INIT_FUNCTION(InitDerivedEnvironment) {
     const int gradiff = FLAMEGPU->random.uniform<int>(0, 2);
     float cellularity;
     float theta_sc;
-    const float O2 = (2/72.0f) + (FLAMEGPU->random.uniform<float>() * (30 / 72.0f)); // rng in range [2/72, 32/72]
+    const float O2 = 0.236;//temp(2/72.0f) + (FLAMEGPU->random.uniform<float>() * (30 / 72.0f)); // rng in range [2/72, 32/72]
     if (histology_init == 1) {
         if (FLAMEGPU->random.uniform<float>() < 0.5f) {
             histology = 2;
