@@ -57,6 +57,7 @@ int main(int argc, const char ** argv) {
             step_log_cfg.logEnvironment("ATRX_inact");
             step_log_cfg.logEnvironment("ALT");
             step_log_cfg.logEnvironment("ALK");
+            step_log_cfg.logEnvironment("telo_count");
             step_log_cfg.agent("Neuroblastoma").logCount();
             step_log_cfg.agent("Neuroblastoma").logMean<int>("apop");
             step_log_cfg.agent("Neuroblastoma").logMean<int>("necro");

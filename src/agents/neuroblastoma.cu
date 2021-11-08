@@ -782,6 +782,7 @@ void initNeuroblastoma(flamegpu::HostAPI &FLAMEGPU) {
         } else {
             agt.setVariable<int>("telo_count", telo_count);
         }
+        agt.setVariable<int>("telo_count", 44);  //Temp
 
         if (histology == 0) {
             if (gradiff == 0) {
