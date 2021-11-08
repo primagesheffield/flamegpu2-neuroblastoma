@@ -84,6 +84,12 @@ int main(int argc, const char ** argv) {
             step_log_cfg.agent("Neuroblastoma").logMean<float>("BNIP3_fn");
             step_log_cfg.agent("Neuroblastoma").logMean<int>("HIF");
             step_log_cfg.agent("Neuroblastoma").logMean<float>("HIF_fn");
+
+            step_log_cfg.agent("Neuroblastoma").logMean<float>("p53_fn");
+            step_log_cfg.agent("Neuroblastoma").logMean<float>("p73_fn");
+            step_log_cfg.agent("Neuroblastoma").logMean<float>("Bcl2_Bclxl_fn");
+            step_log_cfg.agent("Neuroblastoma").logMean<int>("CHK1");
+            step_log_cfg.agent("Neuroblastoma").logMean<int>("DNA_damage");
             step_log_cfg.agent("Schwann").logCount();
             step_log_cfg.agent("Schwann").logMean<int>("apop");
             step_log_cfg.agent("Schwann").logMean<int>("necro");
