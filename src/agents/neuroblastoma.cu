@@ -24,7 +24,7 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
             const float P_DNA_damageHypo = FLAMEGPU->environment.getProperty<float>("P_DNA_damageHypo");
             const int telo_critical = FLAMEGPU->environment.getProperty<int>("telo_critical");
             if ((FLAMEGPU->random.uniform<float>() < (1.0f - static_cast<float>(FLAMEGPU->getVariable<int>("telo_count")) / telo_critical) * step_size)
-            || (FLAMEGPU->random.uniform<float>() < P_DNA_damageHypo * step_size && FLAMEGPU->getVariable<int>("hypoxia") == 1)) {
+            || (FLAMEGPU->random.uniform<float>() < P_DNA_damageHypo * step_size && s_hypoxia == 1)) {
                 s_DNA_damage = 1;
             }
         }
@@ -160,7 +160,7 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
         // Let the intracellular signalling molecules respond to changes.
         const float s_CDS1_fn = FLAMEGPU->getVariable<float>("CDS1_fn");
         const float s_CDC25C_fn = FLAMEGPU->getVariable<float>("CDC25C_fn");
-        const int s_CDS1 = (FLAMEGPU->random.uniform<float>() < s_CDS1_fn&& s_DNA_unreplicated == 1) ? 1 : 0;
+        const int s_CDS1 = (FLAMEGPU->random.uniform<float>() < s_CDS1_fn && s_DNA_unreplicated == 1) ? 1 : 0;
         const int s_CDC25C = FLAMEGPU->random.uniform<float>() < s_CDC25C_fn && !(s_CDS1 == 1 || s_CHK1 == 1) ? 1 : 0;
         FLAMEGPU->setVariable<int>("CDS1", s_CDS1);
         FLAMEGPU->setVariable<int>("CDC25C", s_CDC25C);
