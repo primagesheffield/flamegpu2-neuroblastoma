@@ -23,13 +23,10 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
         } else {
             const float P_DNA_damageHypo = FLAMEGPU->environment.getProperty<float>("P_DNA_damageHypo");
             const int telo_critical = FLAMEGPU->environment.getProperty<int>("telo_critical");
-            if (FLAMEGPU->random.uniform<float>() < 0.03) {
+            if ((FLAMEGPU->random.uniform<float>() < (1.0f - static_cast<float>(FLAMEGPU->getVariable<int>("telo_count")) / telo_critical) * step_size)
+            || (FLAMEGPU->random.uniform<float>() < P_DNA_damageHypo * step_size && s_hypoxia == 1)) {
                 s_DNA_damage = 1;
             }
-            //if ((FLAMEGPU->random.uniform<float>() < (1.0f - static_cast<float>(FLAMEGPU->getVariable<int>("telo_count")) / telo_critical) * step_size)
-            //|| (FLAMEGPU->random.uniform<float>() < P_DNA_damageHypo * step_size && s_hypoxia == 1)) {
-            //    s_DNA_damage = 1;
-            //}
         }
         FLAMEGPU->setVariable<int>("DNA_damage", s_DNA_damage);
         FLAMEGPU->setVariable<int>("hypoxia", s_hypoxia);
@@ -785,7 +782,6 @@ void initNeuroblastoma(flamegpu::HostAPI &FLAMEGPU) {
         } else {
             agt.setVariable<int>("telo_count", telo_count);
         }
-        agt.setVariable<int>("telo_count", 44);  //Temp
 
         if (histology == 0) {
             if (gradiff == 0) {
