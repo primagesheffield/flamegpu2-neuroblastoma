@@ -18,7 +18,7 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
         const int s_nutrient = FLAMEGPU->random.uniform<float>() < (1 - O2 * Cs_O2 / (O2 * Cs_O2 + C50_necro)) ? 0 : 1;
 
         if (s_DNA_damage == 1) {
-            if (FLAMEGPU->getVariable<int>("p53") == 1 && FLAMEGPU->getVariable<int>("p73") == 1)
+            if (FLAMEGPU->getVariable<int>("p53") == 1 || FLAMEGPU->getVariable<int>("p73") == 1)
                 s_DNA_damage = 0;
         } else {
             const float P_DNA_damageHypo = FLAMEGPU->environment.getProperty<float>("P_DNA_damageHypo");
