@@ -117,7 +117,7 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
         const int s_VEGF = FLAMEGPU->random.uniform<float>() < s_VEGF_fn && s_HIF == 1 ? 1 : 0;
         const int s_MYCN_amp = FLAMEGPU->getVariable<int>("MYCN_amp");
         //s_p53 = ((FLAMEGPU->random.uniform<float>() < s_p53_fn && s_DNA_damage == 1) || (FLAMEGPU->random.uniform<float>() < s_p53_fn && s_DNA_damage == 1 && s_MYCN == 1) || (FLAMEGPU->random.uniform<float>() < s_p53_fn && s_HIF == 1) || (FLAMEGPU->random.uniform<float>() < s_p53_fn&& s_HIF == 1 && s_MYCN == 1)) && !(s_MYCN == 1 && s_MYCN_amp == 1) ? 1 : 0;
-        s_p73 = (FLAMEGPU->random.uniform<float>() < s_p73_fn && s_CHK1 == 1) || (FLAMEGPU->random.uniform<float>() < s_p73_fn && s_HIF == 1) ? 1 : 0;
+        //s_p73 = (FLAMEGPU->random.uniform<float>() < s_p73_fn && s_CHK1 == 1) || (FLAMEGPU->random.uniform<float>() < s_p73_fn && s_HIF == 1) ? 1 : 0;
         //
         const int s_p21 = ((FLAMEGPU->random.uniform<float>() < s_p21_fn && s_HIF == 1) || (FLAMEGPU->random.uniform<float>() < s_p21_fn && s_p53 == 1)) && !(s_MAPK_RAS == 1 || s_MYCN == 1) ? 1 : 0;
         const int s_p27 = ((FLAMEGPU->random.uniform<float>() < s_p27_fn && s_HIF == 1) || (FLAMEGPU->random.uniform<float>() < s_p27_fn && s_p53 == 1)) && !(s_MAPK_RAS == 1 || s_MYCN == 1) ? 1 : 0;
