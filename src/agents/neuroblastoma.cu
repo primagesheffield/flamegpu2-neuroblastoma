@@ -23,10 +23,13 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
         } else {
             const float P_DNA_damageHypo = FLAMEGPU->environment.getProperty<float>("P_DNA_damageHypo");
             const int telo_critical = FLAMEGPU->environment.getProperty<int>("telo_critical");
-            if ((FLAMEGPU->random.uniform<float>() < (1.0f - static_cast<float>(FLAMEGPU->getVariable<int>("telo_count")) / telo_critical) * step_size)
-            || (FLAMEGPU->random.uniform<float>() < P_DNA_damageHypo * step_size && s_hypoxia == 1)) {
+            if (FLAMEGPU->random.uniform<float>() < 0.03) {
                 s_DNA_damage = 1;
             }
+            //if ((FLAMEGPU->random.uniform<float>() < (1.0f - static_cast<float>(FLAMEGPU->getVariable<int>("telo_count")) / telo_critical) * step_size)
+            //|| (FLAMEGPU->random.uniform<float>() < P_DNA_damageHypo * step_size && s_hypoxia == 1)) {
+            //    s_DNA_damage = 1;
+            //}
         }
         FLAMEGPU->setVariable<int>("DNA_damage", s_DNA_damage);
         FLAMEGPU->setVariable<int>("hypoxia", s_hypoxia);
@@ -116,8 +119,8 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
         const int s_BNIP3 = FLAMEGPU->random.uniform<float>() < s_BNIP3_fn && s_HIF == 1 ? 1 : 0;
         const int s_VEGF = FLAMEGPU->random.uniform<float>() < s_VEGF_fn && s_HIF == 1 ? 1 : 0;
         const int s_MYCN_amp = FLAMEGPU->getVariable<int>("MYCN_amp");
-        //s_p53 = ((FLAMEGPU->random.uniform<float>() < s_p53_fn && s_DNA_damage == 1) || (FLAMEGPU->random.uniform<float>() < s_p53_fn && s_DNA_damage == 1 && s_MYCN == 1) || (FLAMEGPU->random.uniform<float>() < s_p53_fn && s_HIF == 1) || (FLAMEGPU->random.uniform<float>() < s_p53_fn&& s_HIF == 1 && s_MYCN == 1)) && !(s_MYCN == 1 && s_MYCN_amp == 1) ? 1 : 0;
-        //s_p73 = (FLAMEGPU->random.uniform<float>() < s_p73_fn && s_CHK1 == 1) || (FLAMEGPU->random.uniform<float>() < s_p73_fn && s_HIF == 1) ? 1 : 0;
+        s_p53 = ((FLAMEGPU->random.uniform<float>() < s_p53_fn && s_DNA_damage == 1) || (FLAMEGPU->random.uniform<float>() < s_p53_fn && s_DNA_damage == 1 && s_MYCN == 1) || (FLAMEGPU->random.uniform<float>() < s_p53_fn && s_HIF == 1) || (FLAMEGPU->random.uniform<float>() < s_p53_fn&& s_HIF == 1 && s_MYCN == 1)) && !(s_MYCN == 1 && s_MYCN_amp == 1) ? 1 : 0;
+        s_p73 = (FLAMEGPU->random.uniform<float>() < s_p73_fn && s_CHK1 == 1) || (FLAMEGPU->random.uniform<float>() < s_p73_fn && s_HIF == 1) ? 1 : 0;
         //
         const int s_p21 = ((FLAMEGPU->random.uniform<float>() < s_p21_fn && s_HIF == 1) || (FLAMEGPU->random.uniform<float>() < s_p21_fn && s_p53 == 1)) && !(s_MAPK_RAS == 1 || s_MYCN == 1) ? 1 : 0;
         const int s_p27 = ((FLAMEGPU->random.uniform<float>() < s_p27_fn && s_HIF == 1) || (FLAMEGPU->random.uniform<float>() < s_p27_fn && s_p53 == 1)) && !(s_MAPK_RAS == 1 || s_MYCN == 1) ? 1 : 0;
