@@ -529,4 +529,12 @@ void defineEnvironment(flamegpu::ModelDescription& model) {
     sc_initial_conditions(model);
     internal_derived(model);
     model.addInitFunction(InitDerivedEnvironment);
+    // Validation stuff
+    auto& env = model.Environment();
+    env.newProperty<float>("bb_min_x", 0);
+    env.newProperty<float>("bb_min_y", 0);
+    env.newProperty<float>("bb_min_z", 0);
+    env.newProperty<float>("bb_max_x", 0);
+    env.newProperty<float>("bb_max_y", 0);
+    env.newProperty<float>("bb_max_z", 0);
 }
