@@ -59,21 +59,19 @@ __device__ __forceinline__ void Schwann_sense(flamegpu::DeviceAPI<flamegpu::Mess
             dummy_Nn += Nnbn[gid.x][gid.y][gid.z - 1] + Nscn[gid.x][gid.y][gid.z - 1];
         if (gid.z + 1 < grid_origin.z + grid_dims.z)
             dummy_Nn += Nnbn[gid.x][gid.y][gid.z + 1] + Nscn[gid.x][gid.y][gid.z + 1];
+        FLAMEGPU->setVariable<int>("dummy_Nn", dummy_Nn);
 
 
         const float P_necroIS = FLAMEGPU->environment.getProperty<float>("P_necroIS");
         int s_necro_signal = FLAMEGPU->getVariable<int>("necro_signal");
         int stress = 0;
 
-        int dummy = 0; //temp debugging
         for (int j = 0; j < dummy_Nn; ++j) {
             if (FLAMEGPU->random.uniform<float>() < P_necroIS * step_size) {
                 s_necro_signal += 1 * step_size;
                 stress = 1;
-                dummy++;
             }
         }
-        FLAMEGPU->setVariable<int>("dummy_Nn", dummy);
 
         // The contribution of glycolysis to necrosis is time-independent.
         const float glycoEff = FLAMEGPU->environment.getProperty<float>("glycoEff");
