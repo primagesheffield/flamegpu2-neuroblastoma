@@ -60,6 +60,12 @@ int main(int argc, const char ** argv) {
             step_log_cfg.logEnvironment("telo_count");
             step_log_cfg.logEnvironment("P_necrorp");
             step_log_cfg.logEnvironment("P_necroIS");
+            step_log_cfg.logEnvironment("bb_min_x");
+            step_log_cfg.logEnvironment("bb_min_y");
+            step_log_cfg.logEnvironment("bb_min_z");
+            step_log_cfg.logEnvironment("bb_max_x");
+            step_log_cfg.logEnvironment("bb_max_y");
+            step_log_cfg.logEnvironment("bb_max_z");
             step_log_cfg.agent("Neuroblastoma").logCount();
             step_log_cfg.agent("Neuroblastoma").logMean<int>("apop");
             step_log_cfg.agent("Neuroblastoma").logMean<int>("necro");
