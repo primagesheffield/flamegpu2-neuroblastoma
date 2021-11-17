@@ -65,12 +65,15 @@ __device__ __forceinline__ void Schwann_sense(flamegpu::DeviceAPI<flamegpu::Mess
         int s_necro_signal = FLAMEGPU->getVariable<int>("necro_signal");
         int stress = 0;
 
+        int dummy = 0; //temp debugging
         for (int j = 0; j < dummy_Nn; ++j) {
             if (FLAMEGPU->random.uniform<float>() < P_necroIS * step_size) {
                 s_necro_signal += 1 * step_size;
                 stress = 1;
+                dummy++;
             }
         }
+        FLAMEGPU->setVariable<int>("dummy_Nn", dummy);
 
         // The contribution of glycolysis to necrosis is time-independent.
         const float glycoEff = FLAMEGPU->environment.getProperty<float>("glycoEff");
@@ -96,8 +99,6 @@ __device__ __forceinline__ void Schwann_sense(flamegpu::DeviceAPI<flamegpu::Mess
         // Update apoptotic signals.
         // Source 1: CAS is activated by DNA damage or hypoxia.
         // Source 2 : Chemotherapy.
-        const float nbapop_jux = FLAMEGPU->environment.getProperty<float>("nbapop_jux");
-        const float nbapop_para = FLAMEGPU->environment.getProperty<float>("nbapop_para");
         const float P_apopChemo = FLAMEGPU->environment.getProperty<float>("P_apopChemo");
         const float P_apoprp = FLAMEGPU->environment.getProperty<float>("P_apoprp");
         int s_apop_signal = FLAMEGPU->getVariable<int>("apop_signal");
@@ -357,6 +358,7 @@ flamegpu::AgentDescription &defineSchwann(flamegpu::ModelDescription& model) {
         t.setAllowAgentDeath(true);
         t.setAgentOutput(sc);
     }
+    sc.newVariable<int>("dummy_Nn");  //Debugging
     return sc;
 }
 

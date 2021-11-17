@@ -58,6 +58,8 @@ int main(int argc, const char ** argv) {
             step_log_cfg.logEnvironment("ALT");
             step_log_cfg.logEnvironment("ALK");
             step_log_cfg.logEnvironment("telo_count");
+            step_log_cfg.logEnvironment("P_necrorp");
+            step_log_cfg.logEnvironment("P_necroIS");
             step_log_cfg.agent("Neuroblastoma").logCount();
             step_log_cfg.agent("Neuroblastoma").logMean<int>("apop");
             step_log_cfg.agent("Neuroblastoma").logMean<int>("necro");
@@ -103,6 +105,7 @@ int main(int argc, const char ** argv) {
             step_log_cfg.agent("Schwann").logMean<int>("ATP");
             step_log_cfg.agent("Schwann").logMean<int>("nutrient");
             step_log_cfg.agent("Schwann").logMean<int>("telo_count");
+            step_log_cfg.agent("Schwann").logMean<int>("dummy_Nn");
         }
         /**
          * Create Model Runner
