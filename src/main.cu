@@ -112,12 +112,12 @@ int main(int argc, const char ** argv) {
             step_log_cfg.agent("Schwann").logMean<int>("nutrient");
             step_log_cfg.agent("Schwann").logMean<int>("telo_count");
             step_log_cfg.agent("Schwann").logMean<int>("dummy_Nn");
-            step_log_cfg.agent("GridCell").logMin<int>("Nnbn_grid");
-            step_log_cfg.agent("GridCell").logMax<int>("Nnbn_grid");
-            step_log_cfg.agent("GridCell").logMean<int>("Nnbn_grid");
-            step_log_cfg.agent("GridCell").logMin<int>("Nscn_grid");
-            step_log_cfg.agent("GridCell").logMax<int>("Nscn_grid");
-            step_log_cfg.agent("GridCell").logMean<int>("Nscn_grid");
+            step_log_cfg.agent("GridCell").logMin<unsigned int>("Nnbn_grid");
+            step_log_cfg.agent("GridCell").logMax<unsigned int>("Nnbn_grid");
+            step_log_cfg.agent("GridCell").logMean<unsigned int>("Nnbn_grid");
+            step_log_cfg.agent("GridCell").logMin<unsigned int>("Nscn_grid");
+            step_log_cfg.agent("GridCell").logMax<unsigned int>("Nscn_grid");
+            step_log_cfg.agent("GridCell").logMean<unsigned int>("Nscn_grid");
             step_log_cfg.logEnvironment("grid_origin");
             step_log_cfg.logEnvironment("grid_dims");
         }
