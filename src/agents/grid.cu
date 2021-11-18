@@ -74,6 +74,10 @@ FLAMEGPU_AGENT_FUNCTION(alter, flamegpu::MessageNone, flamegpu::MessageNone) {
     // Nscl_grid[i->x][i->y][i->z] = 0;
     // Nscl_col_grid[i->x][i->y][i->z] = 0;
     // Nnb_grid, d_Nsc_grid, Counts are not reset here, as they are updated by cell cycle
+
+    // Temp for validation
+    FLAMEGPU->setVariable<unsigned int>("Nnbn_grid", Nnb_grid[location.x][location.y][location.z]);
+    FLAMEGPU->setVariable<unsigned int>("Nscn_grid", Nsc_grid[location.x][location.y][location.z]);
     return flamegpu::ALIVE;
 }
 FLAMEGPU_AGENT_FUNCTION(fresolve_CAexpand_device, flamegpu::MessageNone, flamegpu::MessageNone) {
@@ -143,6 +147,9 @@ flamegpu::AgentDescription &defineGrid(flamegpu::ModelDescription& model) {
         gc.newVariable<unsigned int>("N_l_grid");
         gc.newVariable<float>("matrix_value");
         gc.newVariable<unsigned int>("N_grid");
+        // Temp for validation
+        gc.newVariable<unsigned int>("Nnbn_grid");
+        gc.newVariable<unsigned int>("Nscn_grid");
     }
     // Agent Functions
     {
