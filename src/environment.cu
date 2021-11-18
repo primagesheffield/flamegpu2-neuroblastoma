@@ -537,4 +537,6 @@ void defineEnvironment(flamegpu::ModelDescription& model) {
     env.newProperty<float>("bb_max_x", 0);
     env.newProperty<float>("bb_max_y", 0);
     env.newProperty<float>("bb_max_z", 0);
+    model.Environment().newMacroProperty<unsigned int, 16>("sc_cycle");
+    model.Environment().newProperty<unsigned int, 16>("sc_cycle_stage", {});
 }

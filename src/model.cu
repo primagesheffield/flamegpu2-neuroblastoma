@@ -7,6 +7,14 @@ FLAMEGPU_INIT_FUNCTION(ModelInit) {
     initSchwann(*FLAMEGPU);
     initGrid(*FLAMEGPU);
 }
+FLAMEGPU_STEP_FUNCTION(validation) {
+    auto d = FLAMEGPU->environment.getMacroProperty<unsigned int, 16>("sc_cycle");
+    std::array<unsigned int, 16> rtn;
+    for (int i = 0; i < 16; ++i)
+        rtn[i] = d[i];
+    FLAMEGPU->environment.setProperty("sc_cycle_stage", rtn);
+    d.zero();
+}
 
 void defineModel(flamegpu::ModelDescription& model) {
     // Define environment and agents (THE ORDER HERE IS FIXED, AS THEY ADD INIT FUNCTIONS, ENV MUST COME FIRST)
@@ -41,6 +49,7 @@ void defineModel(flamegpu::ModelDescription& model) {
         auto& l_cycle = model.newLayer();
         l_cycle.addAgentFunction(nb.getFunction("nb_cell_lifecycle"));
         l_cycle.addAgentFunction(sc.getFunction("sc_cell_lifecycle"));
+        model.newLayer().addHostFunction(validation);
     }
 }
 #ifdef VISUALISATION

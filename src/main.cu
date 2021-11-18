@@ -120,6 +120,8 @@ int main(int argc, const char ** argv) {
             step_log_cfg.agent("GridCell").logMean<unsigned int>("Nscn_grid");
             step_log_cfg.logEnvironment("grid_origin");
             step_log_cfg.logEnvironment("grid_dims");
+            step_log_cfg.logEnvironment("grid_dims");
+            step_log_cfg.logEnvironment("sc_cycle_stage");
         }
         /**
          * Create Model Runner
