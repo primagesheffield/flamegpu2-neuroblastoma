@@ -24,14 +24,16 @@ void defineModel(flamegpu::ModelDescription& model) {
         model.addInitFunction(ModelInit);
         // Force resolution
         model.newLayer().addSubModel(forceResolution);
+        // Expand grid
+        model.newLayer().addHostFunction(CAexpand);
         // Reset grid
         model.newLayer().addHostFunction(reset_grids);
+        // Vasculature
+        model.newLayer().addHostFunction(vasculature);
         // Output oxygen/matrix grid
         auto& l_output_grid = model.newLayer();
         l_output_grid.addAgentFunction(nb.getFunction("output_oxygen_cell"));
         l_output_grid.addAgentFunction(sc.getFunction("output_matrix_grid_cell"));
-        // Vasculature
-        model.newLayer().addHostFunction(vasculature);
         // Alter
         model.newLayer().addAgentFunction(gc.getFunction("alter"));
         model.newLayer().addHostFunction(alter2);
