@@ -9,10 +9,10 @@ FLAMEGPU_INIT_FUNCTION(ModelInit) {
 }
 FLAMEGPU_STEP_FUNCTION(validation) {
     auto d = FLAMEGPU->environment.getMacroProperty<unsigned int, 16>("sc_cycle");
-    std::array<unsigned int, 16> rtn;
+    std::array<float, 16> rtn;
     for (int i = 0; i < 16; ++i)
-        rtn[i] = d[i];
-    FLAMEGPU->environment.setProperty("sc_cycle_stage", rtn);
+        rtn[i] = d[i] / (float)FLAMEGPU->agent("Schwann").count();
+    FLAMEGPU->environment.setProperty<float, 16>("sc_cycle_stage", rtn);
     d.zero();
 }
 
