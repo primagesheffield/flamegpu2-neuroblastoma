@@ -76,8 +76,10 @@ FLAMEGPU_AGENT_FUNCTION(alter, flamegpu::MessageNone, flamegpu::MessageNone) {
     // Nnb_grid, d_Nsc_grid, Counts are not reset here, as they are updated by cell cycle
 
     // Temp for validation
-    FLAMEGPU->setVariable<unsigned int>("Nnbn_grid", Nnb_grid[location.x][location.y][location.z]);
-    FLAMEGPU->setVariable<unsigned int>("Nscn_grid", Nsc_grid[location.x][location.y][location.z]);
+    const auto Nnbn_grid = FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nnbn_grid");
+    const auto Nscn_grid = FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nscn_grid");
+    FLAMEGPU->setVariable<unsigned int>("Nnbn_grid", Nnbn_grid[location.x][location.y][location.z]);
+    FLAMEGPU->setVariable<unsigned int>("Nscn_grid", Nscn_grid[location.x][location.y][location.z]);
     return flamegpu::ALIVE;
 }
 FLAMEGPU_AGENT_FUNCTION(fresolve_CAexpand_device, flamegpu::MessageNone, flamegpu::MessageNone) {
