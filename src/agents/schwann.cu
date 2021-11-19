@@ -236,9 +236,9 @@ __device__ __forceinline__ void Schwann_cell_cycle(flamegpu::DeviceAPI<flamegpu:
                 s_cycle += step_size;
             }
         } else if (s_cycle < cycle_stages[1]) {
-            ++sc_counter[9];
+            ++sc_counter[8];
             if (s_DNA_damage == 0 && s_hypoxia == 0) {
-                ++sc_counter[0];
+                ++sc_counter[9];
                 s_cycle += step_size;
                 if (s_DNA_unreplicated == 0) {
                     ++sc_counter[10];

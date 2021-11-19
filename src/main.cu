@@ -112,6 +112,7 @@ int main(int argc, const char ** argv) {
             step_log_cfg.agent("Schwann").logMean<int>("nutrient");
             step_log_cfg.agent("Schwann").logMean<int>("telo_count");
             step_log_cfg.agent("Schwann").logMean<int>("dummy_Nn");
+            step_log_cfg.agent("Schwann").logMean<int>("neighbours");
             step_log_cfg.agent("GridCell").logMin<unsigned int>("Nnbn_grid");
             step_log_cfg.agent("GridCell").logMax<unsigned int>("Nnbn_grid");
             step_log_cfg.agent("GridCell").logMean<unsigned int>("Nnbn_grid");
