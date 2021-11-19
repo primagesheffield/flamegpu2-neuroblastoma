@@ -271,10 +271,10 @@ flamegpu::SubModelDescription& defineForceResolution(flamegpu::ModelDescription&
     sc3.setMessageInput(loc);
 
     // Output location
+    auto& l2 = force_resolution.newLayer();
+    l2.addAgentFunction(nb2);
     auto& l3 = force_resolution.newLayer();
     l3.addAgentFunction(sc2);
-    auto &l2 = force_resolution.newLayer();
-    l2.addAgentFunction(nb2);
     // Calculate force
     auto &l4 = force_resolution.newLayer();
     l4.addAgentFunction(nb3);
