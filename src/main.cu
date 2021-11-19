@@ -28,9 +28,9 @@ int main(int argc, const char ** argv) {
         /**
          * Create a run plan
          */
-        flamegpu::RunPlanVector runs(model, 256);
+        flamegpu::RunPlanVector runs(model, 1024);
         {
-            runs.setSteps(100);
+            runs.setSteps(1500);
             runs.setRandomSimulationSeed(12, 1);
         }
         /**
@@ -130,7 +130,7 @@ int main(int argc, const char ** argv) {
         flamegpu::CUDAEnsemble cuda_ensemble(model, argc, argv);
         cuda_ensemble.Config().concurrent_runs = 1;
         cuda_ensemble.Config().devices = { 0 };
-        cuda_ensemble.Config().out_directory = "ensemble_out";
+        cuda_ensemble.Config().out_directory = "ensemble_out_big";
         cuda_ensemble.Config().out_format = "json";
         cuda_ensemble.setStepLog(step_log_cfg);
         cuda_ensemble.simulate(runs);
