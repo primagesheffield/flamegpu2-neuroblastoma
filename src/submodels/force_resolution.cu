@@ -121,7 +121,7 @@ FLAMEGPU_AGENT_FUNCTION(calculate_force, flamegpu::MessageSpatial3D, flamegpu::M
     const glm::vec3 i_xyz = FLAMEGPU->getVariable<glm::vec3>("xyz");
     const flamegpu::id_t i_id = FLAMEGPU->getID();
     const float Ri = calc_R(FLAMEGPU);
-    const float R_cell = FLAMEGPU->environment.getProperty<float>("R_cell");  // Eventually this might vary based on the cell
+    const float R_cell = FLAMEGPU->environment.getProperty<float>("R_cell");
     // Init force to 0 (old force doesn't matter)
     glm::vec3 i_Fxyz = glm::vec3(0);
     float i_overlap = 0;
@@ -129,6 +129,7 @@ FLAMEGPU_AGENT_FUNCTION(calculate_force, flamegpu::MessageSpatial3D, flamegpu::M
     // Load env once
     const float MIN_OVERLAP = FLAMEGPU->environment.getProperty<float>("min_overlap");
     const float K1 = FLAMEGPU->environment.getProperty<float>("k1");
+    const float R_NEIGHBOURS = FLAMEGPU->environment.getProperty<float>("R_neighbours");
     for (auto j : FLAMEGPU->message_in(i_xyz.x, i_xyz.y, i_xyz.z)) {
         if (j.getVariable<flamegpu::id_t>("id") != i_id) {
             glm::vec3 j_xyz = glm::vec3(
@@ -139,7 +140,7 @@ FLAMEGPU_AGENT_FUNCTION(calculate_force, flamegpu::MessageSpatial3D, flamegpu::M
             // Displacement
             const glm::vec3 ij_xyz = i_xyz - j_xyz;
             const float distance_ij = glm::length(ij_xyz);
-            if (distance_ij < FLAMEGPU->environment.getProperty<float>("R_neighbours"))
+            if (distance_ij < R_NEIGHBOURS)
                 i_neighbours++;
             if (distance_ij <= FLAMEGPU->message_in.radius()) {
                 const glm::vec3 direction_ij = ij_xyz / distance_ij;
@@ -270,10 +271,10 @@ flamegpu::SubModelDescription& defineForceResolution(flamegpu::ModelDescription&
     sc3.setMessageInput(loc);
 
     // Output location
+    auto& l3 = force_resolution.newLayer();
+    l3.addAgentFunction(sc2);
     auto &l2 = force_resolution.newLayer();
     l2.addAgentFunction(nb2);
-    auto &l3 = force_resolution.newLayer();
-    l3.addAgentFunction(sc2);
     // Calculate force
     auto &l4 = force_resolution.newLayer();
     l4.addAgentFunction(nb3);
