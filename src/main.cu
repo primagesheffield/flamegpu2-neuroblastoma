@@ -66,6 +66,7 @@ int main(int argc, const char ** argv) {
             step_log_cfg.logEnvironment("bb_max_x");
             step_log_cfg.logEnvironment("bb_max_y");
             step_log_cfg.logEnvironment("bb_max_z");
+            step_log_cfg.logEnvironment("force_resolution_steps");
             step_log_cfg.agent("Neuroblastoma").logCount();
             step_log_cfg.agent("Neuroblastoma").logMean<int>("apop");
             step_log_cfg.agent("Neuroblastoma").logMean<int>("necro");

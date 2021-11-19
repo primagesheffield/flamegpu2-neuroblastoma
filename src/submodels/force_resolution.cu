@@ -103,7 +103,7 @@ FLAMEGPU_AGENT_FUNCTION(output_location_nb, flamegpu::MessageNone, flamegpu::Mes
     FLAMEGPU->message_out.setVariable<float>("Rj", calc_R(FLAMEGPU));
 
     // VALIDATION: Set old location on it 0
-    if (FLAMEGPU->environment.getProperty<unsigned int>("force_resolution_steps") == 0) {
+    if (FLAMEGPU->getStepCounter() == 0) {
         FLAMEGPU->setVariable<glm::vec3>("old_xyz", loc);
     }
     return flamegpu::ALIVE;
@@ -168,7 +168,6 @@ FLAMEGPU_AGENT_FUNCTION(calculate_force, flamegpu::MessageSpatial3D, flamegpu::M
     FLAMEGPU->setVariable<int>("neighbours", i_neighbours);
     return flamegpu::ALIVE;
 }
-
 FLAMEGPU_EXIT_CONDITION(calculate_convergence) {
     //Reduce overlap
     const int max_neighbours = glm::max(FLAMEGPU->agent("Neuroblastoma").max<int>("neighbours"), FLAMEGPU->agent("Schwann").max<int>("neighbours"));
@@ -189,7 +188,7 @@ FLAMEGPU_EXIT_CONDITION(calculate_convergence) {
         (max_neighbours <= N_neighbours) ||
         (max_overlap < 0.15f * R_cell) ||
         (static_cast<float>(FLAMEGPU->getStepCounter()) > static_cast<float>(step_size) * 3600.0f / dt)) {
-        //printf("Force res complete with %u steps\n", FLAMEGPU->getStepCounter());
+        FLAMEGPU->environment.setProperty<unsigned int>("force_resolution_steps", FLAMEGPU->getStepCounter());
         return flamegpu::EXIT;
     }
     return flamegpu::CONTINUE;
@@ -215,7 +214,6 @@ flamegpu::SubModelDescription& defineForceResolution(flamegpu::ModelDescription&
     env.newProperty<float>("R_cell", 0);
     env.newProperty<float>("min_overlap", 0);
     env.newProperty<float>("k1", 0);
-    env.newProperty<float>("alpha", 0);  // Required in force res?
     env.newProperty<float>("R_neighbours", 0);
     env.newProperty<int>("N_neighbours", 0);
     env.newProperty<float>("k_locom", 0);
