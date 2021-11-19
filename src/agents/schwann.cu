@@ -214,7 +214,7 @@ __device__ __forceinline__ void Schwann_cell_cycle(flamegpu::DeviceAPI<flamegpu:
     //In the cell cycle, 0[12] = G0, 1[6] = G1/S, 2[4] = S/G2, 3[2] = G2/M, 4[0] = division.
     //In the cell cycle, 0-11 = G0, 12-17 = G1/S, 18-21 = S/G2, 22-23 = G2/M, 24+ = division.
     unsigned int s_cycle = FLAMEGPU->getVariable<unsigned int>("cycle");
-    const int s_neighbours = FLAMEGPU->getVariable<int>("neighbours");
+    const int s_neighbours = 0;//FLAMEGPU->getVariable<int>("neighbours");//temp
     const int s_ATP = FLAMEGPU->getVariable<int>("ATP");
     const int s_apop = FLAMEGPU->getVariable<int>("apop");
     const int s_necro = FLAMEGPU->getVariable<int>("necro");
