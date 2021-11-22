@@ -28,9 +28,9 @@ int main(int argc, const char ** argv) {
         /**
          * Create a run plan
          */
-        flamegpu::RunPlanVector runs(model, 1024);
+        flamegpu::RunPlanVector runs(model, 128);
         {
-            runs.setSteps(1500);
+            runs.setSteps(50);
             runs.setRandomSimulationSeed(12, 1);
         }
         /**
