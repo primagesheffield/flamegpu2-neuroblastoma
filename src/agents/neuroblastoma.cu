@@ -55,12 +55,12 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
         const float P_necroIS = FLAMEGPU->environment.getProperty<float>("P_necroIS");
         int s_necro_signal = FLAMEGPU->getVariable<int>("necro_signal");
         int stress = 0;
-        for (int j = 0; j < dummy_Nn; ++j) {
+        /*for (int j = 0; j < dummy_Nn; ++j) {
             if (FLAMEGPU->random.uniform<float>() < P_necroIS * step_size) {
                 s_necro_signal += 1 * step_size;
                 stress = 1;
             }
-        }
+        }*/
 
         // The contribution of glycolysis to necrosis is time-independent.
         const float glycoEff = FLAMEGPU->environment.getProperty<float>("glycoEff");
