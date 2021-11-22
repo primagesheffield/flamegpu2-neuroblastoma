@@ -121,7 +121,7 @@ int main(int argc, const char ** argv) {
             step_log_cfg.agent("GridCell").logSum<unsigned int>("Nnbn_grid");
             step_log_cfg.agent("GridCell").logMin<unsigned int>("Nscn_grid");
             step_log_cfg.agent("GridCell").logMax<unsigned int>("Nscn_grid");
-            step_log_cfg.agent("GridCell").logMean<unsigned int>("Nnbn_grid");
+            step_log_cfg.agent("GridCell").logMean<unsigned int>("Nscn_grid");
             step_log_cfg.agent("GridCell").logSum<unsigned int>("Nscn_grid");
             step_log_cfg.logEnvironment("grid_origin");
             step_log_cfg.logEnvironment("grid_dims");
