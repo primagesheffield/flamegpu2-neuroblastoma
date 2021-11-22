@@ -130,9 +130,9 @@ FLAMEGPU_AGENT_FUNCTION(fresolve_CAexpand_device, flamegpu::MessageNone, flamegp
     N_grid[location.x][location.y][location.z].exchange(s_N_grid);
 
     // These reset here during force resolution
-    FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nscl_col_grid").exchange(0);
-    FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nnbn_grid").exchange(0);
-    FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nscn_grid").exchange(0);
+    FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nscl_col_grid")[location.x][location.y][location.z].exchange(0);
+    FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nnbn_grid")[location.x][location.y][location.z].exchange(0);
+    FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nscn_grid")[location.x][location.y][location.z].exchange(0);
     return flamegpu::ALIVE;
 }
 

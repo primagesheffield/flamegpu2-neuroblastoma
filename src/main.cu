@@ -69,7 +69,7 @@ int main(int argc, const char ** argv) {
             step_log_cfg.logEnvironment("force_resolution_steps");
             step_log_cfg.agent("Neuroblastoma").logCount();
             step_log_cfg.agent("Neuroblastoma").logMean<int>("apop");
-            step_log_cfg.agent("Neuroblastoma").logMean<int>("necro");
+            step_log_cfg.agent("Neuroblastoma").logSum<int>("necro");
             step_log_cfg.agent("Neuroblastoma").logMean<int>("necro_signal");
             step_log_cfg.agent("Neuroblastoma").logMean<int>("apop_signal");
             step_log_cfg.agent("Neuroblastoma").logMean<unsigned int>("cycle");
@@ -104,6 +104,7 @@ int main(int argc, const char ** argv) {
             step_log_cfg.agent("Schwann").logCount();
             step_log_cfg.agent("Schwann").logMean<int>("apop");
             step_log_cfg.agent("Schwann").logMean<int>("necro");
+            step_log_cfg.agent("Schwann").logSum<int>("necro");
             step_log_cfg.agent("Schwann").logMean<int>("necro_signal");
             step_log_cfg.agent("Schwann").logMean<int>("apop_signal");
             step_log_cfg.agent("Schwann").logMean<unsigned int>("cycle");
@@ -117,9 +118,11 @@ int main(int argc, const char ** argv) {
             step_log_cfg.agent("GridCell").logMin<unsigned int>("Nnbn_grid");
             step_log_cfg.agent("GridCell").logMax<unsigned int>("Nnbn_grid");
             step_log_cfg.agent("GridCell").logMean<unsigned int>("Nnbn_grid");
+            step_log_cfg.agent("GridCell").logSum<unsigned int>("Nnbn_grid");
             step_log_cfg.agent("GridCell").logMin<unsigned int>("Nscn_grid");
             step_log_cfg.agent("GridCell").logMax<unsigned int>("Nscn_grid");
-            step_log_cfg.agent("GridCell").logMean<unsigned int>("Nscn_grid");
+            step_log_cfg.agent("GridCell").logMean<unsigned int>("Nnbn_grid");
+            step_log_cfg.agent("GridCell").logSum<unsigned int>("Nscn_grid");
             step_log_cfg.logEnvironment("grid_origin");
             step_log_cfg.logEnvironment("grid_dims");
             step_log_cfg.logEnvironment("sc_cycle_stage");
