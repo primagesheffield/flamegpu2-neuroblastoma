@@ -38,19 +38,19 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
         const glm::uvec3 grid_dims = FLAMEGPU->environment.getProperty<glm::uvec3>("grid_dims");
         const auto Nnbn = FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nnbn_grid");
         const auto Nscn = FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nscn_grid");
-        unsigned int dummy_Nn = Nnbn[gid.x][gid.y][gid.z] + Nscn[gid.x][gid.y][gid.z];
+        unsigned int dummy_Nn = static_cast<unsigned int>(Nnbn[gid.x][gid.y][gid.z]) + static_cast<unsigned int>(Nscn[gid.x][gid.y][gid.z]);
         if (gid.x > grid_origin.x)
-            dummy_Nn += Nnbn[gid.x - 1][gid.y][gid.z] + Nscn[gid.x - 1][gid.y][gid.z];
+            dummy_Nn += static_cast<unsigned int>(Nnbn[gid.x - 1][gid.y][gid.z]) + static_cast<unsigned int>(Nscn[gid.x - 1][gid.y][gid.z]);
         if (gid.x + 1 < grid_origin.x + grid_dims.x)
-            dummy_Nn += Nnbn[gid.x + 1][gid.y][gid.z] + Nscn[gid.x + 1][gid.y][gid.z];
+            dummy_Nn += static_cast<unsigned int>(Nnbn[gid.x + 1][gid.y][gid.z]) + static_cast<unsigned int>(Nscn[gid.x + 1][gid.y][gid.z]);
         if (gid.y > grid_origin.y)
-            dummy_Nn += Nnbn[gid.x][gid.y - 1][gid.z] + Nscn[gid.x][gid.y - 1][gid.z];
+            dummy_Nn += static_cast<unsigned int>(Nnbn[gid.x][gid.y - 1][gid.z]) + static_cast<unsigned int>(Nscn[gid.x][gid.y - 1][gid.z]);
         if (gid.y + 1 < grid_origin.y + grid_dims.y)
-            dummy_Nn += Nnbn[gid.x][gid.y + 1][gid.z] + Nscn[gid.x][gid.y + 1][gid.z];
+            dummy_Nn += static_cast<unsigned int>(Nnbn[gid.x][gid.y + 1][gid.z]) + static_cast<unsigned int>(Nscn[gid.x][gid.y + 1][gid.z]);
         if (gid.z > grid_origin.z)
-            dummy_Nn += Nnbn[gid.x][gid.y][gid.z - 1] + Nscn[gid.x][gid.y][gid.z - 1];
+            dummy_Nn += static_cast<unsigned int>(Nnbn[gid.x][gid.y][gid.z - 1]) + static_cast<unsigned int>(Nscn[gid.x][gid.y][gid.z - 1]);
         if (gid.z + 1 < grid_origin.z + grid_dims.z)
-            dummy_Nn += Nnbn[gid.x][gid.y][gid.z + 1] + Nscn[gid.x][gid.y][gid.z + 1];
+            dummy_Nn += static_cast<unsigned int>(Nnbn[gid.x][gid.y][gid.z + 1]) + static_cast<unsigned int>(Nscn[gid.x][gid.y][gid.z + 1]);
 
         const float P_necroIS = FLAMEGPU->environment.getProperty<float>("P_necroIS");
         int s_necro_signal = FLAMEGPU->getVariable<int>("necro_signal");
