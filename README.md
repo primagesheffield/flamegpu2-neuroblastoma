@@ -1,4 +1,4 @@
-# PRIMAGE Standalone Force Resolution
+# PRIMAGE USFD Agent Based Neuroblastoma model
 
 ## Prerequisites
 
@@ -29,11 +29,13 @@ Under Linux, `cmake` can be used to generate makefiles specific to your system:
 
 ```
 mkdir -p build && cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SWIG_PYTHON=ON -DBUILD_SWIG_PYTHON_VIRTUALENV=ON -DVISUALISATION=ON
+cmake .. -DCMAKE_BUILD_TYPE=Release -DVISUALISATION=ON
 make -j8
 ```
 
 The option `-j8` enables parallel compilation using upto 8 threads, this is recommended to improve build times.
+
+`-DCUDA_ARCH=xx` should be included in the command to CMake, where `xx` is replaced with the appropriate CUDA architecture id/s, this will limit compilation to the required CUDA devices, speeding up compilation time.
 
 ### Windows
 
@@ -45,12 +47,16 @@ Using `cmake` this takes the form `-A x64`:
 
 ```
 mkdir build && cd build
-cmake .. -A x64 -DBUILD_SWIG_PYTHON=ON -DBUILD_SWIG_PYTHON_VIRTUALENV=ON -DVISUALISATION=ON
+cmake .. -A x64 -DVISUALISATION=ON
 cmake --build . --config Release
 ```
 
+`-DCUDA_ARCH=xx` should be included in the command to CMake, where `xx` is replaced with the appropriate CUDA architecture id/s, this will limit compilation to the required CUDA devices, speeding up compilation time.
+
 ## Running
-There are two versions of the model implemented in this repository. Using the C++ and Python interfaces to FLAMEGPU2 respectivley. The C++ one is likely to be easier to debug problems with, however most features are supported with the Python interface too (custom transforms/reductions are the only unsupported feature in Python).
+There are two versions of the model implemented in this repository. Using the C++ and Python interfaces to FLAMEGPU2 respectively. The C++ one is likely to be easier to debug problems with.
+
+At current the `py_src` is not upto date, and should not be used (it is leftover from an early copy of the force resolution model).
 
 The only currently useful runtime argument is `-s` for specifying the number of steps e.g. `-s 10`. Once 10 steps have been completed, the visualisation will remain open (assuming `.join()` is called at the end of `main.cu` or `main.py`). Passing `-s 0` or not providing `-s` will perform unlimited steps until the visualisation is closed.
 
