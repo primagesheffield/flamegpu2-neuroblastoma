@@ -5,7 +5,7 @@
 void data_layer_0(flamegpu::ModelDescription& model) {
     auto& env = model.Environment();
     // Initial volume of tumour (cubic micron).
-    env.newProperty<float>("V_tumour", pow(1500.0f, 3));  // 2e6);
+    env.newProperty<float>("V_tumour", pow(2000.0f, 3));  // 2e6);
     // Factor by which the tumour can expand in all three directions.
     // According to Aherne and Buck (1971), the volume doubling time is around 60 days.
     // Note that this is illustrative and unrealistic.
