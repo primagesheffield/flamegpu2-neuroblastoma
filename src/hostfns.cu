@@ -125,9 +125,6 @@ FLAMEGPU_HOST_FUNCTION(vasculature) {
     FLAMEGPU->environment.setProperty<float>("P_O2v", P_O2v_OFF ? 0 : P_O2v);
     FLAMEGPU->environment.setProperty<int>("ang_signal", ang_signal);
 }
-FLAMEGPU_HOST_FUNCTION(fresolve_CAexpand_host) {
-    CAexpand(FLAMEGPU);  // Just call regular CAexpand function
-}
 FLAMEGPU_HOST_FUNCTION(reset_grids) {
     // Reset all grid counters
     // This is mostly useful after cell_cycle, which further manips the grid counters

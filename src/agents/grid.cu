@@ -68,66 +68,7 @@ FLAMEGPU_AGENT_FUNCTION(alter, flamegpu::MessageNone, flamegpu::MessageNone) {
     FLAMEGPU->setVariable<unsigned int>("N_grid", s_N_grid);
     auto N_grid = FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("N_grid");
     N_grid[location.x][location.y][location.z].exchange(s_N_grid);
-    // Nsca_grid[i->x][i->y][i->z] = 0;
-    // Nnba_grid[i->x][i->y][i->z] = 0;
-    // Nnbl_grid[i->x][i->y][i->z] = 0;
-    // Nscl_grid[i->x][i->y][i->z] = 0;
-    // Nscl_col_grid[i->x][i->y][i->z] = 0;
-    // Nnb_grid, d_Nsc_grid, Counts are not reset here, as they are updated by cell cycle
 
-    return flamegpu::ALIVE;
-}
-FLAMEGPU_AGENT_FUNCTION(fresolve_CAexpand_device, flamegpu::MessageNone, flamegpu::MessageNone) {
-    const glm::uvec3 location = FLAMEGPU->getVariable<glm::uvec3>("xyz");
-    const glm::uvec3 grid_origin = FLAMEGPU->environment.getProperty<glm::uvec3>("grid_origin");
-    const glm::uvec3 grid_dims = FLAMEGPU->environment.getProperty<glm::uvec3>("grid_dims");  // GRID_MAX_DIMENSIONS
-    // Skip inactive agents
-    if (location.x < grid_origin.x || location.x >= grid_dims.x - grid_origin.x ||
-        location.y < grid_origin.y || location.y >= grid_dims.y - grid_origin.y ||
-        location.z < grid_origin.z || location.z >= grid_dims.z - grid_origin.z) {
-        FLAMEGPU->setVariable<unsigned int>("Nnbl_grid", 0);
-        FLAMEGPU->setVariable<unsigned int>("Nscl_grid", 0);
-        FLAMEGPU->setVariable<unsigned int>("N_l_grid", 0);
-        FLAMEGPU->setVariable<float>("matrix_value", 0);
-        FLAMEGPU->setVariable<unsigned int>("N_grid", 0);
-        return flamegpu::ALIVE;
-    }
-    const auto matrix_grid = FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("matrix_grid");
-    float matrix_value = matrix_grid[location.x][location.y][location.z].exchange(0); // This is required to read+write in same fn
-    const glm::uvec3 grid_span = FLAMEGPU->environment.getProperty<glm::uvec3>("grid_span");
-    const glm::uvec3 grid_span_old = FLAMEGPU->environment.getProperty<glm::uvec3>("grid_span_old");
-    // Apply CAexpand, if required, to grid members
-    if (grid_span != grid_span_old) {
-        // matrix grid size has changed
-        // If we are in the new area
-        if ((location.z < grid_origin.z + grid_span.z - grid_span_old.z) ||
-            (location.z > grid_origin.z + grid_span.z - 1 + grid_span_old.z) ||
-            (location.y > grid_origin.y + grid_span.y - grid_span_old.y) ||
-            (location.y < grid_origin.y + grid_span.y - 1 + grid_span_old.y) ||
-            (location.x > grid_origin.x + grid_span.x - grid_span_old.x) ||
-            (location.x < grid_origin.x + grid_span.x - 1 + grid_span_old.x)) {
-            matrix_value = FLAMEGPU->environment.getProperty<float>("matrix_dummy");
-        }
-    }
-    auto Nnbl_grid = FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nnbl_grid");
-    auto Nscl_grid = FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nscl_grid");
-    unsigned int s_Nnbl_grid = Nnbl_grid[location.x][location.y][location.z].exchange(0);  // These reset here during force resolution;
-    unsigned int s_Nscl_grid = Nscl_grid[location.x][location.y][location.z].exchange(0);  // These reset here during force resolution;
-    FLAMEGPU->setVariable<unsigned int>("Nnbl_grid", s_Nnbl_grid);
-    FLAMEGPU->setVariable<unsigned int>("Nscl_grid", s_Nscl_grid);
-    FLAMEGPU->setVariable<unsigned int>("N_l_grid", s_Nnbl_grid + s_Nscl_grid);  // This is kind of redundant, could reduce and sum both vals
-    const auto Nnb_grid = FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nnb_grid");
-    const auto Nsc_grid = FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nsc_grid");
-    // Count has been consumed, reset to 0
-    const unsigned int s_N_grid = Nnb_grid[location.x][location.y][location.z].exchange(0) + Nsc_grid[location.x][location.y][location.z].exchange(0);
-    FLAMEGPU->setVariable<unsigned int>("N_grid", s_N_grid);
-    auto N_grid = FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("N_grid");
-    N_grid[location.x][location.y][location.z].exchange(s_N_grid);
-
-    // These reset here during force resolution
-    FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nscl_col_grid")[location.x][location.y][location.z].exchange(0);
-    FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nnbn_grid")[location.x][location.y][location.z].exchange(0);
-    FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nscn_grid")[location.x][location.y][location.z].exchange(0);
     return flamegpu::ALIVE;
 }
 

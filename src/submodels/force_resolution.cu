@@ -39,8 +39,6 @@ FLAMEGPU_AGENT_FUNCTION(apply_force_nb, flamegpu::MessageNone, flamegpu::Message
     location += force * dt / mu_eff;
     // Apply boundary conditions
     boundary_conditions(FLAMEGPU, location);
-    // Begin CAexpand with new data
-    // increment_grid_nb(FLAMEGPU, gid);
 
     // Set updated agent variables
     FLAMEGPU->setVariable<glm::vec3>("xyz", location);
@@ -66,8 +64,6 @@ FLAMEGPU_AGENT_FUNCTION(apply_force_sc, flamegpu::MessageNone, flamegpu::Message
     location += force * dt / mu_eff;
     // Apply boundary conditions
     boundary_conditions(FLAMEGPU, location);
-    // Begin CAexpand with new data
-    // increment_grid_sc(FLAMEGPU, gid);
 
     // Set updated agent variables
     FLAMEGPU->setVariable<glm::vec3>("xyz", location);
@@ -149,8 +145,8 @@ FLAMEGPU_AGENT_FUNCTION(calculate_force, flamegpu::MessageSpatial3D, flamegpu::M
                     // overlap_ij = 0;
                     // force_i = glm::vec3(0);
                 } else if (overlap_ij < MIN_OVERLAP) {
-                    //float Fij = 0;
-                    //force_i += Fij*direction_ij;
+                    // float Fij = 0;
+                    // force_i += Fij*direction_ij;
                 } else {
                     const float Fij = K1 * overlap_ij;
                     i_Fxyz += Fij * direction_ij;
@@ -170,11 +166,11 @@ FLAMEGPU_AGENT_FUNCTION(calculate_force, flamegpu::MessageSpatial3D, flamegpu::M
     return flamegpu::ALIVE;
 }
 FLAMEGPU_EXIT_CONDITION(calculate_convergence) {
-    //Reduce overlap
+    // Reduce overlap
     const int max_neighbours = glm::max(FLAMEGPU->agent("Neuroblastoma").max<int>("neighbours"), FLAMEGPU->agent("Schwann").max<int>("neighbours"));
     const float max_overlap = glm::max(FLAMEGPU->agent("Neuroblastoma").max<float>("overlap"), FLAMEGPU->agent("Schwann").max<float>("overlap"));
-    //Unused currently
-    //float dummy_overlap = reduce_Neuroblastoma_default_overlap_variable();
+    // Unused currently
+    // float dummy_overlap = reduce_Neuroblastoma_default_overlap_variable();
 
     const int N_neighbours = FLAMEGPU->environment.getProperty<int>("N_neighbours");
     const float R_cell = FLAMEGPU->environment.getProperty<float>("R_cell");
@@ -236,9 +232,9 @@ flamegpu::SubModelDescription& defineForceResolution(flamegpu::ModelDescription&
     loc.setMin(-2000, -2000, -2000);
     loc.setMax(2000, 2000, 2000);
     loc.setRadius(25);
-    // loc.newVariable<float>("x");
-    // loc.newVariable<float>("y");
-    // loc.newVariable<float>("z");
+    // loc.newVariable<float>("x");  // implicit
+    // loc.newVariable<float>("y");  // implicit
+    // loc.newVariable<float>("z");  // implicit
     loc.newVariable<float>("Rj");
     loc.newVariable<flamegpu::id_t>("id");
     auto &nb = force_resolution.newAgent("Neuroblastoma");
@@ -279,12 +275,10 @@ flamegpu::SubModelDescription& defineForceResolution(flamegpu::ModelDescription&
     auto &l4 = force_resolution.newLayer();
     l4.addAgentFunction(nb3);
     l4.addAgentFunction(sc3);
-    // Reset grids?
     // Apply force (and output oxygen/matrix grid)
     auto& l1 = force_resolution.newLayer();
     l1.addAgentFunction(nb1);
     l1.addAgentFunction(sc1);
-    // FResolve CAexpand?
     // Calculate convergence
     force_resolution.addExitCondition(calculate_convergence);
 
