@@ -92,7 +92,7 @@ FLAMEGPU_HOST_FUNCTION(vasculature) {
     // When there are more living VEGF - producing neuroblasts than living Schwann cells, an angiogenic signal is produced.
     // When there are enough angiogenic signals, calculate the amount of oxygen consumed by the current population of living cells.
     // Take this as the new oxygen supply rate if it exceeds the old rate.
-    const unsigned int t = FLAMEGPU->getStepCounter(); // This should be step_count + 1, however step count is incremented early by calculate_convergence
+    const unsigned int t = FLAMEGPU->getStepCounter();  // This should be step_count + 1, however step count is incremented early by calculate_convergence
     const float P_O20 = FLAMEGPU->environment.getProperty<float>("P_O20");
     const unsigned int step_size = FLAMEGPU->environment.getProperty<unsigned int>("step_size");
     const float V_grid = FLAMEGPU->environment.getProperty<float>("V_grid");

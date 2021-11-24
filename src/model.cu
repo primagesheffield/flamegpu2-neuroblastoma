@@ -56,10 +56,10 @@ flamegpu::visualiser::ModelVis& defineVisualisation(flamegpu::ModelDescription& 
         auto& sc_agt = m_vis.addAgent("Schwann");
         nb_agt.setXYZVariable("xyz");
         nb_agt.setModel(flamegpu::visualiser::Stock::Models::ICOSPHERE);
-        nb_agt.setModelScale(model.getEnvironment().getProperty<float>("R_cell") * 2.0f); // Could improve this in future to use the dynamic rad
+        nb_agt.setModelScale(model.getEnvironment().getProperty<float>("R_cell") * 2.0f);  // Could improve this in future to use the dynamic rad
         sc_agt.setXYZVariable("xyz");
         sc_agt.setModel(flamegpu::visualiser::Stock::Models::ICOSPHERE);
-        sc_agt.setModelScale(model.getEnvironment().getProperty<float>("R_cell") * 2.0f); // Could improve this in future to use the dynamic rad
+        sc_agt.setModelScale(model.getEnvironment().getProperty<float>("R_cell") * 2.0f);  // Could improve this in future to use the dynamic rad
         // Render the messaging bounding box, -1000 - 1000 each dimension
         {
             auto pen = m_vis.newLineSketch(1, 1, 1, 0.2f);  // white

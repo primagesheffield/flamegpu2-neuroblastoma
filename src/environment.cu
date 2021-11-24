@@ -5,7 +5,7 @@
 void data_layer_0(flamegpu::ModelDescription& model) {
     auto& env = model.Environment();
     // Initial volume of tumour (cubic micron).
-    env.newProperty<float>("V_tumour", pow(1500.0f, 3)); // 2e6);
+    env.newProperty<float>("V_tumour", pow(1500.0f, 3));  // 2e6);
     // Factor by which the tumour can expand in all three directions.
     // According to Aherne and Buck (1971), the volume doubling time is around 60 days.
     // Note that this is illustrative and unrealistic.
@@ -25,7 +25,7 @@ void data_layer_0(flamegpu::ModelDescription& model) {
     // 1.91e-3 cells per cubic micron (Louis and Shohet, 2015).
     // In a tumour with limited stroma, and whose cells are small, this number is 1e9 cells/cm3 or 1e-3 cells/cubic micron (Del Monte, 2009).
     // However, because cells have different sizes and shapes, the number can be as low as 3.7e7 cells/cm3 in a tumour without extracellular structures (Del Monte, 2009).
-    env.newProperty<float>("rho_tumour", (float)9.39e-05);
+    env.newProperty<float>("rho_tumour", static_cast<float>(9.39e-05));
     // Cell radius.
     // The radii of most animal cells range from 5 to 15 microns (Del Monte, 2009).
     env.newProperty<float>("R_cell", 11/2.0f);
@@ -47,16 +47,16 @@ void data_layer_0(flamegpu::ModelDescription& model) {
  */
 void data_layer_1(flamegpu::ModelDescription& model) {
     auto& env = model.Environment();
-    //MYCN amplification status (categorical, 0 or 1), default (-1) means unknown.
+    // MYCN amplification status (categorical, 0 or 1), default (-1) means unknown.
     env.newProperty<int>("MYCN_amp", 0);
-    //TERT rearrangement status (categorical, 0 or 1), default (-1) means unknown.
+    // TERT rearrangement status (categorical, 0 or 1), default (-1) means unknown.
     env.newProperty<int>("TERT_rarngm", 0);
-    //ATRX inactivation status (categorical, 0 or 1), default (-1) means unknown.
+    // ATRX inactivation status (categorical, 0 or 1), default (-1) means unknown.
     env.newProperty<int>("ATRX_inact", 0);
-    //Alternative lengthening of telomeres status (categorical, 0 or 1), default (-1) means unknown. 
+    // Alternative lengthening of telomeres status (categorical, 0 or 1), default (-1) means unknown.
     env.newProperty<int>("ALT", 0);
-    //ALK amplification or activating mutation status (discrete, 0 or 1 or 2), default (-1) means unknown.
-    //0 means wild type, 1 means ALK amplification or activation, and 2 means other RAS mutations.
+    // ALK amplification or activating mutation status (discrete, 0 or 1 or 2), default (-1) means unknown.
+    // 0 means wild type, 1 means ALK amplification or activation, and 2 means other RAS mutations.
     env.newProperty<int>("ALK", 0);
 }
 /**
@@ -64,22 +64,22 @@ void data_layer_1(flamegpu::ModelDescription& model) {
  */
 void data_layer_2(flamegpu::ModelDescription& model) {
     auto& env = model.Environment();
-    //Function of MYCN (continuous, 0 to 1), default (-1) means unknown.
-    const float MYCN_fn11 = 0.758258323f; // Calibration LHC#147
+    // Function of MYCN (continuous, 0 to 1), default (-1) means unknown.
+    const float MYCN_fn11 = 0.758258323f;  // Calibration LHC#147
     const float MYCN_fn00 = 0.8f * 0.71f * MYCN_fn11;
     const float MYCN_fn10 = 0.71f * MYCN_fn11;
     const float MYCN_fn01 = 0.8f * MYCN_fn11;
-    //Function of MAPK/RAS signalling (continuous, 0 to 1), default (-1) means unknown.
-    const float MAPK_RAS_fn11 = 0.826819728f; // Calibration LHC#147
+    // Function of MAPK/RAS signalling (continuous, 0 to 1), default (-1) means unknown.
+    const float MAPK_RAS_fn11 = 0.826819728f;  // Calibration LHC#147
     const float MAPK_RAS_fn10 = 0.77f * MAPK_RAS_fn11;
-    const float MAPK_RAS_fn01 = 0.625214937f; // Calibration LHC#147
+    const float MAPK_RAS_fn01 = 0.625214937f;  // Calibration LHC#147
     const float MAPK_RAS_fn00 = 0.77f * MAPK_RAS_fn01;
-    //Function of p53 signalling (continuous, 0 to 1), default (-1) means unknown.
-    const float p53_fn = 0.772787569f; // Calibration LHC#147
-    //Function of p73 signalling (continuous, 0 to 1), default (-1) means unknown.
-    const float p73_fn = 0.848203617f; // Calibration LHC#147
-    //Function of HIF signalling (continuous, 0 to 1), default (-1) means unknown. 
-    const float HIF_fn = 0.599560284f; // Calibration LHC#147
+    // Function of p53 signalling (continuous, 0 to 1), default (-1) means unknown.
+    const float p53_fn = 0.772787569f;  // Calibration LHC#147
+    // Function of p73 signalling (continuous, 0 to 1), default (-1) means unknown.
+    const float p73_fn = 0.848203617f;  // Calibration LHC#147
+    // Function of HIF signalling (continuous, 0 to 1), default (-1) means unknown.
+    const float HIF_fn = 0.599560284f;  // Calibration LHC#147
 
     env.newProperty<float>("MYCN_fn11", MYCN_fn11);
     env.newProperty<float>("MYCN_fn00", MYCN_fn00);
@@ -118,18 +118,18 @@ void data_layer_3(flamegpu::ModelDescription& model) {
  */
 void cell_cycle_parameters(flamegpu::ModelDescription& model) {
     auto& env = model.Environment();
-    //Durations of G1, S, G2, and M (hours)
-    //Note, if these durations change, the static maths in calc_R() need updating too.
+    // Durations of G1, S, G2, and M (hours)
+    // Note, if these durations change, the static maths in calc_R() need updating too.
     std::array<unsigned int, 4> cycle_stages = { 12, 6, 4, 2 };
-    //Perform a scan over the values, to calculate where the boundaries lie
+    // Perform a scan over the values, to calculate where the boundaries lie
     for (int i = 1; i < sizeof(cycle_stages) / sizeof(unsigned int); ++i) {
         cycle_stages[i] += cycle_stages[i - 1];
     }
     env.newProperty<unsigned int, 4>("cycle_stages", cycle_stages);
-    //Efficiency of glycolysis compared to oxidative phosphorylation (du Plessis et al., 2015).
+    // Efficiency of glycolysis compared to oxidative phosphorylation (du Plessis et al., 2015).
     env.newProperty<float>("glycoEff", 1 / 15.0f);
     // Basal probability of cycling for Schwann cells (Ambros and Ambros et al., 2001).
-    // https://pubmed.ncbi.nlm.nih.gov/11464875/
+    // https:// pubmed.ncbi.nlm.nih.gov/11464875/
     env.newProperty<float>("P_cycle_sc", 0.698516922f);  // Calibration LHC#147
 }
 /**
@@ -137,81 +137,81 @@ void cell_cycle_parameters(flamegpu::ModelDescription& model) {
  */
 void cell_death_parameters(flamegpu::ModelDescription& model) {
     auto& env = model.Environment();
-    //Concentration(M) or partial pressure of oxygen(mmHg) at which 50 % of the tumour cell population die through necrosis(Warren and Partridge, 2016), given in mmHg, converted to g per dm3, then to moles per dm3(M).
-    //Henry's law constant for oxygen gas at human body temperature is used for conversion (Grimes et al., 2014).
-    //Molar mass of O2 is 32 g.
-    //This is time - independent, i.e at equilibrium.
-    env.newProperty<float>("C50_necro", (float)(1.2 / 2.2779e-4 / 32));
-    //Number of apoptotic signals needed to kill the cell (Elmore, 2007).
+    // Concentration(M) or partial pressure of oxygen(mmHg) at which 50 % of the tumour cell population die through necrosis(Warren and Partridge, 2016), given in mmHg, converted to g per dm3, then to moles per dm3(M).
+    // Henry's law constant for oxygen gas at human body temperature is used for conversion (Grimes et al., 2014).
+    // Molar mass of O2 is 32 g.
+    // This is time - independent, i.e at equilibrium.
+    env.newProperty<float>("C50_necro", static_cast<float>(1.2 / 2.2779e-4 / 32));
+    // Number of apoptotic signals needed to kill the cell (Elmore, 2007).
     env.newProperty<int>("apop_critical", 3);
-    //Maximum number of telomere units in a cell.
-    //Maximum is 60 (Hayflick et al., 1961).
+    // Maximum number of telomere units in a cell.
+    // Maximum is 60 (Hayflick et al., 1961).
     env.newProperty<int>("telo_maximum", 60);
-    //Maximum number of telomere units in a senescent cell.
-    //A normal human foetal cell population will divide between 40 and 60 times before entering a senescence phase due to shortening telomeres(Hayflick et al., 1961).
+    // Maximum number of telomere units in a senescent cell.
+    // A normal human foetal cell population will divide between 40 and 60 times before entering a senescence phase due to shortening telomeres(Hayflick et al., 1961).
     env.newProperty<int>("telo_critical", 20);
-    //Probability of gaining DNA damage in an hour due to hypoxia.
-    //Assumed to be 1 %.
-    env.newProperty<float>("P_DNA_damageHypo", 0.461203825f); // Calibration LHC#147
-    //Probability of repairing DNA damage in an hour.
-    //Assumed to be 1 % .
-    env.newProperty<float>("P_DNA_damagerp", 0.291861877f); // Calibration LHC#147
-    //Probability of gaining unreplicated DNA in an hour.
-    //Assumed to be 0.1 %.
+    // Probability of gaining DNA damage in an hour due to hypoxia.
+    // Assumed to be 1 %.
+    env.newProperty<float>("P_DNA_damageHypo", 0.461203825f);  // Calibration LHC#147
+    // Probability of repairing DNA damage in an hour.
+    // Assumed to be 1 % .
+    env.newProperty<float>("P_DNA_damagerp", 0.291861877f);  // Calibration LHC#147
+    // Probability of gaining unreplicated DNA in an hour.
+    // Assumed to be 0.1 %.
     env.newProperty<float>("P_unrepDNA", 0.0f);
-    //Probability of gaining unreplicated DNA in an hour due to hypoxia.
-    //Assumed to be 1 %.
-    env.newProperty<float>("P_unrepDNAHypo", 0.803610534f); // Calibration LHC#147
-    //Probability of repairing unreplicated DNA in an hour.
-    //Assumed to be 1 % .
-    env.newProperty<float>("P_unrepDNArp", 0.871531954f); // Calibration LHC#147
-    //Probability of the immune system triggering a necrotic signal in a living cell per necrotic cell present per hour.
-    //Assumed to be 1 % .
-    env.newProperty<float>("P_necroIS", 0.393895701f); // Calibration LHC#147
-    //Probability of secondary necrosis in an hour (Dunster, Byrne, King 2014).
+    // Probability of gaining unreplicated DNA in an hour due to hypoxia.
+    // Assumed to be 1 %.
+    env.newProperty<float>("P_unrepDNAHypo", 0.803610534f);  // Calibration LHC#147
+    // Probability of repairing unreplicated DNA in an hour.
+    // Assumed to be 1 % .
+    env.newProperty<float>("P_unrepDNArp", 0.871531954f);  // Calibration LHC#147
+    // Probability of the immune system triggering a necrotic signal in a living cell per necrotic cell present per hour.
+    // Assumed to be 1 % .
+    env.newProperty<float>("P_necroIS", 0.393895701f);  // Calibration LHC#147
+    // Probability of secondary necrosis in an hour (Dunster, Byrne, King 2014).
     env.newProperty<float>("P_2ndnecro", 0.2f);
-    //Probability of gaining one unit of telomere in an hour, when telomerase or ALT is active..
-    //Assumed to be 1 % .
-    env.newProperty<float>("P_telorp", 0.068383864f); // Calibration LHC#147
-    //Probability of gaining an apoptotic signal due to chemotherapy in an hour.
-    //Assumed to be 10 % .
-    env.newProperty<float>("P_apopChemo", 0.219394318f); // Calibration LHC#147
-    //Probability of losing an apoptotic signal in an unstressed cell in an hour.
-    //Assumed to be 1 % .
-    env.newProperty<float>("P_apoprp", 0.814669799f); // Calibration LHC#147
-    //Probability of losing a necrotic signal in an unstressed cell in an hour.
-    //Assumed to be 1 % .
-    env.newProperty<float>("P_necrorp", 0.301734721f); // Calibration LHC#147
+    // Probability of gaining one unit of telomere in an hour, when telomerase or ALT is active..
+    // Assumed to be 1 % .
+    env.newProperty<float>("P_telorp", 0.068383864f);  // Calibration LHC#147
+    // Probability of gaining an apoptotic signal due to chemotherapy in an hour.
+    // Assumed to be 10 % .
+    env.newProperty<float>("P_apopChemo", 0.219394318f);  // Calibration LHC#147
+    // Probability of losing an apoptotic signal in an unstressed cell in an hour.
+    // Assumed to be 1 % .
+    env.newProperty<float>("P_apoprp", 0.814669799f);  // Calibration LHC#147
+    // Probability of losing a necrotic signal in an unstressed cell in an hour.
+    // Assumed to be 1 % .
+    env.newProperty<float>("P_necrorp", 0.301734721f);  // Calibration LHC#147
 }
 void schwann_cell_parameters(flamegpu::ModelDescription& model) {
     auto& env = model.Environment();
-    //Production rate of matrix by one Schwann cell (cubic microns per hour).
-    //Protein production rate in one Schwann cell = 0.3 ng per 96 hours = 3.125e-12 g hour-1 (Conlon et al., 2003).
-    //Proportion of protein synthesis related to collagen = 12 % (DeClerck et al., 1987).
-    env.newProperty<float>("P_matrix", (float)(3.125e-12 * 0.12 * 1.89e12));
+    // Production rate of matrix by one Schwann cell (cubic microns per hour).
+    // Protein production rate in one Schwann cell = 0.3 ng per 96 hours = 3.125e-12 g hour-1 (Conlon et al., 2003).
+    // Proportion of protein synthesis related to collagen = 12 % (DeClerck et al., 1987).
+    env.newProperty<float>("P_matrix", static_cast<float>(3.125e-12 * 0.12 * 1.89e12));
 }
 void nb_sc_crosstalk_parameters(flamegpu::ModelDescription& model) {
     auto& env = model.Environment();
-    //Scaling factor for the influence of neuroblasts on Schwann cell proliferation, juxtacrine.
-    //0.5 is assumed.
-    float scpro_jux = 0.770901658f; // Calibration LHC#147
-    //Scaling factor for the influence of Schwann cells on neuroblast differentiation, juxtacrine.
-    //1 is assumed.
-    float nbdiff_jux = 0.078538971f; // Calibration LHC#147
-    //Amount of neuroblast differentiation achieved in an hour, triggered by Schwann cells.
-    //0.01 is assumed.
-    float nbdiff_amount = 0.219370661f; // Calibration LHC#147
-    //Scaling factor for the influence of Schwann cells on neuroblast apoptosis, juxtacrine.
-    //0.1 is assumed.
-    float nbapop_jux = 0.090780907f; // Calibration LHC#147
-    //Scaling factor for the influence of neuroblasts on Schwann cell proliferation, paracrine.
-    //0.05 is assumed.
+    // Scaling factor for the influence of neuroblasts on Schwann cell proliferation, juxtacrine.
+    // 0.5 is assumed.
+    float scpro_jux = 0.770901658f;  // Calibration LHC#147
+    // Scaling factor for the influence of Schwann cells on neuroblast differentiation, juxtacrine.
+    // 1 is assumed.
+    float nbdiff_jux = 0.078538971f;  // Calibration LHC#147
+    // Amount of neuroblast differentiation achieved in an hour, triggered by Schwann cells.
+    // 0.01 is assumed.
+    float nbdiff_amount = 0.219370661f;  // Calibration LHC#147
+    // Scaling factor for the influence of Schwann cells on neuroblast apoptosis, juxtacrine.
+    // 0.1 is assumed.
+    float nbapop_jux = 0.090780907f;  // Calibration LHC#147
+    // Scaling factor for the influence of neuroblasts on Schwann cell proliferation, paracrine.
+    // 0.05 is assumed.
     float scpro_para = scpro_jux / 10;
-    //Scaling factor for the influence of Schwann cells on neuroblast differentiation, paracrine.
-    //0.1 is assumed.
+    // Scaling factor for the influence of Schwann cells on neuroblast differentiation, paracrine.
+    // 0.1 is assumed.
     float nbdiff_para = nbdiff_jux / 10;
-    //Scaling factor for the influence of Schwann cells on neuroblast apoptosis, paracrine.
-    //0.01 is assumed.
+    // Scaling factor for the influence of Schwann cells on neuroblast apoptosis, paracrine.
+    // 0.01 is assumed.
     float nbapop_para = nbapop_jux / 10;
 
     env.newProperty<float>("scpro_jux", scpro_jux);
@@ -224,23 +224,23 @@ void nb_sc_crosstalk_parameters(flamegpu::ModelDescription& model) {
 }
 void immune_system_parameters(flamegpu::ModelDescription& model) {
     auto& env = model.Environment();
-    //Probability of an apoptotic or necrotic cell being engulfed by an immune cell in an hour.
-    //in vivo: 0.35 (Jagiella et al., 2016).
-    //in vitro without stromal cells such as macrophages: 0.01 (Jagiella et al., 2016).
+    // Probability of an apoptotic or necrotic cell being engulfed by an immune cell in an hour.
+    // in vivo: 0.35 (Jagiella et al., 2016).
+    // in vitro without stromal cells such as macrophages: 0.01 (Jagiella et al., 2016).
     env.newProperty<float>("P_lysis", 0.35f);
 }
 void mechanical_model_parameters(flamegpu::ModelDescription& model) {
     auto& env = model.Environment();
     // Minimum overlap below which two cells cannot interact, given in m (Pathmanathan et al., 2009), converted to microns.
     // However, it was decided that it should be reset to zero so that when two cells are just touching, they stop interacting immediately, i.e. no bouncing off.
-    env.newProperty<float>("min_overlap", -4e-6 * 1e6 * 0);
+    env.newProperty<float>("min_overlap", static_cast<float>(-4e-6 * 1e6 * 0));
     // Linear force law parameter in N m-1 (Pathmanathan et al., 2009).
-    env.newProperty<float>("k1", (float)2.2e-3);
-    //A cell's search distance in the search for neighbours (microns).
+    env.newProperty<float>("k1", static_cast<float>(2.2e-3));
+    // A cell's search distance in the search for neighbours (microns).
     // Calibrated.
     env.newProperty<float>("R_neighbours", 1.05f * (2.0f * 1.5f * env.getProperty<float>("R_cell")));  // @todo: Confirm msg radius > this
-    //Number of other cells allowed within a cell's search distance before contact inhibition activates.
-    //Assumed.
+    // Number of other cells allowed within a cell's search distance before contact inhibition activates.
+    // Assumed.
     env.newProperty<int>("N_neighbours", 2);
     // Factor by which a cell magnifies the force acting on it upon contact inhibition.
     // Assumed.
@@ -255,18 +255,18 @@ void extracellular_environment_parameters(flamegpu::ModelDescription& model) {
     auto& env = model.Environment();
     // Production rate of oxygen given in pmol per min per 80000 cells, converted to moles per cell per hour (Grimes et al., 2014).
     // Negative because it is actually consumption.
-    env.newProperty<float>("P_O20", (float)(-250e-12 * 60.0 / 80000.0));
+    env.newProperty<float>("P_O20", static_cast<float>(-250e-12 * 60.0 / 80000.0));
     // Concentration scale or maximum partial pressure of oxygen, given in mmHg (Carreau et al., 2011), converted to g per dm3, then to moles per dm3 (M).
     // Henry's law constant for oxygen gas at human body temperature is used for conversion (Grimes et al., 2014).
     // Molar mass of O2 is 32 g.
     // It is the normal value in the kidney.
-    env.newProperty<float>("Cs_O2", (float)(72.0 / 2.2779e-4 / 32.0));
+    env.newProperty<float>("Cs_O2", static_cast<float>(72.0 / 2.2779e-4 / 32.0));
     // If this is on, the initial oxygen level is taken as the equilibrium.
     // Furthermore, it is assumed that the vasculature always returns it to the equilibrium at the end of a time step.
     env.newProperty<int>("staticO2", 0);
     // Number of angiogenic signals needed to update the vasculature.
     // In an experiment (Utzinger et al., 2015), it took 100 hours for two microvessel fragments to inosculate to the vascular network.
-    // https://pubmed.ncbi.nlm.nih.gov/25795217/ Large-scale time series microscopy of neovessel growth during angiogenesis.
+    // https:// pubmed.ncbi.nlm.nih.gov/25795217/ Large-scale time series microscopy of neovessel growth during angiogenesis.
     env.newProperty<int>("ang_critical", 100);
 }
 void nb_initial_conditions(flamegpu::ModelDescription& model) {
@@ -365,7 +365,7 @@ FLAMEGPU_INIT_FUNCTION(InitDerivedEnvironment) {
     const int gradiff = FLAMEGPU->random.uniform<int>(0, 2);
     float cellularity;
     float theta_sc;
-    const float O2 = (2/72.0f) + (FLAMEGPU->random.uniform<float>() * (30 / 72.0f)); // rng in range [2/72, 32/72]
+    const float O2 = (2/72.0f) + (FLAMEGPU->random.uniform<float>() * (30 / 72.0f));  // rng in range [2/72, 32/72]
     if (histology_init == 1) {
         if (FLAMEGPU->random.uniform<float>() < 0.5f) {
             histology = 2;
@@ -383,44 +383,44 @@ FLAMEGPU_INIT_FUNCTION(InitDerivedEnvironment) {
     }
     if (histology == 0) {
         if (gradiff == 0) {
-            cellularity = 0.83f + (FLAMEGPU->random.uniform<float>() * 0.12f); // [0.83, 0.95)
-            theta_sc = 0.05f + (FLAMEGPU->random.uniform<float>() * 0.12f); // [0.05, 0.17)
+            cellularity = 0.83f + (FLAMEGPU->random.uniform<float>() * 0.12f);  // [0.83, 0.95)
+            theta_sc = 0.05f + (FLAMEGPU->random.uniform<float>() * 0.12f);  // [0.05, 0.17)
         } else if (gradiff == 1) {
-            cellularity = 0.67f + (FLAMEGPU->random.uniform<float>() * 0.16f); // [0.67, 0.83)
-            theta_sc = 0.17f + (FLAMEGPU->random.uniform<float>() * 0.16f); // [0.17, 0.33)
+            cellularity = 0.67f + (FLAMEGPU->random.uniform<float>() * 0.16f);  // [0.67, 0.83)
+            theta_sc = 0.17f + (FLAMEGPU->random.uniform<float>() * 0.16f);  // [0.17, 0.33)
         } else if (gradiff == 2) {
-            cellularity = 0.5f + (FLAMEGPU->random.uniform<float>() * 0.17f); // [0.5, 0.67)
-            theta_sc = 0.33f + (FLAMEGPU->random.uniform<float>() * 0.17f); // [0.33, 0.5)
+            cellularity = 0.5f + (FLAMEGPU->random.uniform<float>() * 0.17f);  // [0.5, 0.67)
+            theta_sc = 0.33f + (FLAMEGPU->random.uniform<float>() * 0.17f);  // [0.33, 0.5)
         }
     } else if (histology == 2) {
         float dummy = FLAMEGPU->random.uniform<float>();
         if (dummy < 0.33f) {
             if (gradiff == 0) {
-                cellularity = 0.83f + (FLAMEGPU->random.uniform<float>() * 0.12f); // [0.83, 0.95)
-                theta_sc =  0.05f + (FLAMEGPU->random.uniform<float>() * 0.12f); // [0.05, 0.17)
+                cellularity = 0.83f + (FLAMEGPU->random.uniform<float>() * 0.12f);  // [0.83, 0.95)
+                theta_sc =  0.05f + (FLAMEGPU->random.uniform<float>() * 0.12f);  // [0.05, 0.17)
             } else if (gradiff == 1) {
-                cellularity = 0.67f + (FLAMEGPU->random.uniform<float>() * 0.16f); // [0.67, 0.83)
-                theta_sc = 0.17f + (FLAMEGPU->random.uniform<float>() * 0.16f); // [0.17, 0.33)
+                cellularity = 0.67f + (FLAMEGPU->random.uniform<float>() * 0.16f);  // [0.67, 0.83)
+                theta_sc = 0.17f + (FLAMEGPU->random.uniform<float>() * 0.16f);  // [0.17, 0.33)
             } else if (gradiff == 2) {
-                cellularity = 0.5f + (FLAMEGPU->random.uniform<float>() * 0.17f); // [0.5, 0.67)
-                theta_sc = 0.33f + (FLAMEGPU->random.uniform<float>() * 0.17f); // [0.33, 0.5)
+                cellularity = 0.5f + (FLAMEGPU->random.uniform<float>() * 0.17f);  // [0.5, 0.67)
+                theta_sc = 0.33f + (FLAMEGPU->random.uniform<float>() * 0.17f);  // [0.33, 0.5)
             }
         } else if (dummy < 0.66f) {
-            cellularity = 0.33f + (FLAMEGPU->random.uniform<float>() * 0.17f); // [0.33, 0.5)
-            theta_sc = 0.5f + (FLAMEGPU->random.uniform<float>() * 0.17f); // [0.5, 0.67)
+            cellularity = 0.33f + (FLAMEGPU->random.uniform<float>() * 0.17f);  // [0.33, 0.5)
+            theta_sc = 0.5f + (FLAMEGPU->random.uniform<float>() * 0.17f);  // [0.5, 0.67)
         } else {
-            cellularity = 0.17f + (FLAMEGPU->random.uniform<float>() * 0.16f); // [0.17, 0.33)
-            theta_sc = 0.67f + (FLAMEGPU->random.uniform<float>() * 0.16f); // [0.67, 0.83)
+            cellularity = 0.17f + (FLAMEGPU->random.uniform<float>() * 0.16f);  // [0.17, 0.33)
+            theta_sc = 0.67f + (FLAMEGPU->random.uniform<float>() * 0.16f);  // [0.67, 0.83)
         }
     } else if (histology == 3) {
-        cellularity = 0.33f + (FLAMEGPU->random.uniform<float>() * 0.17f); // [0.33, 0.5)
-        theta_sc = 0.5f + (FLAMEGPU->random.uniform<float>() * 0.17f); // [0.5, 0.67)
+        cellularity = 0.33f + (FLAMEGPU->random.uniform<float>() * 0.17f);  // [0.33, 0.5)
+        theta_sc = 0.5f + (FLAMEGPU->random.uniform<float>() * 0.17f);  // [0.5, 0.67)
     } else if (histology == 5) {
-        cellularity = 0.17f + (FLAMEGPU->random.uniform<float>() * 0.16f); // [0.17, 0.33)
-        theta_sc = 0.67f + (FLAMEGPU->random.uniform<float>() * 0.16f); // [0.67, 0.83)
+        cellularity = 0.17f + (FLAMEGPU->random.uniform<float>() * 0.16f);  // [0.17, 0.33)
+        theta_sc = 0.67f + (FLAMEGPU->random.uniform<float>() * 0.16f);  // [0.67, 0.83)
     } else if (histology == 6) {
-        cellularity = 0.05f + (FLAMEGPU->random.uniform<float>() * 0.12f); // [0.05, 0.17)
-        theta_sc = 0.83f + (FLAMEGPU->random.uniform<float>() * 0.12f); // [0.83, 0.95)
+        cellularity = 0.05f + (FLAMEGPU->random.uniform<float>() * 0.12f);  // [0.05, 0.17)
+        theta_sc = 0.83f + (FLAMEGPU->random.uniform<float>() * 0.12f);  // [0.83, 0.95)
     }
     FLAMEGPU->environment.setProperty<int>("histology", histology);
     FLAMEGPU->environment.setProperty<int>("gradiff", gradiff);
@@ -498,15 +498,15 @@ FLAMEGPU_INIT_FUNCTION(InitDerivedEnvironment) {
     const float P_O2v = FLAMEGPU->environment.getProperty<float>("P_O2v");
     const int P_O2v_OFF = FLAMEGPU->environment.getProperty<int>("P_O2v_OFF");
      // Initial tumour radius (microns)
-    const float R_tumour = (float)(0.5 * pow(V_tumour, (1.0 / 3.0)));
+    const float R_tumour = static_cast<float>(0.5 * pow(V_tumour, (1.0 / 3.0)));
     FLAMEGPU->environment.setProperty<float>("R_tumour", R_tumour);
     // Tumour boundary's (microns)
     FLAMEGPU->environment.setProperty<glm::vec3>("bc_minus", glm::vec3(-boundary_max * R_tumour));
     FLAMEGPU->environment.setProperty<glm::vec3>("bc_plus", glm::vec3(boundary_max * R_tumour));
     // Grid element or voxel volume (cubic microns).
-    FLAMEGPU->environment.setProperty<float>("V_grid", (float)pow(2.0 * R_voxel, 3.0f));
+    FLAMEGPU->environment.setProperty<float>("V_grid", static_cast<float>(pow(2.0 * R_voxel, 3.0f)));
     // Grid element or voxel side area (square microns).
-    FLAMEGPU->environment.setProperty<float>("A_grid", (float)pow(2.0 * R_voxel, 2.0f));
+    FLAMEGPU->environment.setProperty<float>("A_grid", static_cast<float>(pow(2.0 * R_voxel, 2.0f)));
     // This variable represents vasculature()
     FLAMEGPU->environment.setProperty<float>("P_O2v", P_O2v_OFF ? 0.0f : P_O2v);
     FLAMEGPU->environment.setProperty<float>("matrix_dummy", 1.0f - cellularity);

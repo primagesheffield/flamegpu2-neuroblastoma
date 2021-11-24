@@ -115,15 +115,22 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
         const int s_BNIP3 = FLAMEGPU->random.uniform<float>() < s_BNIP3_fn && s_HIF == 1 ? 1 : 0;
         const int s_VEGF = FLAMEGPU->random.uniform<float>() < s_VEGF_fn && s_HIF == 1 ? 1 : 0;
         const int s_MYCN_amp = FLAMEGPU->getVariable<int>("MYCN_amp");
-        s_p53 = ((FLAMEGPU->random.uniform<float>() < s_p53_fn && s_DNA_damage == 1) || (FLAMEGPU->random.uniform<float>() < s_p53_fn && s_DNA_damage == 1 && s_MYCN == 1) || (FLAMEGPU->random.uniform<float>() < s_p53_fn && s_HIF == 1) || (FLAMEGPU->random.uniform<float>() < s_p53_fn&& s_HIF == 1 && s_MYCN == 1)) && !(s_MYCN == 1 && s_MYCN_amp == 1) ? 1 : 0;
-        s_p73 = (FLAMEGPU->random.uniform<float>() < s_p73_fn && s_CHK1 == 1) || (FLAMEGPU->random.uniform<float>() < s_p73_fn && s_HIF == 1) ? 1 : 0;
+        s_p53 = ((FLAMEGPU->random.uniform<float>() < s_p53_fn && s_DNA_damage == 1) ||
+                (FLAMEGPU->random.uniform<float>() < s_p53_fn && s_DNA_damage == 1 && s_MYCN == 1) ||
+                (FLAMEGPU->random.uniform<float>() < s_p53_fn && s_HIF == 1) ||
+                (FLAMEGPU->random.uniform<float>() < s_p53_fn&& s_HIF == 1 && s_MYCN == 1)) &&
+                !(s_MYCN == 1 && s_MYCN_amp == 1)
+                ? 1 : 0;
+        s_p73 = (FLAMEGPU->random.uniform<float>() < s_p73_fn && s_CHK1 == 1) ||
+                (FLAMEGPU->random.uniform<float>() < s_p73_fn && s_HIF == 1)
+                ? 1 : 0;
         const int s_p21 = ((FLAMEGPU->random.uniform<float>() < s_p21_fn && s_HIF == 1) || (FLAMEGPU->random.uniform<float>() < s_p21_fn && s_p53 == 1)) && !(s_MAPK_RAS == 1 || s_MYCN == 1) ? 1 : 0;
         const int s_p27 = ((FLAMEGPU->random.uniform<float>() < s_p27_fn && s_HIF == 1) || (FLAMEGPU->random.uniform<float>() < s_p27_fn && s_p53 == 1)) && !(s_MAPK_RAS == 1 || s_MYCN == 1) ? 1 : 0;
         const int s_Bcl2_Bclxl = (FLAMEGPU->random.uniform<float>() < s_Bcl2_Bclxl_fn && !(s_BNIP3 == 1 || s_p53 == 1 || s_p73 == 1)) ? 1 : 0;
         const int s_BAK_BAX = ((FLAMEGPU->random.uniform<float>() < s_BAK_BAX_fn && s_hypoxia == 1) || (FLAMEGPU->random.uniform<float>() < s_BAK_BAX_fn && s_p53 == 1) || (FLAMEGPU->random.uniform<float>() < s_BAK_BAX_fn && s_p73 == 1)) && !(s_Bcl2_Bclxl == 1 || s_IAP2 == 1) ? 1 : 0;
         const int s_ATP = FLAMEGPU->getVariable<int>("ATP");
         const int s_CAS = ((FLAMEGPU->random.uniform<float>() < s_CAS_fn && s_BAK_BAX == 1) || (FLAMEGPU->random.uniform<float>() < s_CAS_fn && s_hypoxia == 1)) && s_ATP == 1 ? 1 : 0;
-        
+
         FLAMEGPU->setVariable<int>("MYCN", s_MYCN);
         FLAMEGPU->setVariable<int>("MAPK_RAS", s_MAPK_RAS);
         FLAMEGPU->setVariable<int>("JAB1", s_JAB1);
@@ -144,12 +151,12 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
         // Update attribute layer 1, part 2.
         // Detect the presence of stressors.
         int s_DNA_unreplicated  = FLAMEGPU->getVariable<int>("DNA_unreplicated");
-        if (s_DNA_unreplicated == 1)
+        if (s_DNA_unreplicated == 1) {
             if (s_p53 == 1 || s_p73 == 1) {
                 s_DNA_unreplicated = 0;
                 FLAMEGPU->setVariable<int>("DNA_unreplicated", 0);
             }
-
+        }
         // Update attribute layer 3, part 2.
         // Let the intracellular signalling molecules respond to changes.
         const float s_CDS1_fn = FLAMEGPU->getVariable<float>("CDS1_fn");
@@ -195,11 +202,11 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
         unsigned int Nscl_count = FLAMEGPU->environment.getProperty<unsigned int>("Nscl_count");
         unsigned int Nnbl_count = FLAMEGPU->environment.getProperty<unsigned int>("Nnbl_count");
         float s_degdiff = FLAMEGPU->getVariable<float>("degdiff");
-        if (FLAMEGPU->random.uniform<float>() < step_size * nbdiff_jux * dummy_Nscl / (float)(dummy_Nnbl + dummy_Nscl)) {
+        if (FLAMEGPU->random.uniform<float>() < step_size * nbdiff_jux * dummy_Nscl / static_cast<float>(dummy_Nnbl + dummy_Nscl)) {
             s_degdiff += nbdiff_amount * step_size;
             if (s_degdiff > 1)
                 s_degdiff = 1;
-        } else if (FLAMEGPU->random.uniform<float>() < step_size * nbdiff_para * Nscl_count / (float)(Nnbl_count + Nscl_count)) {
+        } else if (FLAMEGPU->random.uniform<float>() < step_size * nbdiff_para * Nscl_count / static_cast<float>(Nnbl_count + Nscl_count)) {
             s_degdiff += nbdiff_amount * step_size;
             if (s_degdiff > 1)
                 s_degdiff = 1;
@@ -222,10 +229,10 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
             s_apop_signal += 1 * step_size;
             stress = 1;
         }
-        if (FLAMEGPU->random.uniform<float>() < step_size * nbapop_jux * dummy_Nscl / (float)(dummy_Nnbl + dummy_Nscl)) {
+        if (FLAMEGPU->random.uniform<float>() < step_size * nbapop_jux * dummy_Nscl / static_cast<float>(dummy_Nnbl + dummy_Nscl)) {
             s_apop_signal += 1 * step_size;
             stress = 1;
-        } else if (FLAMEGPU->random.uniform<float>() < step_size * nbapop_para * Nscl_count / (float)(Nnbl_count + Nscl_count)) {
+        } else if (FLAMEGPU->random.uniform<float>() < step_size * nbapop_para * Nscl_count / static_cast<float>(Nnbl_count + Nscl_count)) {
             s_apop_signal += 1 * step_size;
             stress = 1;
         }
@@ -328,8 +335,8 @@ __device__ __forceinline__ void Neuroblastoma_cell_cycle(flamegpu::DeviceAPI<fla
     const int s_CDC25C = FLAMEGPU->getVariable<int>("CDC25C");
     const int s_hypoxia = FLAMEGPU->getVariable<int>("hypoxia");
 
-    //In the cell cycle, 0[12] = G0, 1[6] = G1/S, 2[4] = S/G2, 3[2] = G2/M, 4[0] = division.
-    //In the cell cycle, 0-11 = G0, 12-17 = G1/S, 18-21 = S/G2, 22-23 = G2/M, 24+ = division.
+    // In the cell cycle, 0[12] = G0, 1[6] = G1/S, 2[4] = S/G2, 3[2] = G2/M, 4[0] = division.
+    // In the cell cycle, 0-11 = G0, 12-17 = G1/S, 18-21 = S/G2, 22-23 = G2/M, 24+ = division.
     if (s_neighbours <= N_neighbours && s_ATP == 1 && s_apop == 0 && s_necro == 0) {
         if (s_cycle < cycle_stages[0]) {
             if (s_cycle == 0) {
@@ -373,7 +380,7 @@ __device__ __forceinline__ bool Neuroblastoma_divide(flamegpu::DeviceAPI<flamegp
     const int s_necro = FLAMEGPU->getVariable<int>("necro");
     if (!(s_apop == 0 && s_necro == 0))
         return false;
-    //Telomere repair and division of a neuroblastoma cell.
+    // Telomere repair and division of a neuroblastoma cell.
     //  1. If the number of telomere units is below the maximum value, try repairing it.
     //  2. At the end of the cell cycle, the cell divides.
     //      (a)Move it back to the beginning of the cycle.
@@ -387,9 +394,9 @@ __device__ __forceinline__ bool Neuroblastoma_divide(flamegpu::DeviceAPI<flamegp
     const unsigned int step_size = FLAMEGPU->environment.getProperty<unsigned int>("step_size");
     const glm::uvec4 cycle_stages = FLAMEGPU->environment.getProperty<glm::uvec4>("cycle_stages");
     if (s_telo_count < telo_maximum) {
-        if (s_telo == 1 && (FLAMEGPU->random.uniform<float>() < P_telorp * (float)step_size)) {
+        if (s_telo == 1 && (FLAMEGPU->random.uniform<float>() < P_telorp * static_cast<float>(step_size))) {
             s_telo_count += 1;
-        } else if (s_ALT == 1 && (FLAMEGPU->random.uniform<float>() < P_telorp * (float)step_size)) {
+        } else if (s_ALT == 1 && (FLAMEGPU->random.uniform<float>() < P_telorp * static_cast<float>(step_size))) {
             s_telo_count += 1;
         }
     }
@@ -405,7 +412,6 @@ __device__ __forceinline__ bool Neuroblastoma_divide(flamegpu::DeviceAPI<flamegp
 }
 
 FLAMEGPU_AGENT_FUNCTION(nb_cell_lifecycle, flamegpu::MessageNone, flamegpu::MessageNone) {
-
     Neuroblastoma_sense(FLAMEGPU);
     Neuroblastoma_cell_cycle(FLAMEGPU);
     if (remove(FLAMEGPU)) {
@@ -689,7 +695,7 @@ void initNeuroblastoma(flamegpu::HostAPI &FLAMEGPU) {
     for (unsigned int i = 0; i < NB_COUNT; ++i) {
         auto agt = NB.newAgent();
         // Spatial coordinates (integration with imaging biomarkers).
-        agt.setVariable<glm::vec3>("xyz", 
+        agt.setVariable<glm::vec3>("xyz",
             glm::vec3(-R_tumour + (FLAMEGPU.random.uniform<float>() * 2 * R_tumour),
                 -R_tumour + (FLAMEGPU.random.uniform<float>() * 2 * R_tumour),
                 -R_tumour + (FLAMEGPU.random.uniform<float>() * 2 * R_tumour)));
@@ -698,7 +704,7 @@ void initNeuroblastoma(flamegpu::HostAPI &FLAMEGPU) {
         agt.setVariable<int>("TERT_rarngm", TERT_rarngm < 0 ? static_cast<int>(FLAMEGPU.random.uniform<float>() < 0.5) : TERT_rarngm);
         agt.setVariable<int>("ATRX_inact", ATRX_inact < 0 ? static_cast<int>(FLAMEGPU.random.uniform<float>() < 0.5) : ATRX_inact);
         agt.setVariable<int>("ALT", ALT < 0 ? static_cast<int>(FLAMEGPU.random.uniform<float>() < 0.5) : ALT);
-        agt.setVariable<int>("ALK", ALK < 0 ? FLAMEGPU.random.uniform<int>(0, 2) : ALK); // Random int in range [0, 2]
+        agt.setVariable<int>("ALK", ALK < 0 ? FLAMEGPU.random.uniform<int>(0, 2) : ALK);  // Random int in range [0, 2]
         // Data Layer 2 (integration with genetic/molecular biomarkers).
         agt.setVariable<float>("MYCN_fn00", MYCN_fn00 < 0 ? FLAMEGPU.random.uniform<float>() : MYCN_fn00);
         agt.setVariable<float>("MYCN_fn10", MYCN_fn10 < 0 ? FLAMEGPU.random.uniform<float>() : MYCN_fn10);
@@ -744,7 +750,7 @@ void initNeuroblastoma(flamegpu::HostAPI &FLAMEGPU) {
         agt.setVariable<float>("BAK_BAX_fn", BAK_BAX_fn < 0 ? FLAMEGPU.random.uniform<float>() : BAK_BAX_fn);
         agt.setVariable<float>("CAS_fn", CAS_fn < 0 ? FLAMEGPU.random.uniform<float>() : CAS_fn);
         agt.setVariable<float>("VEGF_fn", VEGF_fn < 0 ? FLAMEGPU.random.uniform<float>() : VEGF_fn);
-        //Initial conditions.
+        // Initial conditions.
         agt.setVariable<glm::vec3>("Fxyz", glm::vec3(0));
         agt.setVariable<float>("overlap", 0);
         agt.setVariable<int>("neighbours", 0);
@@ -755,7 +761,7 @@ void initNeuroblastoma(flamegpu::HostAPI &FLAMEGPU) {
         } else {
             // Weird init, because Py model has uniform chance per stage
             // uniform chance within stage
-            const int stage = FLAMEGPU.random.uniform<int>(0, 3); // Random int in range [0, 3]
+            const int stage = FLAMEGPU.random.uniform<int>(0, 3);  // Random int in range [0, 3]
             const unsigned int stage_start = stage == 0 ? 0 : cycle_stages[stage - 1];
             const unsigned int stage_extra = static_cast<unsigned int>(FLAMEGPU.random.uniform<float>() * static_cast<float>(cycle_stages[stage] - stage_start));
             agt.setVariable<unsigned int>("cycle", stage_start + stage_extra);
@@ -764,15 +770,15 @@ void initNeuroblastoma(flamegpu::HostAPI &FLAMEGPU) {
         agt.setVariable<int>("apop_signal", apop_signal < 0 ? 0 : apop_signal);
         agt.setVariable<int>("necro", necro < 0 ? 0 : necro);
         agt.setVariable<int>("necro_signal", necro_signal < 0 ? 0 : necro_signal);
-        agt.setVariable<int>("necro_critical", FLAMEGPU.random.uniform<int>(3, 168)); // Random int in range [3, 168]
+        agt.setVariable<int>("necro_critical", FLAMEGPU.random.uniform<int>(3, 168));  // Random int in range [3, 168]
         if (telo_count < 0) {
-            agt.setVariable<int>("telo_count", FLAMEGPU.random.uniform<int>(25, 35)); // Random int in range [25, 35]
+            agt.setVariable<int>("telo_count", FLAMEGPU.random.uniform<int>(25, 35));  // Random int in range [25, 35]
         } else if (telo_count == 1) {
-            agt.setVariable<int>("telo_count", FLAMEGPU.random.uniform<int>(41, 60)); // Random int in range [41, 60]
+            agt.setVariable<int>("telo_count", FLAMEGPU.random.uniform<int>(41, 60));  // Random int in range [41, 60]
         } else if (telo_count == 2) {
-            agt.setVariable<int>("telo_count", FLAMEGPU.random.uniform<int>(1, 20)); // Random int in range [1, 20]
+            agt.setVariable<int>("telo_count", FLAMEGPU.random.uniform<int>(1, 20));  // Random int in range [1, 20]
         } else if (telo_count == 3) {
-            agt.setVariable<int>("telo_count", FLAMEGPU.random.uniform<int>(21, 40)); // Random int in range [21, 40]
+            agt.setVariable<int>("telo_count", FLAMEGPU.random.uniform<int>(21, 40));  // Random int in range [21, 40]
         } else {
             agt.setVariable<int>("telo_count", telo_count);
         }
@@ -850,8 +856,15 @@ void initNeuroblastoma(flamegpu::HostAPI &FLAMEGPU) {
         const int a_IAP2 = (FLAMEGPU.random.uniform<float>() < a_IAP2_fn && a_hypoxia == 1) ? 1 : 0;
         const int a_HIF = ((FLAMEGPU.random.uniform<float>() < a_HIF_fn && a_hypoxia == 1) || (FLAMEGPU.random.uniform<float>() < a_HIF_fn && a_hypoxia == 1 && a_JAB1 == 1)) && !(agt.getVariable<int>("p53") == 1 || agt.getVariable<int>("p73") == 1) ? 1 : 0;  // Unusual case here, if JAB1 is on, second chance
         const int a_BNIP3 = (FLAMEGPU.random.uniform<float>() < a_BNIP3_fn && a_HIF == 1) ? 1 : 0;
-        const int a_p53 = ((FLAMEGPU.random.uniform<float>() < a_p53_fn && a_DNA_damage == 1) || (FLAMEGPU.random.uniform<float>() < a_p53_fn && a_DNA_damage == 1 && a_MYCN == 1) || (FLAMEGPU.random.uniform<float>() < a_p53_fn && a_HIF == 1) || (FLAMEGPU.random.uniform<float>() < a_p53_fn && a_HIF == 1 && a_MYCN == 1)) && !(a_MYCN == 1 && a_MYCN_amp == 1) ? 1 : 0;
-        const int a_p73 = ((FLAMEGPU.random.uniform<float>() < a_p73_fn && a_CHK1 == 1) || (FLAMEGPU.random.uniform<float>() < a_p73_fn && a_HIF == 1)) ? 1 : 0;
+        const int a_p53 = ((FLAMEGPU.random.uniform<float>() < a_p53_fn && a_DNA_damage == 1) ||
+                          (FLAMEGPU.random.uniform<float>() < a_p53_fn && a_DNA_damage == 1 && a_MYCN == 1) ||
+                          (FLAMEGPU.random.uniform<float>() < a_p53_fn && a_HIF == 1) ||
+                          (FLAMEGPU.random.uniform<float>() < a_p53_fn && a_HIF == 1 && a_MYCN == 1)) &&
+                          !(a_MYCN == 1 && a_MYCN_amp == 1)
+                          ? 1 : 0;
+        const int a_p73 = ((FLAMEGPU.random.uniform<float>() < a_p73_fn && a_CHK1 == 1) ||
+                          (FLAMEGPU.random.uniform<float>() < a_p73_fn && a_HIF == 1))
+                          ? 1 : 0;
         const int a_BAK_BAX = (((FLAMEGPU.random.uniform<float>() < a_BAK_BAX_fn && a_hypoxia == 1) || (FLAMEGPU.random.uniform<float>() < a_BAK_BAX_fn && a_p53 == 1) || (FLAMEGPU.random.uniform<float>() < a_BAK_BAX_fn && a_p73 == 1)) && !(a_Bcl2_Bclxl == 1 || a_IAP2 == 1)) ? 1 : 0;
 
         agt.setVariable<int>("MYCN", a_MYCN);

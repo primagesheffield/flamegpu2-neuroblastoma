@@ -1,5 +1,5 @@
-#ifndef SRC_HEADER_H
-#define SRC_HEADER_H
+#ifndef SRC_HEADER_H_
+#define SRC_HEADER_H_
 
 #include "flamegpu/flamegpu.h"
 /**
@@ -73,8 +73,7 @@ __device__ __forceinline__ glm::ivec3 toGrid(flamegpu::DeviceAPI<Mi, Mo>* FLAMEG
     return glm::ivec3(
         grid_origin.x + floor((location.x + span.x / 2.0f) / R_voxel / 2.0f),
         grid_origin.y + floor((location.y + span.y / 2.0f) / R_voxel / 2.0f),
-        grid_origin.z + floor((location.z + span.z / 2.0f) / R_voxel / 2.0f)
-    );
+        grid_origin.z + floor((location.z + span.z / 2.0f) / R_voxel / 2.0f));
 }
 /**
  * Notify the NB tracking grid counters of the passed cell's state
@@ -115,7 +114,7 @@ __device__ void increment_grid_sc(flamegpu::DeviceAPI<Mi, Mo>* FLAMEGPU, const g
  * Common function used by nb and sc cell lifecycle to shift cells which divide
  */
 __device__ __forceinline__ glm::vec3 drift(flamegpu::DeviceAPI<flamegpu::MessageNone, flamegpu::MessageNone>* FLAMEGPU) {
-    //Randomly and slightly move a generic cell.
+    // Randomly and slightly move a generic cell.
     glm::vec3 location = FLAMEGPU->template getVariable<glm::vec3>("xyz");
     const float R_cell = FLAMEGPU->environment.getProperty<float>("R_cell");
     const glm::vec3 dummy_dir = glm::vec3(
@@ -132,7 +131,7 @@ __device__ __forceinline__ glm::vec3 drift(flamegpu::DeviceAPI<flamegpu::Message
  * Common function used by nb and sc cell lifecycle to decide whether a cell is dead
  */
 __device__ __forceinline__ bool remove(flamegpu::DeviceAPI<flamegpu::MessageNone, flamegpu::MessageNone>* FLAMEGPU) {
-    //Remove an apoptotic or necrotic cell if it is engulfed by an immune cell.
+    // Remove an apoptotic or necrotic cell if it is engulfed by an immune cell.
     if (FLAMEGPU->getVariable<int>("apop") == 1 || FLAMEGPU->getVariable<int>("necro") == 1) {
         const float P_lysis = FLAMEGPU->environment.getProperty<float>("P_lysis");
         const unsigned int step_size = FLAMEGPU->environment.getProperty<unsigned int>("step_size");
@@ -144,7 +143,7 @@ __device__ __forceinline__ bool remove(flamegpu::DeviceAPI<flamegpu::MessageNone
 template<typename Mi, typename Mo>
 __device__ __forceinline__ bool getChemoState(flamegpu::DeviceAPI<Mi, Mo>* FLAMEGPU) {
     return false;
-    //return (FLAMEGPU->getStepCounter() % 504) < 24;
+    // return (FLAMEGPU->getStepCounter() % 504) < 24;
 }
 
 // Hostfn prototypes
@@ -154,4 +153,4 @@ extern flamegpu::FLAMEGPU_HOST_FUNCTION_POINTER alter2;
 extern flamegpu::FLAMEGPU_HOST_FUNCTION_POINTER CAexpand;
 
 
-#endif  // SRC_HEADER_H
+#endif  // SRC_HEADER_H_

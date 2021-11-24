@@ -16,7 +16,7 @@ FLAMEGPU_AGENT_FUNCTION(alter, flamegpu::MessageNone, flamegpu::MessageNone) {
     }
 
     const auto matrix_grid = FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("matrix_grid");
-    float matrix_value = matrix_grid[location.x][location.y][location.z].exchange(0); // This is required to read+write in same fn
+    float matrix_value = matrix_grid[location.x][location.y][location.z].exchange(0);  // This is required to read+write in same fn
     const glm::uvec3 grid_span = FLAMEGPU->environment.getProperty<glm::uvec3>("grid_span");
     const glm::uvec3 grid_span_old = FLAMEGPU->environment.getProperty<glm::uvec3>("grid_span_old");
     // Apply CAexpand, if required, to grid members
@@ -40,7 +40,7 @@ FLAMEGPU_AGENT_FUNCTION(alter, flamegpu::MessageNone, flamegpu::MessageNone) {
     // Assuming a diffusivity of 1.75e-5 cm2 s - 1 (Grote et al., 1977), the diffusion length in an hour is 0.5 cm or 5 mm.Diffusion is not limiting.
     // 2. Matrix volume fraction :
     // Calculate the volume produced by living Schwann cells in a time step.
-    //
+
     // Sum these grid values, so that alter2() can perform a reduction for oxygen calc
     const auto Nnbl_grid = FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nnbl_grid");
     const auto Nscl_grid = FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nscl_grid");
@@ -137,7 +137,7 @@ void initGrid(flamegpu::HostAPI &FLAMEGPU) {
     for (unsigned int i = 0; i < GC_COUNT; ++i) {
         auto agt = gc.newAgent();
         agt.setVariable<unsigned int, 3>("xyz", {
-            i % GRID_MAX_DIMENSIONS, 
+            i % GRID_MAX_DIMENSIONS,
             (i / GRID_MAX_DIMENSIONS) % GRID_MAX_DIMENSIONS,
             i / (GRID_MAX_DIMENSIONS * GRID_MAX_DIMENSIONS)
         });

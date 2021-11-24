@@ -20,7 +20,7 @@ __device__ __forceinline__ void Schwann_sense(flamegpu::DeviceAPI<flamegpu::Mess
         if (s_DNA_damage == 0) {
             const float P_DNA_damageHypo = FLAMEGPU->environment.getProperty<float>("P_DNA_damageHypo");
             const int telo_critical = FLAMEGPU->environment.getProperty<int>("telo_critical");
-            if (FLAMEGPU->random.uniform<float>() < (1 - s_telo_count / (float)telo_critical)*step_size) {
+            if (FLAMEGPU->random.uniform<float>() < (1 - s_telo_count / static_cast<float>(telo_critical))*step_size) {
                 s_DNA_damage = 1;
             } else if (FLAMEGPU->random.uniform<float>() < P_DNA_damageHypo*step_size && s_hypoxia == 1) {
                 s_DNA_damage = 1;
@@ -100,7 +100,7 @@ __device__ __forceinline__ void Schwann_sense(flamegpu::DeviceAPI<flamegpu::Mess
         const float P_apoprp = FLAMEGPU->environment.getProperty<float>("P_apoprp");
         int s_apop_signal = FLAMEGPU->getVariable<int>("apop_signal");
         const unsigned int s_cycle = FLAMEGPU->getVariable<unsigned int>("cycle");
-        const int s_ATP = FLAMEGPU->getVariable<int>("ATP"); // Could set this above, rather than get
+        const int s_ATP = FLAMEGPU->getVariable<int>("ATP");  // Could set this above, rather than get
         stress = 0;
         if ((s_DNA_damage == 1 || s_hypoxia == 1) && s_ATP == 1) {
             s_apop_signal += 1 * step_size;
@@ -137,9 +137,8 @@ __device__ __forceinline__ void Schwann_sense(flamegpu::DeviceAPI<flamegpu::Mess
         }
     }
 }
-__device__ __forceinline__ void Schwann_cell_cycle(flamegpu::DeviceAPI<flamegpu::MessageNone, flamegpu::MessageNone>* FLAMEGPU)
-{
-    // Progress through the Schwann cell's cell cycle.    
+__device__ __forceinline__ void Schwann_cell_cycle(flamegpu::DeviceAPI<flamegpu::MessageNone, flamegpu::MessageNone>* FLAMEGPU) {
+    // Progress through the Schwann cell's cell cycle.
     // In the cell cycle, 0 = G0, 1 = G1 / S, 2 = S / G2, 3 = G2 / M, 4 = division.
     // Regulatory mechanisms :
     //      1. Contact inhibition.
@@ -196,9 +195,9 @@ __device__ __forceinline__ void Schwann_cell_cycle(flamegpu::DeviceAPI<flamegpu:
 
     // The influence of neuroblasts on Schwann cell proliferation.
     bool dummy_scpro;
-    if (FLAMEGPU->random.uniform<float>() < step_size*scpro_jux*dummy_Nnbl / (float)(dummy_Nnbl + dummy_Nscl)) {
+    if (FLAMEGPU->random.uniform<float>() < step_size*scpro_jux*dummy_Nnbl / static_cast<float>(dummy_Nnbl + dummy_Nscl)) {
         dummy_scpro = true;
-    } else if (FLAMEGPU->random.uniform<float>() < step_size*scpro_para*Nnbl_count / (float)(Nnbl_count + Nscl_count)) {
+    } else if (FLAMEGPU->random.uniform<float>() < step_size*scpro_para*Nnbl_count / static_cast<float>(Nnbl_count + Nscl_count)) {
         dummy_scpro = true;
     } else {
         dummy_scpro = false;
@@ -206,8 +205,8 @@ __device__ __forceinline__ void Schwann_cell_cycle(flamegpu::DeviceAPI<flamegpu:
     const float P_cycle_sc = FLAMEGPU->environment.getProperty<float>("P_cycle_sc");
     const bool dummy_scycle = (dummy_scpro == 1 || FLAMEGPU->random.uniform<float>() < P_cycle_sc) ? true : false;
 
-    //In the cell cycle, 0[12] = G0, 1[6] = G1/S, 2[4] = S/G2, 3[2] = G2/M, 4[0] = division.
-    //In the cell cycle, 0-11 = G0, 12-17 = G1/S, 18-21 = S/G2, 22-23 = G2/M, 24+ = division.
+    // In the cell cycle, 0[12] = G0, 1[6] = G1/S, 2[4] = S/G2, 3[2] = G2/M, 4[0] = division.
+    // In the cell cycle, 0-11 = G0, 12-17 = G1/S, 18-21 = S/G2, 22-23 = G2/M, 24+ = division.
     unsigned int s_cycle = FLAMEGPU->getVariable<unsigned int>("cycle");
     const int s_neighbours = FLAMEGPU->getVariable<int>("neighbours");
     const int s_ATP = FLAMEGPU->getVariable<int>("ATP");
@@ -398,7 +397,7 @@ void initSchwann(flamegpu::HostAPI &FLAMEGPU) {
         } else {
             // Weird init, because Py model has uniform chance per stage
             // uniform chance within stage
-            const int stage = FLAMEGPU.random.uniform<int>(0, 3); // Random int in range [0, 3]
+            const int stage = FLAMEGPU.random.uniform<int>(0, 3);  // Random int in range [0, 3]
             const unsigned int stage_start = stage == 0 ? 0 : cycle_stages[stage - 1];
             const unsigned int stage_extra = static_cast<unsigned int>(FLAMEGPU.random.uniform<float>() * static_cast<float>(cycle_stages[stage] - stage_start));
             agt.setVariable<unsigned int>("cycle", stage_start + stage_extra);
@@ -407,8 +406,8 @@ void initSchwann(flamegpu::HostAPI &FLAMEGPU) {
         agt.setVariable<int>("apop_signal", apop_signal_sc < 0 ? 0 : apop_signal_sc);
         agt.setVariable<int>("necro", necro_sc < 0 ? 0 : necro_sc);
         agt.setVariable<int>("necro_signal", necro_signal_sc < 0 ? 0 : necro_signal_sc);
-        agt.setVariable<int>("necro_critical", FLAMEGPU.random.uniform<int>(3, 168)); // Random int in range [3, 168]
-        agt.setVariable<int>("telo_count", telo_count_sc < 0 ? FLAMEGPU.random.uniform<int>(25, 35) : telo_count_sc); // Random int in range [25, 35]
+        agt.setVariable<int>("necro_critical", FLAMEGPU.random.uniform<int>(3, 168));  // Random int in range [3, 168]
+        agt.setVariable<int>("telo_count", telo_count_sc < 0 ? FLAMEGPU.random.uniform<int>(25, 35) : telo_count_sc);  // Random int in range [25, 35]
         // Attribute Layer 1
         agt.setVariable<int>("hypoxia", 0);
         agt.setVariable<int>("nutrient", 1);
