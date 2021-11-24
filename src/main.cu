@@ -39,6 +39,8 @@ int main(int argc, const char ** argv) {
         flamegpu::StepLoggingConfig step_log_cfg(model);
         {
             step_log_cfg.setFrequency(1);
+            step_log_cfg.logEnvironment("Nscl_count");
+            step_log_cfg.logEnvironment("Nnbl_count");
             step_log_cfg.logEnvironment("O2");
             step_log_cfg.logEnvironment("Cs_O2");
             step_log_cfg.logEnvironment("C50_necro");
@@ -50,8 +52,6 @@ int main(int argc, const char ** argv) {
             step_log_cfg.logEnvironment("apop_critical");
             step_log_cfg.logEnvironment("nbapop_jux");
             step_log_cfg.logEnvironment("nbapop_para");
-            step_log_cfg.logEnvironment("Nscl_count");
-            step_log_cfg.logEnvironment("Nnbl_count");
             step_log_cfg.logEnvironment("MYCN_amp");
             step_log_cfg.logEnvironment("TERT_rarngm");
             step_log_cfg.logEnvironment("ATRX_inact");
@@ -60,12 +60,6 @@ int main(int argc, const char ** argv) {
             step_log_cfg.logEnvironment("telo_count");
             step_log_cfg.logEnvironment("P_necrorp");
             step_log_cfg.logEnvironment("P_necroIS");
-            step_log_cfg.logEnvironment("bb_min_x");
-            step_log_cfg.logEnvironment("bb_min_y");
-            step_log_cfg.logEnvironment("bb_min_z");
-            step_log_cfg.logEnvironment("bb_max_x");
-            step_log_cfg.logEnvironment("bb_max_y");
-            step_log_cfg.logEnvironment("bb_max_z");
             step_log_cfg.logEnvironment("force_resolution_steps");
             step_log_cfg.agent("Neuroblastoma").logCount();
             step_log_cfg.agent("Neuroblastoma").logMean<int>("apop");
@@ -114,8 +108,6 @@ int main(int argc, const char ** argv) {
             step_log_cfg.agent("Schwann").logMean<int>("ATP");
             step_log_cfg.agent("Schwann").logMean<int>("nutrient");
             step_log_cfg.agent("Schwann").logMean<int>("telo_count");
-            step_log_cfg.agent("Schwann").logMean<int>("dummy_Nn");
-            step_log_cfg.agent("Schwann").logMax<int>("dummy_Nn");
             step_log_cfg.agent("Schwann").logMean<int>("neighbours");
             step_log_cfg.agent("GridCell").logMin<unsigned int>("Nnbn_grid");
             step_log_cfg.agent("GridCell").logMax<unsigned int>("Nnbn_grid");
@@ -127,7 +119,6 @@ int main(int argc, const char ** argv) {
             step_log_cfg.agent("GridCell").logSum<unsigned int>("Nscn_grid");
             step_log_cfg.logEnvironment("grid_origin");
             step_log_cfg.logEnvironment("grid_dims");
-            step_log_cfg.logEnvironment("sc_cycle_stage");
         }
         /**
          * Create Model Runner
@@ -135,7 +126,7 @@ int main(int argc, const char ** argv) {
         flamegpu::CUDAEnsemble cuda_ensemble(model, argc, argv);
         cuda_ensemble.Config().concurrent_runs = 1;
         cuda_ensemble.Config().devices = { 0 };
-        cuda_ensemble.Config().out_directory = "ensemble_out_big";
+        cuda_ensemble.Config().out_directory = "ensemble_out";
         cuda_ensemble.Config().out_format = "json";
         cuda_ensemble.setStepLog(step_log_cfg);
         cuda_ensemble.simulate(runs);

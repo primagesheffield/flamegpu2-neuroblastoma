@@ -511,8 +511,8 @@ FLAMEGPU_INIT_FUNCTION(InitDerivedEnvironment) {
     FLAMEGPU->environment.setProperty<float>("P_O2v", P_O2v_OFF ? 0.0f : P_O2v);
     FLAMEGPU->environment.setProperty<float>("matrix_dummy", 1.0f - cellularity);
 }
-#define _USE_MATH_DEFINES
-#include <math.h>
+// #define _USE_MATH_DEFINES
+// #include <math.h>
 void defineEnvironment(flamegpu::ModelDescription& model) {
     data_layer_0(model);
     data_layer_1(model);
@@ -529,14 +529,4 @@ void defineEnvironment(flamegpu::ModelDescription& model) {
     sc_initial_conditions(model);
     internal_derived(model);
     model.addInitFunction(InitDerivedEnvironment);
-    // Validation stuff, temp
-    auto& env = model.Environment();
-    env.newProperty<float>("bb_min_x", 0);
-    env.newProperty<float>("bb_min_y", 0);
-    env.newProperty<float>("bb_min_z", 0);
-    env.newProperty<float>("bb_max_x", 0);
-    env.newProperty<float>("bb_max_y", 0);
-    env.newProperty<float>("bb_max_z", 0);
-    model.Environment().newMacroProperty<unsigned int, 16>("sc_cycle");
-    model.Environment().newProperty<float, 16>("sc_cycle_stage", {});
 }

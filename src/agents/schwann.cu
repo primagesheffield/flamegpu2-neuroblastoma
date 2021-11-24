@@ -59,7 +59,6 @@ __device__ __forceinline__ void Schwann_sense(flamegpu::DeviceAPI<flamegpu::Mess
             dummy_Nn += static_cast<unsigned int>(Nnbn[gid.x][gid.y][gid.z - 1]) + static_cast<unsigned int>(Nscn[gid.x][gid.y][gid.z - 1]);
         if (gid.z + 1 < grid_origin.z + grid_dims.z)
             dummy_Nn += static_cast<unsigned int>(Nnbn[gid.x][gid.y][gid.z + 1]) + static_cast<unsigned int>(Nscn[gid.x][gid.y][gid.z + 1]);
-        FLAMEGPU->setVariable<int>("dummy_Nn", dummy_Nn);
 
 
         const float P_necroIS = FLAMEGPU->environment.getProperty<float>("P_necroIS");
@@ -140,7 +139,6 @@ __device__ __forceinline__ void Schwann_sense(flamegpu::DeviceAPI<flamegpu::Mess
 }
 __device__ __forceinline__ void Schwann_cell_cycle(flamegpu::DeviceAPI<flamegpu::MessageNone, flamegpu::MessageNone>* FLAMEGPU)
 {
-    const auto sc_counter = FLAMEGPU->environment.getMacroProperty<unsigned int, 16>("sc_cycle");
     // Progress through the Schwann cell's cell cycle.    
     // In the cell cycle, 0 = G0, 1 = G1 / S, 2 = S / G2, 3 = G2 / M, 4 = division.
     // Regulatory mechanisms :
@@ -200,13 +198,10 @@ __device__ __forceinline__ void Schwann_cell_cycle(flamegpu::DeviceAPI<flamegpu:
     bool dummy_scpro;
     if (FLAMEGPU->random.uniform<float>() < step_size*scpro_jux*dummy_Nnbl / (float)(dummy_Nnbl + dummy_Nscl)) {
         dummy_scpro = true;
-        ++sc_counter[0];
     } else if (FLAMEGPU->random.uniform<float>() < step_size*scpro_para*Nnbl_count / (float)(Nnbl_count + Nscl_count)) {
         dummy_scpro = true;
-        ++sc_counter[1];
     } else {
         dummy_scpro = false;
-        ++sc_counter[2];
     }
     const float P_cycle_sc = FLAMEGPU->environment.getProperty<float>("P_cycle_sc");
     const bool dummy_scycle = (dummy_scpro == 1 || FLAMEGPU->random.uniform<float>() < P_cycle_sc) ? true : false;
@@ -222,46 +217,33 @@ __device__ __forceinline__ void Schwann_cell_cycle(flamegpu::DeviceAPI<flamegpu:
     const int s_DNA_unreplicated = FLAMEGPU->getVariable<int>("DNA_unreplicated");
     const int s_hypoxia = FLAMEGPU->getVariable<int>("hypoxia");
     if (dummy_scycle && s_neighbours < N_neighbours && s_ATP == 1 && s_apop == 0 && s_necro == 0) {
-        ++sc_counter[3];
         if (s_cycle < cycle_stages[0]) {
-            ++sc_counter[4];
             if (s_cycle == 0) {
-                ++sc_counter[5];
                 if (s_DNA_damage == 0 && s_hypoxia == 0) {
-                    ++sc_counter[6];
                     s_cycle += step_size;
                 }
             } else if (s_DNA_damage == 0 && s_hypoxia == 0) {
-                ++sc_counter[7];
                 s_cycle += step_size;
             }
         } else if (s_cycle < cycle_stages[1]) {
-            ++sc_counter[8];
             if (s_DNA_damage == 0 && s_hypoxia == 0) {
-                ++sc_counter[9];
                 s_cycle += step_size;
                 if (s_DNA_unreplicated == 0) {
-                    ++sc_counter[10];
                     const float P_unrepDNA = FLAMEGPU->environment.getProperty<float>("P_unrepDNA");
                     const float P_unrepDNAHypo = FLAMEGPU->environment.getProperty<float>("P_unrepDNAHypo");
                     if (FLAMEGPU->random.uniform<float>() < P_unrepDNA * step_size) {
-                        ++sc_counter[11];
                         FLAMEGPU->setVariable<int>("DNA_unreplicated", 1);
                     } else if (FLAMEGPU->random.uniform<float>() < P_unrepDNAHypo * step_size && s_hypoxia == 1) {
-                        ++sc_counter[12];
                         FLAMEGPU->setVariable<int>("DNA_unreplicated", 1);
                     }
                 }
             }
         } else if (s_cycle < cycle_stages[2]) {
-            ++sc_counter[13];
             s_cycle += step_size;
             if (s_cycle >= cycle_stages[2] && (s_DNA_damage == 1 || s_DNA_unreplicated == 1)) {
-                ++sc_counter[14];
                 s_cycle -= step_size;
             }
         } else if (s_cycle < cycle_stages[3]) {
-            ++sc_counter[15];
             s_cycle += step_size;
         }
     }
@@ -373,7 +355,6 @@ flamegpu::AgentDescription &defineSchwann(flamegpu::ModelDescription& model) {
         t.setAllowAgentDeath(true);
         t.setAgentOutput(sc);
     }
-    sc.newVariable<int>("dummy_Nn");  //Debugging
     return sc;
 }
 

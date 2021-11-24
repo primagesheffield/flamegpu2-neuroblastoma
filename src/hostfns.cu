@@ -136,18 +136,4 @@ FLAMEGPU_HOST_FUNCTION(reset_grids) {
     FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nnbl_grid").zero();
     FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nscl_grid").zero();
     FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nscl_col_grid").zero();
-
-    // Validation stuff
-    const glm::vec3 min_pos = min(
-        FLAMEGPU->agent("Neuroblastoma").reduce<glm::vec3>("xyz", glm_min, glm::vec3(std::numeric_limits<float>().max())),
-        FLAMEGPU->agent("Schwann").reduce<glm::vec3>("xyz", glm_min, glm::vec3(std::numeric_limits<float>().max())));
-    const glm::vec3 max_pos = max(
-        FLAMEGPU->agent("Neuroblastoma").reduce<glm::vec3>("xyz", glm_max, glm::vec3(-std::numeric_limits<float>().max())),
-        FLAMEGPU->agent("Schwann").reduce<glm::vec3>("xyz", glm_max, glm::vec3(-std::numeric_limits<float>().max())));
-    FLAMEGPU->environment.setProperty<float>("bb_min_x", min_pos.x);
-    FLAMEGPU->environment.setProperty<float>("bb_min_y", min_pos.y);
-    FLAMEGPU->environment.setProperty<float>("bb_min_z", min_pos.z);
-    FLAMEGPU->environment.setProperty<float>("bb_max_x", max_pos.x);
-    FLAMEGPU->environment.setProperty<float>("bb_max_y", max_pos.y);
-    FLAMEGPU->environment.setProperty<float>("bb_max_z", max_pos.z);
 }
