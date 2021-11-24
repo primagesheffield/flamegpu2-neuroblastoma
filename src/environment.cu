@@ -65,21 +65,21 @@ void data_layer_1(flamegpu::ModelDescription& model) {
 void data_layer_2(flamegpu::ModelDescription& model) {
     auto& env = model.Environment();
     // Function of MYCN (continuous, 0 to 1), default (-1) means unknown.
-    const float MYCN_fn11 = 0.758258323f;  // Calibration LHC#147
+    const float MYCN_fn11 = 0.942648156f;  // Calibration LHC#564
     const float MYCN_fn00 = 0.8f * 0.71f * MYCN_fn11;
     const float MYCN_fn10 = 0.71f * MYCN_fn11;
     const float MYCN_fn01 = 0.8f * MYCN_fn11;
     // Function of MAPK/RAS signalling (continuous, 0 to 1), default (-1) means unknown.
-    const float MAPK_RAS_fn11 = 0.826819728f;  // Calibration LHC#147
+    const float MAPK_RAS_fn11 = 0.377627766f;  // Calibration LHC#564
     const float MAPK_RAS_fn10 = 0.77f * MAPK_RAS_fn11;
-    const float MAPK_RAS_fn01 = 0.625214937f;  // Calibration LHC#147
+    const float MAPK_RAS_fn01 = 0.003161348f;  // Calibration LHC#564
     const float MAPK_RAS_fn00 = 0.77f * MAPK_RAS_fn01;
     // Function of p53 signalling (continuous, 0 to 1), default (-1) means unknown.
-    const float p53_fn = 0.772787569f;  // Calibration LHC#147
+    const float p53_fn = 0.198089528;  // Calibration LHC#564
     // Function of p73 signalling (continuous, 0 to 1), default (-1) means unknown.
-    const float p73_fn = 0.848203617f;  // Calibration LHC#147
+    const float p73_fn = 0.141041534f;  // Calibration LHC#564
     // Function of HIF signalling (continuous, 0 to 1), default (-1) means unknown.
-    const float HIF_fn = 0.599560284f;  // Calibration LHC#147
+    const float HIF_fn = 0.591769646f;  // Calibration LHC#564
 
     env.newProperty<float>("MYCN_fn11", MYCN_fn11);
     env.newProperty<float>("MYCN_fn00", MYCN_fn00);
@@ -130,7 +130,7 @@ void cell_cycle_parameters(flamegpu::ModelDescription& model) {
     env.newProperty<float>("glycoEff", 1 / 15.0f);
     // Basal probability of cycling for Schwann cells (Ambros and Ambros et al., 2001).
     // https:// pubmed.ncbi.nlm.nih.gov/11464875/
-    env.newProperty<float>("P_cycle_sc", 0.698516922f);  // Calibration LHC#147
+    env.newProperty<float>("P_cycle_sc", 0.344412213f);  // Calibration LHC#564
 }
 /**
  * neuroblasts and Schwann cells
@@ -152,36 +152,36 @@ void cell_death_parameters(flamegpu::ModelDescription& model) {
     env.newProperty<int>("telo_critical", 20);
     // Probability of gaining DNA damage in an hour due to hypoxia.
     // Assumed to be 1 %.
-    env.newProperty<float>("P_DNA_damageHypo", 0.461203825f);  // Calibration LHC#147
+    env.newProperty<float>("P_DNA_damageHypo", 0.772947675f);  // Calibration LHC#564
     // Probability of repairing DNA damage in an hour.
     // Assumed to be 1 % .
-    env.newProperty<float>("P_DNA_damagerp", 0.291861877f);  // Calibration LHC#147
+    env.newProperty<float>("P_DNA_damagerp", 0.771497002f);  // Calibration LHC#564
     // Probability of gaining unreplicated DNA in an hour.
     // Assumed to be 0.1 %.
     env.newProperty<float>("P_unrepDNA", 0.0f);
     // Probability of gaining unreplicated DNA in an hour due to hypoxia.
     // Assumed to be 1 %.
-    env.newProperty<float>("P_unrepDNAHypo", 0.803610534f);  // Calibration LHC#147
+    env.newProperty<float>("P_unrepDNAHypo", 0.434578817f);  // Calibration LHC#564
     // Probability of repairing unreplicated DNA in an hour.
     // Assumed to be 1 % .
-    env.newProperty<float>("P_unrepDNArp", 0.871531954f);  // Calibration LHC#147
+    env.newProperty<float>("P_unrepDNArp", 0.890953082f);  // Calibration LHC#564
     // Probability of the immune system triggering a necrotic signal in a living cell per necrotic cell present per hour.
     // Assumed to be 1 % .
-    env.newProperty<float>("P_necroIS", 0.393895701f);  // Calibration LHC#147
+    env.newProperty<float>("P_necroIS", 0.57675841f);  // Calibration LHC#564
     // Probability of secondary necrosis in an hour (Dunster, Byrne, King 2014).
     env.newProperty<float>("P_2ndnecro", 0.2f);
     // Probability of gaining one unit of telomere in an hour, when telomerase or ALT is active..
     // Assumed to be 1 % .
-    env.newProperty<float>("P_telorp", 0.068383864f);  // Calibration LHC#147
+    env.newProperty<float>("P_telorp", 0.08895382f);  // Calibration LHC#564
     // Probability of gaining an apoptotic signal due to chemotherapy in an hour.
     // Assumed to be 10 % .
-    env.newProperty<float>("P_apopChemo", 0.219394318f);  // Calibration LHC#147
+    env.newProperty<float>("P_apopChemo", 0.276331829f);  // Calibration LHC#564
     // Probability of losing an apoptotic signal in an unstressed cell in an hour.
     // Assumed to be 1 % .
-    env.newProperty<float>("P_apoprp", 0.814669799f);  // Calibration LHC#147
+    env.newProperty<float>("P_apoprp", 0.957831979f);  // Calibration LHC#564
     // Probability of losing a necrotic signal in an unstressed cell in an hour.
     // Assumed to be 1 % .
-    env.newProperty<float>("P_necrorp", 0.301734721f);  // Calibration LHC#147
+    env.newProperty<float>("P_necrorp", 0.98970852f);  // Calibration LHC#564
 }
 void schwann_cell_parameters(flamegpu::ModelDescription& model) {
     auto& env = model.Environment();
@@ -194,16 +194,16 @@ void nb_sc_crosstalk_parameters(flamegpu::ModelDescription& model) {
     auto& env = model.Environment();
     // Scaling factor for the influence of neuroblasts on Schwann cell proliferation, juxtacrine.
     // 0.5 is assumed.
-    float scpro_jux = 0.770901658f;  // Calibration LHC#147
+    float scpro_jux = 0.040184733f;  // Calibration LHC#564
     // Scaling factor for the influence of Schwann cells on neuroblast differentiation, juxtacrine.
     // 1 is assumed.
-    float nbdiff_jux = 0.078538971f;  // Calibration LHC#147
+    float nbdiff_jux = 0.39577123f;  // Calibration LHC#564
     // Amount of neuroblast differentiation achieved in an hour, triggered by Schwann cells.
     // 0.01 is assumed.
-    float nbdiff_amount = 0.219370661f;  // Calibration LHC#147
+    float nbdiff_amount = 0.241650418f;  // Calibration LHC#564
     // Scaling factor for the influence of Schwann cells on neuroblast apoptosis, juxtacrine.
     // 0.1 is assumed.
-    float nbapop_jux = 0.090780907f;  // Calibration LHC#147
+    float nbapop_jux = 0.088949834f;  // Calibration LHC#564
     // Scaling factor for the influence of neuroblasts on Schwann cell proliferation, paracrine.
     // 0.05 is assumed.
     float scpro_para = scpro_jux / 10;
