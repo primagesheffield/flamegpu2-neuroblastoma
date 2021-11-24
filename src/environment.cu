@@ -75,7 +75,7 @@ void data_layer_2(flamegpu::ModelDescription& model) {
     const float MAPK_RAS_fn01 = 0.003161348f;  // Calibration LHC#564
     const float MAPK_RAS_fn00 = 0.77f * MAPK_RAS_fn01;
     // Function of p53 signalling (continuous, 0 to 1), default (-1) means unknown.
-    const float p53_fn = 0.198089528;  // Calibration LHC#564
+    const float p53_fn = 0.198089528f;  // Calibration LHC#564
     // Function of p73 signalling (continuous, 0 to 1), default (-1) means unknown.
     const float p73_fn = 0.141041534f;  // Calibration LHC#564
     // Function of HIF signalling (continuous, 0 to 1), default (-1) means unknown.
@@ -122,7 +122,7 @@ void cell_cycle_parameters(flamegpu::ModelDescription& model) {
     // Note, if these durations change, the static maths in calc_R() need updating too.
     std::array<unsigned int, 4> cycle_stages = { 12, 6, 4, 2 };
     // Perform a scan over the values, to calculate where the boundaries lie
-    for (int i = 1; i < sizeof(cycle_stages) / sizeof(unsigned int); ++i) {
+    for (unsigned int i = 1; i < sizeof(cycle_stages) / sizeof(unsigned int); ++i) {
         cycle_stages[i] += cycle_stages[i - 1];
     }
     env.newProperty<unsigned int, 4>("cycle_stages", cycle_stages);
