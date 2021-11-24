@@ -236,7 +236,8 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
             s_apop_signal += 1 * step_size;
             stress = 1;
         }
-        if (getChemoState(FLAMEGPU) && 1 < s_cycle < 2 && FLAMEGPU->random.uniform<float>() < P_apopChemo * step_size) {
+        const glm::uvec4 cycle_stages = FLAMEGPU->environment.getProperty<glm::uvec4>("cycle_stages");
+        if (getChemoState(FLAMEGPU) && cycle_stages[1] < s_cycle && s_cycle < cycle_stages[2] && FLAMEGPU->random.uniform<float>() < P_apopChemo * step_size) {
             s_apop_signal += 1 * step_size;
             stress = 1;
         }
