@@ -207,6 +207,7 @@ flamegpu::SubModelDescription& defineForceResolution(flamegpu::ModelDescription&
     env.newProperty<float>("mu", 0.0f);
     env.newProperty<float>("dt", 0.0f);
     env.newProperty<unsigned int, 4>("cycle_stages", { 0, 0, 0, 0 });
+    env.newProperty<float>("matrix_dummy", 0);
     env.newProperty<unsigned int>("force_resolution_steps", 0);
     env.newProperty<float>("R_cell", 0);
     env.newProperty<float>("min_overlap", 0);
