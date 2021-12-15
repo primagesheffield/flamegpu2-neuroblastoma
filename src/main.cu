@@ -62,6 +62,7 @@ int main(int argc, const char ** argv) {
             for (unsigned int j = 0; j < RUNS_PER_CONFIG; ++j) {
                 for (unsigned int i = 0; i < CONFIG_COUNT; ++i) {
                     const unsigned int ij = i * RUNS_PER_CONFIG + j;
+                    runs[ij].setOutputSubdirectory(std::to_string(columns["Index"][i]));
                     runs[ij].setRandomSimulationSeed((j+12) * 84673);  // Something something prime number
                     runs[ij].setProperty<float>("O2", columns["O2"][i]);
                     runs[ij].setProperty<float>("cellularity", columns["cellularity"][i]);
