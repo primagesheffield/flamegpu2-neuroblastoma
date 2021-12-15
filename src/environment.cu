@@ -16,6 +16,7 @@ void data_layer_minus1(flamegpu::ModelDescription& model) {
     env.newProperty<float>("degdiff", 0);
     // DERIVED: Clonal composition (continuous, 24 numbers adding up to 1).
     env.newProperty<float, 24>("clones", {});
+    env.newProperty<float, 23>("clones_dummy", {});
 }
 /**
  * integration with imaging biomarkers
@@ -358,13 +359,12 @@ FLAMEGPU_INIT_FUNCTION(InitDerivedEnvironment) {
     /**
      * Data layer -1 (Studies involving heterogeneous tumours).
      */
-    const float O2 = (2 / 72.0f) + (FLAMEGPU->random.uniform<float>() * (30 / 72.0f));  // rng in range [2/72, 32/72)
+    /*const float O2 = (2 / 72.0f) + (FLAMEGPU->random.uniform<float>() * (30 / 72.0f));  // rng in range [2/72, 32/72)
     float cellularity = 0.17f + (FLAMEGPU->random.uniform<float>() * 0.78f);  // rng in range [0.17, 0.95)
     float theta_sc = 0.05f + (FLAMEGPU->random.uniform<float>() * 0.78f);  // rng in range [0.05, 0.83)
-    float degdiff = FLAMEGPU->random.uniform<float>() * 0.8f;  // rng in range [0.0, 0.8)
-    std::vector<float> dummy(23);
-    for (auto &v : dummy)
-        v = FLAMEGPU->random.uniform<float>();
+    float degdiff = FLAMEGPU->random.uniform<float>() * 0.8f;  // rng in range [0.0, 0.8)*/
+    std::array<float, 23> clones_dummy = FLAMEGPU->environment.getProperty<float, 23>("clones_dummy");
+    std::vector<float> dummy(clones_dummy.begin(), clones_dummy.end());
     std::sort(dummy.begin(), dummy.end());
     dummy.push_back(1.0f);
     std::array<float, 24> clones;
@@ -375,10 +375,10 @@ FLAMEGPU_INIT_FUNCTION(InitDerivedEnvironment) {
             clones[i] = dummy[i] - dummy[i-1];
         }
     }
-    FLAMEGPU->environment.setProperty<float>("O2", O2);
+    /*FLAMEGPU->environment.setProperty<float>("O2", O2);
     FLAMEGPU->environment.setProperty<float>("cellularity", cellularity);
     FLAMEGPU->environment.setProperty<float>("theta_sc", theta_sc);
-    FLAMEGPU->environment.setProperty<float>("degdiff", degdiff);
+    FLAMEGPU->environment.setProperty<float>("degdiff", degdiff);*/
     FLAMEGPU->environment.setProperty<float, 24>("clones", clones);
 
     /**
@@ -451,7 +451,7 @@ FLAMEGPU_INIT_FUNCTION(InitDerivedEnvironment) {
     FLAMEGPU->environment.setProperty<float>("A_grid", static_cast<float>(pow(2.0 * R_voxel, 2.0f)));
     // This variable represents vasculature()
     FLAMEGPU->environment.setProperty<float>("P_O2v", P_O2v_OFF ? 0.0f : P_O2v);
-    FLAMEGPU->environment.setProperty<float>("matrix_dummy", 1.0f - cellularity);
+    FLAMEGPU->environment.setProperty<float>("matrix_dummy", 1.0f - FLAMEGPU->environment.getProperty<float>("cellularity"));
     /**
      * hetNB Logging
      */
