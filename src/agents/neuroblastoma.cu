@@ -250,6 +250,7 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
         const int apop_critical = FLAMEGPU->environment.getProperty<int>("apop_critical");
         const int s_necro_critical = FLAMEGPU->getVariable<int>("necro_critical");
         if (s_apop_signal >= apop_critical) {
+            FLAMEGPU->setVariable<float>("degdiff", 0);
             FLAMEGPU->setVariable<int>("telo", 0);
             FLAMEGPU->setVariable<int>("ALT", 0);
             FLAMEGPU->setVariable<int>("MYCN", 0);
@@ -274,6 +275,7 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
             FLAMEGPU->setVariable<int>("ATP", 0);
             FLAMEGPU->setVariable<int>("apop", 1);
         } else if (s_necro_signal >= s_necro_critical) {
+            FLAMEGPU->setVariable<float>("degdiff", 0);
             FLAMEGPU->setVariable<int>("telo", 0);
             FLAMEGPU->setVariable<int>("ALT", 0);
             FLAMEGPU->setVariable<int>("MYCN", 0);
@@ -502,6 +504,7 @@ FLAMEGPU_AGENT_FUNCTION(nb_cell_lifecycle, flamegpu::MessageNone, flamegpu::Mess
         FLAMEGPU->agent_out.setVariable<glm::vec3>("old_xyz", newLoc);
         FLAMEGPU->agent_out.setVariable<float>("move_dist", 0);  // This could be left to default init?
     }
+    FLAMEGPU->environment.getMacroProperty<unsigned int, 24>("NB_living_count")[FLAMEGPU->getVariable<int>("cloneID")-1]++;
     return flamegpu::ALIVE;
 }
 FLAMEGPU_AGENT_FUNCTION(output_oxygen_cell, flamegpu::MessageNone, flamegpu::MessageNone) {
@@ -692,6 +695,7 @@ void initNeuroblastoma(flamegpu::HostAPI &FLAMEGPU) {
 
     for (int j = 0; j < clones.size(); ++j) {
         const unsigned int NB_COUNT = static_cast<unsigned int>(N_CELL * clones[j]);
+        FLAMEGPU.environment.setProperty<int>("NB_living_count", j, static_cast<int>(NB_COUNT));
         const int cloneID = j + 1;
         for (unsigned int i = 0; i < NB_COUNT; ++i) {
             auto agt = NB.newAgent();
@@ -742,7 +746,7 @@ void initNeuroblastoma(flamegpu::HostAPI &FLAMEGPU) {
                 agt.setVariable<float>("MAPK_RAS_fn", agt.getVariable<float>("MAPK_RAS_fn11"));
             }
             if (p53_fn < 0) {
-                agt.setVariable<float>("p53_fn", FLAMEGPU.random.uniform<float>());            
+                agt.setVariable<float>("p53_fn", FLAMEGPU.random.uniform<float>());
             } else if ((s_cloneID / 3) % 2 == 1) {
                 agt.setVariable<float>("p53_fn", p53_fn);
             } else {

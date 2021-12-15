@@ -1,6 +1,6 @@
 #include "header.h"
 
-const bool ENSEMBLE = false;
+const bool ENSEMBLE = true;
 int main(int argc, const char ** argv) {
     flamegpu::ModelDescription model("PRIMAGE: Neuroblastoma");
     defineModel(model);
@@ -24,7 +24,7 @@ int main(int argc, const char ** argv) {
          */
         flamegpu::RunPlanVector runs(model, 128);
         {
-            runs.setSteps(50);
+            runs.setSteps(3024);
             runs.setRandomSimulationSeed(12, 1);
         }
         /**
@@ -33,8 +33,11 @@ int main(int argc, const char ** argv) {
         flamegpu::StepLoggingConfig step_log_cfg(model);
         {
             step_log_cfg.setFrequency(1);
+            step_log_cfg.logEnvironment("O2");
             step_log_cfg.logEnvironment("Nscl_count");
             step_log_cfg.logEnvironment("Nnbl_count");
+            step_log_cfg.logEnvironment("NB_living_count");
+            step_log_cfg.logEnvironment("NB_living_degdiff_average");
         }
         /**
          * Create Model Runner

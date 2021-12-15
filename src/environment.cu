@@ -346,6 +346,14 @@ void internal_derived(flamegpu::ModelDescription& model) {
     // VALIDATION:
     env.newProperty<unsigned int>("force_resolution_steps", 0);
 }
+void hetNB_logging(flamegpu::ModelDescription& model) {
+    auto& env = model.Environment();
+    // Per cloneID, NB_living_count
+    env.newMacroProperty<unsigned int, 24>("NB_living_count");
+    env.newProperty<int, 24>("NB_living_count", { 0 });
+    // Something to calc degdiff avg across NB_living into
+    env.newProperty<float>("NB_living_degdiff_average", 0.0f);
+}
 FLAMEGPU_INIT_FUNCTION(InitDerivedEnvironment) {
     /**
      * Data layer -1 (Studies involving heterogeneous tumours).
@@ -463,5 +471,6 @@ void defineEnvironment(flamegpu::ModelDescription& model) {
     nb_initial_conditions(model);
     sc_initial_conditions(model);
     internal_derived(model);
+    hetNB_logging(model);
     model.addInitFunction(InitDerivedEnvironment);
 }
