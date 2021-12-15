@@ -452,6 +452,10 @@ FLAMEGPU_INIT_FUNCTION(InitDerivedEnvironment) {
     // This variable represents vasculature()
     FLAMEGPU->environment.setProperty<float>("P_O2v", P_O2v_OFF ? 0.0f : P_O2v);
     FLAMEGPU->environment.setProperty<float>("matrix_dummy", 1.0f - cellularity);
+    /**
+     * hetNB Logging
+     */
+    FLAMEGPU->environment.setProperty<float>("NB_living_degdiff_average", FLAMEGPU->environment.getProperty<float>("degdiff"));
 }
 // #define _USE_MATH_DEFINES
 // #include <math.h>

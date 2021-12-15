@@ -415,4 +415,5 @@ void initSchwann(flamegpu::HostAPI &FLAMEGPU) {
         agt.setVariable<int>("DNA_damage", 0);
         agt.setVariable<int>("DNA_unreplicated", 0);
     }
+    FLAMEGPU.environment.setProperty<unsigned int>("Nscl_count", SC_COUNT);
 }
