@@ -1,5 +1,23 @@
 #include "header.h"
 /**
+ * Data layer -1 (Studies involving heterogeneous tumours).
+ */
+void data_layer_minus1(flamegpu::ModelDescription& model) {
+    auto& env = model.Environment();
+    // DERIVED: Initial oxygen level (continuous, 0 to 1).
+    // Oxygen concentration in the kidney = 72 mmHg (Carreau et al., 2011), chosen as concentration scale.
+    // Oxygen concentration in hypoxic tumours = 2 to 32 mmHg (McKeown, 2014).
+    env.newProperty<float>("O2", 0);
+    // DERIVED: Initial cellularity in the tumour (continuous, 0 to 1).
+    env.newProperty<float>("cellularity", 0.5);
+    // DERIVED: Fraction of Schwann cells in the cell population (continuous, 0 to 1).
+    env.newProperty<float>("theta_sc", 0.5);
+    // DERIVED: Degree of differentiation (continuous, 0 to 1).
+    env.newProperty<float>("degdiff", 0);
+    // DERIVED: Clonal composition (continuous, 24 numbers adding up to 1).
+    env.newProperty<float, 24>("clones", {});
+}
+/**
  * integration with imaging biomarkers
  */
 void data_layer_0(flamegpu::ModelDescription& model) {
@@ -14,13 +32,6 @@ void data_layer_0(flamegpu::ModelDescription& model) {
     // Half of a voxel's side length in microns.
     // This must be at least as big as R_cell.
     env.newProperty<float>("R_voxel", 15);
-    // Histology type (0 is neuroblastoma, 1 is ganglioneuroblastoma, 2 is nodular ganglioneuroblastoma, 3 is intermixed ganglioneuroblastoma, 4 is ganglioneuroma, 5 is maturing ganglioneuroma, and 6 is mature ganglioneuroma).
-    // If it is a ganglioneuroblastoma or a ganglioneuroma, assign the subtype stochastically.
-    env.newProperty<int>("histology_init", 0);
-    // DERIVED: Runtime decided based on histology_init
-    env.newProperty<int>("histology", 0);
-    // DERIVED: Grade of differentiation for neuroblastoma (0 is undifferentiated, 1 is pooly differentiated, and 2 is differentiating).
-    env.newProperty<int>("gradiff", 0);
     // Initial cell density of tumour (cells per cubic micron).
     // 1.91e-3 cells per cubic micron (Louis and Shohet, 2015).
     // In a tumour with limited stroma, and whose cells are small, this number is 1e9 cells/cm3 or 1e-3 cells/cubic micron (Del Monte, 2009).
@@ -29,14 +40,6 @@ void data_layer_0(flamegpu::ModelDescription& model) {
     // Cell radius.
     // The radii of most animal cells range from 5 to 15 microns (Del Monte, 2009).
     env.newProperty<float>("R_cell", 11/2.0f);
-    // DERIVED: Initial oxygen level (continuous, 0 to 1).
-    // Oxygen concentration in the kidney = 72 mmHg (Carreau et al., 2011), chosen as concentration scale.
-    // Oxygen concentration in hypoxic tumours = 2 to 32 mmHg (McKeown, 2014).
-    env.newProperty<float>("O2", 0);
-    // DERIVED: Initial cellularity in the tumour (continuous, 0 to 1).
-    env.newProperty<float>("cellularity", 0.5);
-    // DERIVED: Fraction of Schwann cells in the cell population (continuous, 0 to 1).
-    env.newProperty<float>("theta_sc", 0.5);
     // Sensitivity of the boundary displacement field to invasion into the boundary
     // Note that this is illustrative and unrealistic.
     // The orchestrator must provide the parameters of a displacement function.
@@ -47,17 +50,8 @@ void data_layer_0(flamegpu::ModelDescription& model) {
  */
 void data_layer_1(flamegpu::ModelDescription& model) {
     auto& env = model.Environment();
-    // MYCN amplification status (categorical, 0 or 1), default (-1) means unknown.
-    env.newProperty<int>("MYCN_amp", 0);
-    // TERT rearrangement status (categorical, 0 or 1), default (-1) means unknown.
-    env.newProperty<int>("TERT_rarngm", 0);
-    // ATRX inactivation status (categorical, 0 or 1), default (-1) means unknown.
-    env.newProperty<int>("ATRX_inact", 0);
     // Alternative lengthening of telomeres status (categorical, 0 or 1), default (-1) means unknown.
     env.newProperty<int>("ALT", 0);
-    // ALK amplification or activating mutation status (discrete, 0 or 1 or 2), default (-1) means unknown.
-    // 0 means wild type, 1 means ALK amplification or activation, and 2 means other RAS mutations.
-    env.newProperty<int>("ALK", 0);
 }
 /**
  * integration with genetic/molecular biomarkers of neuroblasts
@@ -288,10 +282,6 @@ void nb_initial_conditions(flamegpu::ModelDescription& model) {
     // Maximum is 84 (Warren et al., 2016).
     // default (-1) means random initialisation.
     env.newProperty<int>("necro_signal", -1);
-    // DERIVED: Number of telomere units (categorical, integers from 0 to 60)
-    // Maximum is 60 (Hayflick et al., 1961).
-    // default (-1) means random initialisation between 25 and 35, inclusive.
-    env.newProperty<int>("telo_count", -1);
 }
 void sc_initial_conditions(flamegpu::ModelDescription& model) {
     auto& env = model.Environment();
@@ -358,83 +348,39 @@ void internal_derived(flamegpu::ModelDescription& model) {
 }
 FLAMEGPU_INIT_FUNCTION(InitDerivedEnvironment) {
     /**
-     * Data layer 0 (integration with imaging biomarkers).
+     * Data layer -1 (Studies involving heterogeneous tumours).
      */
-    const int histology_init = FLAMEGPU->environment.getProperty<int>("histology_init");
-    int histology;
-    const int gradiff = FLAMEGPU->random.uniform<int>(0, 2);
-    float cellularity;
-    float theta_sc;
-    const float O2 = (2/72.0f) + (FLAMEGPU->random.uniform<float>() * (30 / 72.0f));  // rng in range [2/72, 32/72]
-    if (histology_init == 1) {
-        if (FLAMEGPU->random.uniform<float>() < 0.5f) {
-            histology = 2;
+    const float O2 = (2 / 72.0f) + (FLAMEGPU->random.uniform<float>() * (30 / 72.0f));  // rng in range [2/72, 32/72)
+    float cellularity = 0.17f + (FLAMEGPU->random.uniform<float>() * 0.78f);  // rng in range [0.17, 0.95)
+    float theta_sc = 0.05f + (FLAMEGPU->random.uniform<float>() * 0.78f);  // rng in range [0.05, 0.83)
+    float degdiff = FLAMEGPU->random.uniform<float>() * 0.8f;  // rng in range [0.0, 0.8)
+    std::vector<float> dummy(23);
+    for (auto &v : dummy)
+        v = FLAMEGPU->random.uniform<float>();
+    std::sort(dummy.begin(), dummy.end());
+    dummy.push_back(1.0f);
+    std::array<float, 24> clones;
+    for (unsigned int i = 0; i < dummy.size(); ++i) {
+        if (i == 0) {
+            clones[i] = dummy[i];
         } else {
-            histology = 3;
+            clones[i] = dummy[i] - dummy[i-1];
         }
-    } else if (histology_init == 4) {
-        if (FLAMEGPU->random.uniform<float>() < 0.5f) {
-            histology = 5;
-        } else {
-            histology = 6;
-        }
-    } else {
-        histology = histology_init;
     }
-    if (histology == 0) {
-        if (gradiff == 0) {
-            cellularity = 0.83f + (FLAMEGPU->random.uniform<float>() * 0.12f);  // [0.83, 0.95)
-            theta_sc = 0.05f + (FLAMEGPU->random.uniform<float>() * 0.12f);  // [0.05, 0.17)
-        } else if (gradiff == 1) {
-            cellularity = 0.67f + (FLAMEGPU->random.uniform<float>() * 0.16f);  // [0.67, 0.83)
-            theta_sc = 0.17f + (FLAMEGPU->random.uniform<float>() * 0.16f);  // [0.17, 0.33)
-        } else if (gradiff == 2) {
-            cellularity = 0.5f + (FLAMEGPU->random.uniform<float>() * 0.17f);  // [0.5, 0.67)
-            theta_sc = 0.33f + (FLAMEGPU->random.uniform<float>() * 0.17f);  // [0.33, 0.5)
-        }
-    } else if (histology == 2) {
-        float dummy = FLAMEGPU->random.uniform<float>();
-        if (dummy < 0.33f) {
-            if (gradiff == 0) {
-                cellularity = 0.83f + (FLAMEGPU->random.uniform<float>() * 0.12f);  // [0.83, 0.95)
-                theta_sc =  0.05f + (FLAMEGPU->random.uniform<float>() * 0.12f);  // [0.05, 0.17)
-            } else if (gradiff == 1) {
-                cellularity = 0.67f + (FLAMEGPU->random.uniform<float>() * 0.16f);  // [0.67, 0.83)
-                theta_sc = 0.17f + (FLAMEGPU->random.uniform<float>() * 0.16f);  // [0.17, 0.33)
-            } else if (gradiff == 2) {
-                cellularity = 0.5f + (FLAMEGPU->random.uniform<float>() * 0.17f);  // [0.5, 0.67)
-                theta_sc = 0.33f + (FLAMEGPU->random.uniform<float>() * 0.17f);  // [0.33, 0.5)
-            }
-        } else if (dummy < 0.66f) {
-            cellularity = 0.33f + (FLAMEGPU->random.uniform<float>() * 0.17f);  // [0.33, 0.5)
-            theta_sc = 0.5f + (FLAMEGPU->random.uniform<float>() * 0.17f);  // [0.5, 0.67)
-        } else {
-            cellularity = 0.17f + (FLAMEGPU->random.uniform<float>() * 0.16f);  // [0.17, 0.33)
-            theta_sc = 0.67f + (FLAMEGPU->random.uniform<float>() * 0.16f);  // [0.67, 0.83)
-        }
-    } else if (histology == 3) {
-        cellularity = 0.33f + (FLAMEGPU->random.uniform<float>() * 0.17f);  // [0.33, 0.5)
-        theta_sc = 0.5f + (FLAMEGPU->random.uniform<float>() * 0.17f);  // [0.5, 0.67)
-    } else if (histology == 5) {
-        cellularity = 0.17f + (FLAMEGPU->random.uniform<float>() * 0.16f);  // [0.17, 0.33)
-        theta_sc = 0.67f + (FLAMEGPU->random.uniform<float>() * 0.16f);  // [0.67, 0.83)
-    } else if (histology == 6) {
-        cellularity = 0.05f + (FLAMEGPU->random.uniform<float>() * 0.12f);  // [0.05, 0.17)
-        theta_sc = 0.83f + (FLAMEGPU->random.uniform<float>() * 0.12f);  // [0.83, 0.95)
-    }
-    FLAMEGPU->environment.setProperty<int>("histology", histology);
-    FLAMEGPU->environment.setProperty<int>("gradiff", gradiff);
+    FLAMEGPU->environment.setProperty<float>("O2", O2);
     FLAMEGPU->environment.setProperty<float>("cellularity", cellularity);
     FLAMEGPU->environment.setProperty<float>("theta_sc", theta_sc);
-    FLAMEGPU->environment.setProperty<float>("O2", O2);
+    FLAMEGPU->environment.setProperty<float>("degdiff", degdiff);
+    FLAMEGPU->environment.setProperty<float, 24>("clones", clones);
+
+    /**
+     * Data layer 0 (integration with imaging biomarkers).
+     */
+    // n/a
     /**
      * Data Layer 1 (integration with genetic/molecular biomarkers of neuroblasts).
      */
-    FLAMEGPU->environment.setProperty<int>("MYCN_amp", FLAMEGPU->random.uniform<int>(0, 1));
-    FLAMEGPU->environment.setProperty<int>("TERT_rarngm", FLAMEGPU->random.uniform<int>(0, 1));
-    FLAMEGPU->environment.setProperty<int>("ATRX_inact", FLAMEGPU->random.uniform<int>(0, 1));
-    FLAMEGPU->environment.setProperty<int>("ALT", FLAMEGPU->random.uniform<int>(0, 1));
-    FLAMEGPU->environment.setProperty<int>("ALK", FLAMEGPU->random.uniform<int>(0, 2));
+     // n/a
     /**
      * Data Layer 2 (integration with genetic/molecular biomarkers of neuroblasts).
      */
@@ -471,19 +417,7 @@ FLAMEGPU_INIT_FUNCTION(InitDerivedEnvironment) {
     /**
      * Initial conditions (neuroblasts).
      */
-    const int ALT = FLAMEGPU->environment.getProperty<int>("ALT");
-    const int ATRX_inact = FLAMEGPU->environment.getProperty<int>("ATRX_inact");
-    const int MYCN_amp = FLAMEGPU->environment.getProperty<int>("MYCN_amp");
-    const int TERT_rarngm = FLAMEGPU->environment.getProperty<int>("TERT_rarngm");
-    int telo_count;
-    if (ALT == 1 || ATRX_inact == 1) {
-        telo_count = 1;
-    } else if (MYCN_amp == 1 || TERT_rarngm == 1) {
-        telo_count = 2;
-    } else {
-        telo_count = 3;
-    }
-    FLAMEGPU->environment.setProperty<int>("telo_count", telo_count);
+    // n/a
     /**
      * Initial conditions (Schwann cells).
      */
@@ -514,6 +448,7 @@ FLAMEGPU_INIT_FUNCTION(InitDerivedEnvironment) {
 // #define _USE_MATH_DEFINES
 // #include <math.h>
 void defineEnvironment(flamegpu::ModelDescription& model) {
+    data_layer_minus1(model);
     data_layer_0(model);
     data_layer_1(model);
     data_layer_2(model);
