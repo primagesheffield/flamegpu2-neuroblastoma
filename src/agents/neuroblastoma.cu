@@ -694,7 +694,7 @@ void initNeuroblastoma(flamegpu::HostAPI &FLAMEGPU) {
     const unsigned int N_CELL = (unsigned int)ceil(rho_tumour * V_tumour * cellularity * (1 - theta_sc));
 
     unsigned int Nnbl_count = 0;
-    for (int j = 0; j < clones.size(); ++j) {
+    for (int j = 0; j < static_cast<int>(clones.size()); ++j) {
         const unsigned int NB_COUNT = static_cast<unsigned int>(N_CELL * clones[j]);
         Nnbl_count += NB_COUNT;
         FLAMEGPU.environment.setProperty<int>("NB_living_count", j, static_cast<int>(NB_COUNT));
