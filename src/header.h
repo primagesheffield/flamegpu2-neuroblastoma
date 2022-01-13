@@ -7,6 +7,8 @@
  */
 #define GRID_MAX_DIMENSIONS 151
 #define GMD GRID_MAX_DIMENSIONS
+// If chemo len is too high, environment gets too big
+#define CHEMO_LEN 200
 
 /**
  * Define model
