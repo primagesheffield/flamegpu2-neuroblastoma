@@ -55,6 +55,7 @@ project(orchestrator_FGPUNB CUDA CXX)
 SET(ORCHESTRATOR_SRC
     ${COMMON_SRC}
     ${CMAKE_CURRENT_SOURCE_DIR}/orchestrator_src/structures.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/orchestrator_src/main.h
     ${CMAKE_CURRENT_SOURCE_DIR}/orchestrator_src/main.cu
     ${CMAKE_CURRENT_SOURCE_DIR}/orchestrator_src/json.h
     ${CMAKE_CURRENT_SOURCE_DIR}/orchestrator_src/json_in.cpp
