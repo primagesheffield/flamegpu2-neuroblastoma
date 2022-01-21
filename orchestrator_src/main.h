@@ -6,8 +6,7 @@
 /**
  * Commandline execution configuration options and default values
  */
-struct RunConfig
-{
+struct RunConfig {
     std::string inFile;
     std::string primageOutputFile;
     unsigned int device = 0;

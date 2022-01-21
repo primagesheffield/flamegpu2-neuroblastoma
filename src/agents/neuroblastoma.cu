@@ -297,6 +297,7 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
             FLAMEGPU->setVariable<int>("CAS", 0);
             FLAMEGPU->setVariable<int>("mobile", 0);
             FLAMEGPU->setVariable<int>("ATP", 0);
+            FLAMEGPU->setVariable<float>("degdiff", 0);
             FLAMEGPU->setVariable<int>("apop", 1);
         } else if (s_necro_signal >= s_necro_critical) {
             FLAMEGPU->setVariable<int>("telo", 0);
@@ -321,6 +322,7 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
             FLAMEGPU->setVariable<int>("CAS", 0);
             FLAMEGPU->setVariable<int>("mobile", 0);
             FLAMEGPU->setVariable<int>("ATP", 0);
+            FLAMEGPU->setVariable<float>("degdiff", 0);
             FLAMEGPU->setVariable<int>("apop", 0);
             FLAMEGPU->setVariable<int>("necro", 1);
         }

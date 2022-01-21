@@ -5,7 +5,7 @@
 #include <vector>
 
 struct Version {
-    int number[3] = {14,4,0};
+    int number[3] = {14, 4, 0};
     bool warn_flag = false;
 };
 /**

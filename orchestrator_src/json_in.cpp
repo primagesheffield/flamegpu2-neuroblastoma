@@ -1,3 +1,7 @@
+#include <../rapidjson-src/include/rapidjson/stream.h>
+#include <../rapidjson-src/include/rapidjson/reader.h>
+#include <../rapidjson-src/include/rapidjson/error/en.h>
+
 #include <string>
 #include <iostream>
 #include <fstream>
@@ -5,10 +9,6 @@
 #include <set>
 
 #include "json.h"
-
-#include <../rapidjson-src/include/rapidjson/stream.h>
-#include <../rapidjson-src/include/rapidjson/reader.h>
-#include <../rapidjson-src/include/rapidjson/error/en.h>
 /**
  * This is the main sax style parser for the json state
  * It stores it's current position within the hierarchy with mode, lastKey and current_variable_array_index
@@ -34,7 +34,7 @@ class JSONStateReader_impl : public rapidjson::BaseReaderHandler<rapidjson::UTF8
     std::string current_state;
 
  public:
-    JSONStateReader_impl(const std::string &_filename)
+    explicit JSONStateReader_impl(const std::string &_filename)
         : filename(_filename) {
         memset(&input, 0, sizeof(OrchestratorInput));
     }
@@ -116,7 +116,7 @@ class JSONStateReader_impl : public rapidjson::BaseReaderHandler<rapidjson::UTF8
         } else if (mode.top() == Config) {
             if (lastKey == "seed") {
                 input.seed = static_cast<uint32_t>(val);
-            } else if(lastKey == "steps") {
+            } else if (lastKey == "steps") {
                 input.steps = static_cast<uint32_t>(val);
             } else {
                 fprintf(stderr, "Unexpected key '%s' in config block, "
@@ -166,7 +166,7 @@ class JSONStateReader_impl : public rapidjson::BaseReaderHandler<rapidjson::UTF8
     }
     bool Key(const char* str, rapidjson::SizeType, bool) {
         lastKey = str;
-        if(found_keys.insert(lastKey).second) {
+        if (found_keys.insert(lastKey).second) {
             fprintf(stderr, "Unexpected duplicate of key '%s' found.\n", lastKey.c_str());
             throw std::exception();
         }
@@ -207,7 +207,7 @@ class JSONStateReader_impl : public rapidjson::BaseReaderHandler<rapidjson::UTF8
                     fprintf(stderr, "Input validation failed.\n 'drug_effects' should be 6x the length of `end_effects' should have the same length (%llu != %llu == 6 x %llu).\n",
                     input.drug_effects.size(), 6*input.end_effects.size(), input.end_effects.size());
                     throw std::exception();
-                }  
+                }
             } else {
                 fprintf(stderr, "Input validation failed.\n 'start_effects' and `end_effects' should have the same length (%llu != %llu).\n", input.start_effects.size(), input.end_effects.size());
                 throw std::exception();

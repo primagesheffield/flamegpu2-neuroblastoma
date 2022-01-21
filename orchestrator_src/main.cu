@@ -1,7 +1,12 @@
+#include <numeric>
+#include <algorithm>
+#include <functional>
+#include <glm/gtx/component_wise.hpp>
+
 #include "header.h"
 #include "main.h"
 #include "json.h"
-#include <glm/gtx/component_wise.hpp>
+
 OrchestratorOutput sim_out;
 FLAMEGPU_EXIT_FUNCTION(ConstructPrimageOutput) {
     auto GridCell = FLAMEGPU->agent("GridCell");
@@ -48,23 +53,30 @@ FLAMEGPU_EXIT_FUNCTION(ConstructPrimageOutput) {
         sim_out.tumour_volume /= 1e+9;
     }
     if (NB_living_count) {
-        // @todo float ratio_VEGF_NB_SC;
-        // @todo float nb_telomere_length_mean;
-        // @todo float nb_telomere_length_sd;
-        // @todo float nb_necro_signal_mean;
-        // @todo float nb_necro_signal_sd;
-        // @todo float nb_apop_signal_mean;
-        // @todo float nb_apop_signal_sd;
-        // @todo float extent_of_differentiation_mean;
-        // @todo float extent_of_differentiation_sd;        
+        sim_out.ratio_VEGF_NB_SC = Schwann.count() ? Neuroblastoma.sum<int>("VEGF") / static_cast<float>(Schwann.count()) : 0;
+        const auto telomere_length = Neuroblastoma.meanStandardDeviation<int>("telo_count");
+        sim_out.nb_telomere_length_mean = static_cast<float>(telomere_length.first);
+        sim_out.nb_telomere_length_sd = static_cast<float>(telomere_length.second);
+        const auto necro_signal = Neuroblastoma.meanStandardDeviation<int>("necro_signal");
+        sim_out.nb_necro_signal_mean = static_cast<float>(necro_signal.first);
+        sim_out.nb_necro_signal_sd = static_cast<float>(necro_signal.second);
+        const auto apop_signal = Neuroblastoma.meanStandardDeviation<int>("apop_signal");
+        sim_out.nb_apop_signal_mean = static_cast<float>(apop_signal.first);
+        sim_out.nb_apop_signal_sd = static_cast<float>(apop_signal.second);
+        const auto degdiff = Neuroblastoma.meanStandardDeviation<float>("degdiff");
+        sim_out.extent_of_differentiation_mean = static_cast<float>(degdiff.first);
+        sim_out.extent_of_differentiation_sd = static_cast<float>(degdiff.second);
     }
     if (SC_living_count) {
-        // @todo float sc_telomere_length_mean;
-        // @todo float sc_telomere_length_sd;
-        // @todo float sc_necro_signal_mean;
-        // @todo float sc_necro_signal_sd;
-        // @todo float sc_apop_signal_mean;
-        // @todo float sc_apop_signal_sd;
+        const auto telomere_length = Schwann.meanStandardDeviation<int>("telo_count");
+        sim_out.sc_telomere_length_mean = static_cast<float>(telomere_length.first);
+        sim_out.sc_telomere_length_sd = static_cast<float>(telomere_length.second);
+        const auto necro_signal = Schwann.meanStandardDeviation<int>("necro_signal");
+        sim_out.sc_necro_signal_mean = static_cast<float>(necro_signal.first);
+        sim_out.sc_necro_signal_sd = static_cast<float>(necro_signal.second);
+        const auto apop_signal = Schwann.meanStandardDeviation<int>("apop_signal");
+        sim_out.sc_apop_signal_mean = static_cast<float>(apop_signal.first);
+        sim_out.sc_apop_signal_sd = static_cast<float>(apop_signal.second);
     }
 }
 int main(int argc, const char** argv) {
@@ -112,39 +124,39 @@ int main(int argc, const char** argv) {
 
     // Run FGPU2
     sim.simulate();
-
+    // Update delta outputs
+    sim_out.delta_O2 = sim_out.O2 - input.O2;
+    sim_out.delta_ecm = sim_out.ecm - (1 - std::reduce(input.cellularity.begin(), input.cellularity.end(), 0, std::plus<>()));
     // Write orchestrator output to disk
     writeOrchestratorOutput(sim_out, cfg.primageOutputFile);
     return 0;
 }
 RunConfig parseArgs(int argc, const char** argv) {
-    if (argc == 1)
-    {
+    if (argc == 1) {
         printHelp(argv[0]);
     }
     RunConfig cfg;
     int i = 1;
-    for (; i < argc; i++)
-    {
-        //Get arg as lowercase
+    for (; i < argc; i++) {
+        // Get arg as lowercase
         std::string arg(argv[i]);
         std::transform(arg.begin(), arg.end(), arg.begin(), ::tolower);
 
-        //-device <uint>, Uses the specified cuda device, defaults to 0
-        if (arg.compare("--device") == 0 || arg.compare("-d") == 0)
-        {
+        // -device <uint>, Uses the specified cuda device, defaults to 0
+        if (arg.compare("--device") == 0 || arg.compare("-d") == 0) {
             cfg.device = (unsigned int)strtoul(argv[++i], nullptr, 0);
             continue;
         }
-        //-in <string>, Specifies the input state file
-        else if (arg.compare("--in") == 0 || arg.compare("-i") == 0) {
+        // -in <string>, Specifies the input state file
+        if (arg.compare("--in") == 0 || arg.compare("-i") == 0) {
             cfg.inFile = std::string(argv[++i]);
             continue;
-        }  else if (arg.compare("--primage") == 0) {
+        }
+        if (arg.compare("--primage") == 0) {
             cfg.primageOutputFile = std::string(argv[++i]);
             continue;
-        } else
-            fprintf(stderr, "Unexpected argument: %s\n", arg.c_str());
+        }
+        fprintf(stderr, "Unexpected argument: %s\n", arg.c_str());
         printHelp(argv[0]);
     }
     if (cfg.inFile.empty()) {

@@ -1,12 +1,12 @@
+#include <../rapidjson-src/include/rapidjson/writer.h>
+#include <../rapidjson-src/include/rapidjson/prettywriter.h>
+#include <../rapidjson-src/include/rapidjson/stringbuffer.h>
+
 #include <string>
 #include <iostream>
 #include <fstream>
 
 #include "structures.h"
-
-#include <../rapidjson-src/include/rapidjson/writer.h>
-#include <../rapidjson-src/include/rapidjson/prettywriter.h>
-#include <../rapidjson-src/include/rapidjson/stringbuffer.h>
 
 void writeOrchestratorOutput(const OrchestratorOutput&out, const std::string &outputFile) {
     rapidjson::StringBuffer s;

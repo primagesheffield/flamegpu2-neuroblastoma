@@ -133,10 +133,12 @@ __device__ __forceinline__ void Schwann_sense(flamegpu::DeviceAPI<flamegpu::Mess
         if (s_apop_signal >= apop_critical) {
             FLAMEGPU->setVariable<int>("mobile", 0);
             FLAMEGPU->setVariable<int>("ATP", 0);
+            FLAMEGPU->setVariable<float>("degdiff", 0);
             FLAMEGPU->setVariable<int>("apop", 1);
         } else if (s_necro_signal >= s_necro_critical) {
             FLAMEGPU->setVariable<int>("mobile", 0);
             FLAMEGPU->setVariable<int>("ATP", 0);
+            FLAMEGPU->setVariable<float>("degdiff", 0);
             FLAMEGPU->setVariable<int>("necro", 1);
         }
 
