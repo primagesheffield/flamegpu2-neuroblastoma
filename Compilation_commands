@@ -1,0 +1,15 @@
+srun --pty bash -i
+module load Anaconda3/2019.07
+conda create -n mynumpy python=3.8 numpy
+conda create -n myscience python=3.5 numpy=1.8.1 scipy
+conda install pip
+conda install cmake
+
+module load CUDA/10.2.89-GCC-8.3.0 
+cmake .. -DCMAKE_BUILD_TYPE=Release -DVISUALISATION=OFF -DSEATBELTS=OFF -DCUDA_ARCH=70
+make -j1
+
+sbatch hetNB5.sh
+squeue
+sacct -v
+scancel 2348458
