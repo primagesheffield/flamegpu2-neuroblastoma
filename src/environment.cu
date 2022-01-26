@@ -33,13 +33,18 @@ void data_layer_0(flamegpu::ModelDescription& model) {
     // Oxygen concentration in the kidney = 72 mmHg (Carreau et al., 2011), chosen as concentration scale.
     // Oxygen concentration in hypoxic tumours = 2 to 32 mmHg (McKeown, 2014).
     env.newProperty<float>("O2", 0);
+    // Number of cycles of chemotherapy.
+    env.newProperty<int>("chemo_number", 2);
     // Time point at which the chemotherapeutic agents become effective.
-    env.newProperty<int, 2>("chemo_start", {0, 240});
-    // The point at which the chemotherapeutic agents stop being effective.
-    env.newProperty<int, 2>("chemo_end", {96, 336});
+    std::array<int, 336> chemo_start = {0, 240};
+    env.newProperty<int, 336>("chemo_start", chemo_start);
+    // Time point at which the chemotherapeutic agents stop being effective.
+    std::array<int, 336> chemo_end = {96, 336};
+    env.newProperty<int, 336>("chemo_end", chemo_end);
     // Probability that the following species is inhibited by the chemotherapeutic agents.
     // CHK1, JAB1, HIF, MYCN, TEP1, and p53.
-    env.newProperty<float, 6>("chemo_effects", {0.602666, 0.602666, 0.602666, 0.602666, 0.602666, 0.602666});
+    std::array<float, 6> chemo_effects = {0.602666, 0.602666, 0.602666, 0.602666, 0.602666, 0.602666};
+    env.newProperty<float, 6>("chemo_effects", chemo_effects);
     // DERIVED: Initial cellularity in the tumour (continuous, 0 to 1).
     env.newProperty<float>("cellularity", 0.5);
     // DERIVED: Fraction of Schwann cells in the cell population (continuous, 0 to 1).
