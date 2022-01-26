@@ -106,18 +106,13 @@ __device__ __forceinline__ void Schwann_sense(flamegpu::DeviceAPI<flamegpu::Mess
             s_apop_signal += 1 * step_size;
             stress = 1;
         }
-        const glm::uvec2 chemo_start = FLAMEGPU->environment.getProperty<glm::uvec2>("chemo_start");
-        const glm::uvec2 chemo_end = FLAMEGPU->environment.getProperty<glm::uvec2>("chemo_end");
-        const glm::uvec6 chemo_effects = FLAMEGPU->environment.getProperty<glm::uvec6>("chemo_effects");
+        const std::array<float, 6> chemo_effects = FLAMEGPU.environment.getProperty<float, 6>("chemo_effects");
         const glm::uvec4 cycle_stages = FLAMEGPU->environment.getProperty<glm::uvec4>("cycle_stages");
 	int chemo = 0;
-        for(int i=0;i<2;i++)
-		{
-			if(FLAMEGPU->getStepCounter()>=chemo_start[i] && FLAMEGPU->getStepCounter()<=chemo_start[i] && FLAMEGPU->random.uniform<float>()<(chemo_effects[0]+chemo_effects[1]+chemo_effects[2]+chemo_effects[3]+chemo_effects[4]+chemo_effects[5])/6)
-                                {
-                                        chemo = 1;
-                                        break;
-                                }
+	if(CHEMO_ACTIVE && FLAMEGPU->random.uniform<float>()<(chemo_effects[0]+chemo_effects[1]+chemo_effects[2]+chemo_effects[3]+chemo_effects[4]+chemo_effects[5])/6)
+                {
+                        chemo = 1;
+                        break;
                 }
         if (chemo == 1 && cycle_stages[1] < s_cycle && s_cycle < cycle_stages[2] && FLAMEGPU->random.uniform<float>() < P_apopChemo * step_size) {
             s_apop_signal += 1 * step_size;

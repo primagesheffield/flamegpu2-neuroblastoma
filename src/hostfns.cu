@@ -142,3 +142,25 @@ FLAMEGPU_HOST_FUNCTION(host_validation) {
     FLAMEGPU->environment.getMacroProperty<unsigned int>("validation_Nnbl").zero();
     FLAMEGPU->environment.getMacroProperty<unsigned int>("validation_Nscl").zero();
 }
+
+__FLAME_GPU_HOST_LAYER_FUNC__ __host__ void toggle_chemo() {
+    int chemo_state = 0;
+    int chemo_index = -1;
+    const std::array<int, 336> h_env_chemo_start = FLAMEGPU.environment.getProperty<int, 336>("chemo_start");
+    const std::array<int, 336> h_env_chemo_end = FLAMEGPU.environment.getProperty<int, 336>("chemo_end");
+    for (int i = 0; i < sizeof(h_env_chemo_start) / sizeof(h_env_chemo_start[0]); ++i) {
+        if (h_env_orchestrator_time >= h_env_chemo_start[i]) {
+            if (h_env_orchestrator_time < h_env_chemo_end[i]) {
+                chemo_state = 1;
+                chemo_index = i;
+                break;
+            }
+        }
+    }
+    if (chemo_state != h_env_CHEMO_ACTIVE || step_count == 0 ) {
+        set_CHEMO_ACTIVE(&chemo_state);
+        chemo_index *= 6 ; // 6 effects per start/end time
+        if (chemo_index != h_env_CHEMO_OFFSET)
+            set_CHEMO_OFFSET(&chemo_index);
+    }
+}
