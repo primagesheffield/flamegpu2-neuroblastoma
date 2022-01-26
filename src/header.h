@@ -142,7 +142,26 @@ __device__ __forceinline__ bool remove(flamegpu::DeviceAPI<flamegpu::MessageNone
 }
 template<typename Mi, typename Mo>
 __device__ __forceinline__ bool getChemoState(flamegpu::DeviceAPI<Mi, Mo>* FLAMEGPU) {
-    return false;
+    int chemo = 0;
+    const int chemo_number = FLAMEGPU->environment.getProperty<int>("chemo_number");
+    const std::array<int, 336> chemo_start = FLAMEGPU.environment.getProperty<int, 336>("chemo_start");
+    const std::array<int, 336> chemo_end = FLAMEGPU.environment.getProperty<int, 336>("chemo_end");
+    for(int i=0;i<chemo_number;i++)
+	{
+		if(FLAMEGPU->getStepCounter()>=chemo_start[i] && FLAMEGPU->getStepCounter()<=chemo_end[i])
+			{
+                                                chemo = 1;
+                                                break;
+                        }
+	}
+    if(chemo==1)
+	{
+		return true;
+	}
+    else
+	{
+		return false;
+	}
     // return (FLAMEGPU->getStepCounter() % 504) < 24;
 }
 
@@ -151,7 +170,7 @@ extern flamegpu::FLAMEGPU_HOST_FUNCTION_POINTER vasculature;
 extern flamegpu::FLAMEGPU_HOST_FUNCTION_POINTER reset_grids;
 extern flamegpu::FLAMEGPU_HOST_FUNCTION_POINTER alter2;
 extern flamegpu::FLAMEGPU_HOST_FUNCTION_POINTER CAexpand;
+extern flamegpu::FLAMEGPU_HOST_FUNCTION_POINTER toggle_chemo;
 extern flamegpu::FLAMEGPU_HOST_FUNCTION_POINTER host_validation;
-
 
 #endif  // SRC_HEADER_H_

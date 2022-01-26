@@ -37,6 +37,7 @@ void defineModel(flamegpu::ModelDescription& model) {
         // Alter
         model.newLayer().addAgentFunction(gc.getFunction("alter"));
         model.newLayer().addHostFunction(alter2);
+	model.newLayer().addHostFunction(toggle_chemo);
         // Cell cycle
         auto& l_cycle = model.newLayer();
         l_cycle.addAgentFunction(nb.getFunction("nb_cell_lifecycle"));
