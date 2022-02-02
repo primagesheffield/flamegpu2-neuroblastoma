@@ -143,7 +143,7 @@ FLAMEGPU_HOST_FUNCTION(host_validation) {
     FLAMEGPU->environment.getMacroProperty<unsigned int>("validation_Nscl").zero();
 }
 
-__FLAME_GPU_HOST_LAYER_FUNC__ __host__ void toggle_chemo() {
+FLAMEGPU_HOST_FUNCTION(toggle_chemo) {
     int chemo_state = 0;
     int chemo_index = -1;
     const std::array<int, 336> h_env_chemo_start = FLAMEGPU->environment.getProperty<int, 336>("chemo_start");
