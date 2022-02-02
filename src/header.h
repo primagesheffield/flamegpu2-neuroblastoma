@@ -142,26 +142,7 @@ __device__ __forceinline__ bool remove(flamegpu::DeviceAPI<flamegpu::MessageNone
 }
 template<typename Mi, typename Mo>
 __device__ __forceinline__ bool getChemoState(flamegpu::DeviceAPI<Mi, Mo>* FLAMEGPU) {
-    int chemo = 0;
-    const int chemo_number = FLAMEGPU->environment.getProperty<int>("chemo_number");
-    const std::array<int, 336> chemo_start = FLAMEGPU.environment.getProperty<int, 336>("chemo_start");
-    const std::array<int, 336> chemo_end = FLAMEGPU.environment.getProperty<int, 336>("chemo_end");
-    for(int i=0;i<chemo_number;i++)
-	{
-		if(FLAMEGPU->getStepCounter()>=chemo_start[i] && FLAMEGPU->getStepCounter()<=chemo_end[i])
-			{
-                                                chemo = 1;
-                                                break;
-                        }
-	}
-    if(chemo==1)
-	{
-		return true;
-	}
-    else
-	{
-		return false;
-	}
+    continue;
     // return (FLAMEGPU->getStepCounter() % 504) < 24;
 }
 
