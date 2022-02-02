@@ -45,6 +45,9 @@ void data_layer_0(flamegpu::ModelDescription& model) {
     // CHK1, JAB1, HIF, MYCN, TEP1, and p53.
     std::array<float, 6> chemo_effects = {0.602666, 0.602666, 0.602666, 0.602666, 0.602666, 0.602666};
     env.newProperty<float, 6>("chemo_effects", chemo_effects);
+    // Default values of variables in toggle_chemo.
+    env.newProperty<int>("CHEMO_ACTIVE", 0);
+    env.newProperty<int>("CHEMO_OFFSET", -1);
     // DERIVED: Initial cellularity in the tumour (continuous, 0 to 1).
     env.newProperty<float>("cellularity", 0.5);
     // DERIVED: Fraction of Schwann cells in the cell population (continuous, 0 to 1).
