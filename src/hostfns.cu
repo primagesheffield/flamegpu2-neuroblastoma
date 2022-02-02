@@ -157,10 +157,7 @@ FLAMEGPU_HOST_FUNCTION(toggle_chemo) {
             }
         }
     }
-    if (chemo_state != FLAMEGPU->environment.getProperty<int>("CHEMO_ACTIVE") || FLAMEGPU->getStepCounter() == 0 ) {
-	FLAMEGPU->environment.setProperty<int>("CHEMO_ACTIVE", chemo_state);
-        chemo_index *= 6 ; // 6 effects per start/end time
-        if (chemo_index != FLAMEGPU->environment.getProperty<int>("CHEMO_OFFSET"))
-            FLAMEGPU->environment.setProperty<int>("CHEMO_OFFSET", chemo_index);
-    }
+    FLAMEGPU->environment.setProperty<int>("CHEMO_ACTIVE", chemo_state);
+    chemo_index *= 6 ; // 6 effects per start/end time
+    FLAMEGPU->environment.setProperty<int>("CHEMO_OFFSET", chemo_index);
 }
