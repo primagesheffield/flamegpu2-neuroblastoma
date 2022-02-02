@@ -142,7 +142,7 @@ __device__ __forceinline__ bool remove(flamegpu::DeviceAPI<flamegpu::MessageNone
 }
 template<typename Mi, typename Mo>
 __device__ __forceinline__ bool getChemoState(flamegpu::DeviceAPI<Mi, Mo>* FLAMEGPU) {
-    continue;
+    return FLAMEGPU->environment.getProperty<int>("CHEMO_ACTIVE");
     // return (FLAMEGPU->getStepCounter() % 504) < 24;
 }
 
