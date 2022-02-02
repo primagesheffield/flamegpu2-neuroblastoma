@@ -93,4 +93,5 @@ jobs:
 
     - name: Build
       working-directory: ${{ env.BUILD_DIR }}
-      run: cmake --build . --target all --verbose -j `nproc`
+      # run: cmake --build . --target all --verbose -j `nproc`
+      run: cmake --build . --target all --verbose -j 1

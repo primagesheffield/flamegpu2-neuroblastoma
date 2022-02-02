@@ -71,4 +71,5 @@ jobs:
 
     - name: Build
       working-directory: ${{ env.BUILD_DIR }}
-      run: cmake --build . --config ${{ env.CONFIG }} --target ALL_BUILD --verbose -j `nproc`
+      # run: cmake --build . --config ${{ env.CONFIG }} --target ALL_BUILD --verbose -j `nproc`
+      run: cmake --build . --config ${{ env.CONFIG }} --target ALL_BUILD --verbose -j 1
