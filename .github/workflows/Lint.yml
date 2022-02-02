@@ -1,0 +1,54 @@
+# Lint the project using cpplint
+name: Lint
+
+on:
+  push:
+    branches:
+      - '**'
+    paths:
+      - "**"
+      - "!.github/**"
+      - ".github/workflows/Lint.yml"
+  pull_request:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  cpplint:
+    runs-on: ${{ matrix.cudacxx.os }}
+    name: "cpplint (${{ matrix.cudacxx.cuda }}, ${{ matrix.cudacxx.os }})"
+    strategy:
+      fail-fast: false
+      # Multiplicative build matrix
+      # optional exclude: can be partial, include: must be specific
+      matrix:
+        cudacxx:
+          - cuda: "11.0"
+            os: ubuntu-20.04
+    env:
+      # Define constants
+      BUILD_DIR: "build"
+      BUILD_TESTS: "ON"
+      # Port matrix options to environment, for more portability.
+      CUDA: ${{ matrix.cudacxx.cuda }}
+      OS: ${{ matrix.cudacxx.os }}
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install cpplint
+      run: |
+        python3 -m pip install cpplint
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+    - name: Configure cmake
+      run: >
+        cmake . -B "${{ env.BUILD_DIR }}"
+        -DALLOW_LINT_ONLY=ON
+
+    - name: Lint
+      working-directory: ${{ env.BUILD_DIR }}
+      run: cmake --build . --target all_lint --verbose -j `nproc` 
+

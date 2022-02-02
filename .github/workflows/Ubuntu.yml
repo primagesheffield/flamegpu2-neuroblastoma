@@ -1,0 +1,96 @@
+# Compile project on Ubuntu
+name: Ubuntu
+
+on:
+  push:
+    branches:
+      - '**'
+    paths:
+      - "**"
+      - "!.github/**"
+      - ".github/workflows/Ubuntu.yml"
+  pull_request:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    runs-on: ${{ matrix.cudacxx.os }}
+    strategy:
+      fail-fast: false
+      # Multiplicative build matrix
+      # optional exclude: can be partial, include: must be specific
+      matrix:
+        cudacxx:
+          - cuda: "11.6"
+            cuda_arch: "35"
+            hostcxx: gcc-8
+            os: ubuntu-20.04
+          # - cuda: "10.0"
+          #   cuda_arch: "35"
+          #   hostcxx: gcc-7
+          #   os: ubuntu-18.04
+        config:
+          - name: "Release"
+            config: "Release"
+
+    # Name the job based on matrix/env options
+    name: "build (${{ matrix.cudacxx.cuda }}, ${{ matrix.config.name }}, ${{ matrix.cudacxx.os }})"
+
+    # Define job-wide env constants, and promote matrix elements to env constants for portable steps.
+    env:
+      # Define constants
+      BUILD_DIR: "build"
+      # Port matrix options to environment, for more portability.
+      CUDA: ${{ matrix.cudacxx.cuda }}
+      CUDA_ARCH: ${{ matrix.cudacxx.cuda_arch }}
+      HOSTCXX: ${{ matrix.cudacxx.hostcxx }}
+      OS: ${{ matrix.cudacxx.os }}
+      CONFIG: ${{ matrix.config.config }}
+      # Kept for portable steps between this and the main repository.
+      VISUALISATION: "ON"
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install CUDA
+      if: ${{ startswith(env.OS, 'ubuntu') && env.CUDA != '' }}
+      env:
+        cuda: ${{ env.CUDA }}
+      run: .github/scripts/install_cuda_ubuntu.sh
+
+    - name: Install/Select gcc and g++
+      if: ${{ startsWith(env.HOSTCXX, 'gcc-') }}
+      run: |
+        gcc_version=${HOSTCXX//gcc-/}
+        sudo apt-get install -y gcc-${gcc_version} g++-${gcc_version}
+        echo "CC=/usr/bin/gcc-${gcc_version}" >> $GITHUB_ENV
+        echo "CXX=/usr/bin/g++-${gcc_version}" >> $GITHUB_ENV
+        echo "CUDAHOSTCXX=/usr/bin/g++-${gcc_version}" >> $GITHUB_ENV
+
+    - name: Install Visualisation Dependencies
+      if: ${{ startswith(env.OS, 'ubuntu') && env.VISUALISATION == 'ON' }}
+      run: |
+        # Install ubuntu-20.04 packages
+        if [ "$OS" == 'ubuntu-20.04' ]; then 
+          sudo apt-get install -y libglew-dev libfontconfig1-dev libsdl2-dev libdevil-dev libfreetype-dev
+        fi
+        # Install Ubuntu 18.04 packages
+        if [ "$OS" == 'ubuntu-18.04' ]; then 
+          sudo apt-get install -y libglew-dev libfontconfig1-dev libsdl2-dev libdevil-dev libfreetype6-dev libgl1-mesa-dev
+        fi
+
+    - name: Configure cmake
+      run: >
+        cmake . -B "${{ env.BUILD_DIR }}"
+        -DCMAKE_BUILD_TYPE="${{ env.CONFIG }}"
+        -Werror=dev
+        -DCMAKE_WARN_DEPRECATED="OFF" 
+        -DWARNINGS_AS_ERRORS="ON"
+        -DCUDA_ARCH="${{ env.CUDA_ARCH }}"
+
+    - name: Build
+      working-directory: ${{ env.BUILD_DIR }}
+      run: cmake --build . --target all --verbose -j `nproc`
