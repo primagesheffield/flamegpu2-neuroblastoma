@@ -34,13 +34,13 @@ void data_layer_0(flamegpu::ModelDescription& model) {
     // Oxygen concentration in hypoxic tumours = 2 to 32 mmHg (McKeown, 2014).
     env.newProperty<float>("O2", 0);
     // Number of cycles of chemotherapy.
-    env.newProperty<int>("chemo_number", 2);
+    env.newProperty<unsigned int>("chemo_number", 2);
     // Time point at which the chemotherapeutic agents become effective.
-    std::array<int, 336> chemo_start = {0, 240};
-    env.newProperty<int, 336>("chemo_start", chemo_start);
+    std::array<unsigned int, 336> chemo_start = {0, 240};
+    env.newProperty<unsigned int, 336>("chemo_start", chemo_start);
     // Time point at which the chemotherapeutic agents stop being effective.
-    std::array<int, 336> chemo_end = {96, 336};
-    env.newProperty<int, 336>("chemo_end", chemo_end);
+    std::array<unsigned int, 336> chemo_end = {96, 336};
+    env.newProperty<unsigned int, 336>("chemo_end", chemo_end);
     // Probability that the following species is inhibited by the chemotherapeutic agents.
     // CHK1, JAB1, HIF, MYCN, TEP1, and p53.
     std::array<float, 6> chemo_effects = {0.602666, 0.602666, 0.602666, 0.602666, 0.602666, 0.602666};
