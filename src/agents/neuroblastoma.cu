@@ -107,32 +107,29 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
         int s_MYCN = FLAMEGPU->random.uniform<float>() < s_MYCN_fn ? 1 : 0;
         if(s_MYCN == 1)
 	{
-	        const float chemo3 = FLAMEGPU->environment.getProperty<float, 6>("chemo_effects", 3);
+	        const float chemo3 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 3);
 		if(CHEMO_ACTIVE && FLAMEGPU->random.uniform<float>() < chemo3)
 			{
 				s_MYCN = 0;
-				break;
 			}
 	}
         const int s_MAPK_RAS = FLAMEGPU->random.uniform<float>() < s_MAPK_RAS_fn ? 1 : 0;
         int s_JAB1 = FLAMEGPU->random.uniform<float>() < s_JAB1_fn ? 1 : 0;
         if(s_JAB1 == 1)
         {
-	        const float chemo1 = FLAMEGPU->environment.getProperty<float, 6>("chemo_effects", 1);
+	        const float chemo1 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 1);
                 if(CHEMO_ACTIVE && FLAMEGPU->random.uniform<float>()<chemo1)
 	                {
                                 s_JAB1 = 0;
-                                break;
                         }
         }
         int s_CHK1 = (FLAMEGPU->random.uniform<float>() < s_CHK1_fn && s_DNA_damage == 1) || (FLAMEGPU->random.uniform<float>() < s_CHK1_fn && s_DNA_damage == 1 && s_MYCN == 1) ? 1 : 0;
         if(s_CHK1 == 1)
         {
-	        const float chemo0 = FLAMEGPU->environment.getProperty<float, 6>("chemo_effects", 0);
+	        const float chemo0 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 0);
                 if(CHEMO_ACTIVE && FLAMEGPU->random.uniform<float>()<chemo0)
                         {
                                 s_CHK1 = 0;
-                                break;
                         }
         }
         const int s_ID2 = FLAMEGPU->random.uniform<float>() < s_ID2_fn && s_MYCN == 1 ? 1 : 0;
@@ -142,11 +139,10 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
         int s_HIF = ((FLAMEGPU->random.uniform<float>() < s_HIF_fn && s_hypoxia == 1) || (FLAMEGPU->random.uniform<float>() < s_HIF_fn && s_hypoxia == 1 && s_JAB1 == 1)) && !(s_p53 == 1 || s_p73 == 1) ? 1 : 0;
         if(s_HIF == 1)
         {
-		const float chemo2 = FLAMEGPU->environment.getProperty<float, 6>("chemo_effects", 2);
+		const float chemo2 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 2);
                 if(CHEMO_ACTIVE && FLAMEGPU->random.uniform<float>()<chemo2)
                         {
                                 s_HIF = 0;
-                                break;
                         }
         }
 	const int s_BNIP3 = FLAMEGPU->random.uniform<float>() < s_BNIP3_fn && s_HIF == 1 ? 1 : 0;
@@ -160,11 +156,10 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
                 ? 1 : 0;
         if(s_p53 == 1)
         {
-		const float chemo5 = FLAMEGPU->environment.getProperty<float, 6>("chemo_effects", 5);
+		const float chemo5 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 5);
                 if(CHEMO_ACTIVE && FLAMEGPU->random.uniform<float>()<chemo5)
                         {
                                 s_p53 = 0;
-                                break;
                         }
         }
 	s_p73 = (FLAMEGPU->random.uniform<float>() < s_p73_fn && s_CHK1 == 1) ||
@@ -440,11 +435,10 @@ __device__ __forceinline__ bool Neuroblastoma_divide(flamegpu::DeviceAPI<flamegp
         if (s_telo == 1 && (FLAMEGPU->random.uniform<float>() < P_telorp * static_cast<float>(step_size))) {
 	    int telo_dummy = 1;
 	    const int CHEMO_ACTIVE = FLAMEGPU->environment.getProperty<int>("CHEMO_ACTIVE");
-	    const float chemo4 = FLAMEGPU->environment.getProperty<float, 6>("chemo_effects", 4);
+	    const float chemo4 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 4);
 	    if(CHEMO_ACTIVE && FLAMEGPU->random.uniform<float>()<chemo4)
                 {
                         telo_dummy = 0;
-                        break;
                 }
             if(telo_dummy==1)
 		{
