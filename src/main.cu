@@ -1,6 +1,6 @@
 #include "header.h"
 
-const bool ENSEMBLE = false;
+const bool ENSEMBLE = true;
 int main(int argc, const char ** argv) {
     flamegpu::ModelDescription model("PRIMAGE: Neuroblastoma");
     defineModel(model);
@@ -22,7 +22,7 @@ int main(int argc, const char ** argv) {
         /**
          * Create a run plan
          */
-        flamegpu::RunPlanVector runs(model, 128);
+        flamegpu::RunPlanVector runs(model, 3);
         {
             runs.setSteps(336);
             runs.setRandomSimulationSeed(12, 1);
