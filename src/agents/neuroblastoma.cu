@@ -504,7 +504,9 @@ FLAMEGPU_AGENT_FUNCTION(nb_cell_lifecycle, flamegpu::MessageNone, flamegpu::Mess
         FLAMEGPU->agent_out.setVariable<glm::vec3>("old_xyz", newLoc);
         FLAMEGPU->agent_out.setVariable<float>("move_dist", 0);  // This could be left to default init?
     }
-    FLAMEGPU->environment.getMacroProperty<unsigned int, 24>("NB_living_count")[FLAMEGPU->getVariable<int>("cloneID")-1]++;
+    if(FLAMEGPU->getVariable<int>("apop")==0 && FLAMEGPU->getVariable<int>("necro")==0){
+    	FLAMEGPU->environment.getMacroProperty<unsigned int, 24>("NB_living_count")[FLAMEGPU->getVariable<int>("cloneID")-1]++;
+    }
     return flamegpu::ALIVE;
 }
 FLAMEGPU_AGENT_FUNCTION(output_oxygen_cell, flamegpu::MessageNone, flamegpu::MessageNone) {
