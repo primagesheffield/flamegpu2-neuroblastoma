@@ -19,8 +19,13 @@ FLAMEGPU_HOST_FUNCTION(hetNB_logging_fn) {
     // Reset macroprop
     macro_NB_living_count.zero();
     // Calc degdiff over Nnbl_count
+    if(FLAMEGPU->environment.getProperty<unsigned int>("Nnbl_count")!=0){
     FLAMEGPU->environment.setProperty<float>("NB_living_degdiff_average",
         FLAMEGPU->agent("Neuroblastoma").sum<float>("degdiff") / FLAMEGPU->environment.getProperty<unsigned int>("Nnbl_count"));
+    }
+    else{
+    FLAMEGPU->environment.setProperty<float>("NB_living_degdiff_average", 0);
+    }
 }
 
 void defineModel(flamegpu::ModelDescription& model) {
