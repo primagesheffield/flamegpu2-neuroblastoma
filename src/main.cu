@@ -55,7 +55,7 @@ int main(int argc, const char ** argv) {
          * Create a run plan
          */
         const unsigned int CONFIG_COUNT = static_cast<unsigned int>(columns["Index"].size());
-        const unsigned int RUNS_PER_CONFIG = 10;
+        const unsigned int RUNS_PER_CONFIG = 100;
         flamegpu::RunPlanVector runs(model, CONFIG_COUNT * RUNS_PER_CONFIG);
         {
             runs.setSteps(3024);
