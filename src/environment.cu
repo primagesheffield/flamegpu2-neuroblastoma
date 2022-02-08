@@ -7,16 +7,60 @@ void data_layer_minus1(flamegpu::ModelDescription& model) {
     // DERIVED: Initial oxygen level (continuous, 0 to 1).
     // Oxygen concentration in the kidney = 72 mmHg (Carreau et al., 2011), chosen as concentration scale.
     // Oxygen concentration in hypoxic tumours = 2 to 32 mmHg (McKeown, 2014).
-    env.newProperty<float>("O2", 0);
+    env.newProperty<float>("O2", 0.243);
     // DERIVED: Initial cellularity in the tumour (continuous, 0 to 1).
-    env.newProperty<float>("cellularity", 0.5);
+    env.newProperty<float>("cellularity", 0.475);
     // DERIVED: Fraction of Schwann cells in the cell population (continuous, 0 to 1).
-    env.newProperty<float>("theta_sc", 0.5);
+    env.newProperty<float>("theta_sc", 0.086);
     // DERIVED: Degree of differentiation (continuous, 0 to 1).
-    env.newProperty<float>("degdiff", 0);
+    env.newProperty<float>("degdiff", 0.283);
+    // Initial fraction of neuroblasts with MYCN amplification.
+    // Try 0.3, 0.6, and 0.9.
+    float MYCN_amp_fraction = 0.3;
+    env.newProperty<float>("MYCN_amp_fraction", MYCN_amp_fraction;
+    // Test 1 considers TERT rearrangement and ATRX inactivation too (all 24 clones).
+    // Test 2 considers MYCN amplification only (first 12 clones only).
+    // Do both tests for each value of MYCN_amp_fraction.
+    int test = 1;
+    env.newProperty<float>("test", test);
     // DERIVED: Clonal composition (continuous, 24 numbers adding up to 1).
-    env.newProperty<float, 24>("clones", {});
-    env.newProperty<float, 23>("clones_dummy", {});
+    // Clones 7 to clones 12 should add up to MYCN_amp_fraction.
+    // The remaining clones should add up to one minus MYCN_amp_fraction.
+    std::array<float, 24> clones = {};
+    for(int i=0; i<24; i++){
+	clones[i] = FLAMEGPU->random.uniform<float>();
+    }
+    float sum_MYCN_amp = clones[6] + clones[7] + clones[8] + clones[9] + clones[10] + clones[11];
+    for(int i=6; i<12; i++){
+	float dummy = MYCN_amp_fraction*clones[i]/sum_MYCN_amp;
+        clones[i] = dummy;
+    }
+    if(test == 1){
+	float sum_MYCN_amp_neg = clones[0] + clones[1] + clones[2] + clones[3] + clones[4] + clones[5] + clones[12] + clones[13] + clones[14] + clones[15] + clones[16] + clones[17]
+	 + clones[18] + clones[19] + clones[20] + clones[21] + clones[22] + clones[23];
+	for(int i=0; i<6; i++){
+		dummy = (1-MYCN_amp_fraction)*clones[i]/sum_MYCN_amp_neg;
+		clones[i] = dummy;
+
+	}
+        for(int i=12; i<24; i++){
+                dummy = (1-MYCN_amp_fraction)*clones[i]/sum_MYCN_amp_neg;
+		clones[i] = dummy;
+        }
+    }
+    else{
+        float sum_MYCN_amp_neg = clones[0] + clones[1] + clones[2] + clones[3] + clones[4] + clones[5];
+        for(int i=0; i<6; i++){
+                dummy = (1-MYCN_amp_fraction)*clones[i]/sum_MYCN_amp_neg;
+                clones[i] = dummy;
+
+        }
+        for(int i=12; i<24; i++){
+                dummy = 0;
+                clones[i] = dummy;
+        }
+    }
+    env.newProperty<float, 24>("clones", clones);
 }
 /**
  * integration with imaging biomarkers
