@@ -73,7 +73,7 @@ void data_layer_0(flamegpu::ModelDescription& model) {
     // According to Aherne and Buck (1971), the volume doubling time is around 60 days.
     // Note that this is illustrative and unrealistic.
     // The orchestrator must provide more details about the boundary geometry, potentially different parameters for different directions.
-    env.newProperty<float>("boundary_max", 4);
+    env.newProperty<float>("boundary_max", 1.26);
     // Half of a voxel's side length in microns.
     // This must be at least as big as R_cell.
     env.newProperty<float>("R_voxel", 15);

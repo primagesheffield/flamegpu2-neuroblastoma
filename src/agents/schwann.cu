@@ -216,7 +216,7 @@ __device__ __forceinline__ void Schwann_cell_cycle(flamegpu::DeviceAPI<flamegpu:
     const int s_DNA_damage = FLAMEGPU->getVariable<int>("DNA_damage");
     const int s_DNA_unreplicated = FLAMEGPU->getVariable<int>("DNA_unreplicated");
     const int s_hypoxia = FLAMEGPU->getVariable<int>("hypoxia");
-    if (dummy_scycle && s_neighbours < N_neighbours && s_ATP == 1 && s_apop == 0 && s_necro == 0) {
+    if (dummy_scycle && s_neighbours <= N_neighbours && s_ATP == 1 && s_apop == 0 && s_necro == 0) {
         if (s_cycle < cycle_stages[0]) {
             if (s_cycle == 0) {
                 if (s_DNA_damage == 0 && s_hypoxia == 0) {
