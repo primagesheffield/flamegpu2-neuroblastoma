@@ -10,7 +10,7 @@ void data_layer_0(flamegpu::ModelDescription& model) {
     // According to Aherne and Buck (1971), the volume doubling time is around 60 days.
     // Note that this is illustrative and unrealistic.
     // The orchestrator must provide more details about the boundary geometry, potentially different parameters for different directions.
-    env.newProperty<float>("boundary_max", 4);
+    env.newProperty<float>("boundary_max", 1.26f);
     // Half of a voxel's side length in microns.
     // This must be at least as big as R_cell.
     env.newProperty<float>("R_voxel", 15);
@@ -476,7 +476,9 @@ FLAMEGPU_INIT_FUNCTION(InitDerivedEnvironment) {
     const int MYCN_amp = FLAMEGPU->environment.getProperty<int>("MYCN_amp");
     const int TERT_rarngm = FLAMEGPU->environment.getProperty<int>("TERT_rarngm");
     int telo_count;
-    if (ALT == 1 || ATRX_inact == 1) {
+    if ((ALT == 1 || ATRX_inact == 1) && (MYCN_amp == 1 || TERT_rarngm == 1)) {
+        telo_count = FLAMEGPU->random.uniform<int>(1, 2);
+    } else if (ALT == 1 || ATRX_inact == 1) {
         telo_count = 1;
     } else if (MYCN_amp == 1 || TERT_rarngm == 1) {
         telo_count = 2;
