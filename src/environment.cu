@@ -17,7 +17,7 @@ void data_layer_minus1(flamegpu::ModelDescription& model) {
     // Initial fraction of neuroblasts with MYCN amplification.
     // Try 0.3, 0.6, and 0.9.
     float MYCN_amp_fraction = 0.3;
-    env.newProperty<float>("MYCN_amp_fraction", MYCN_amp_fraction;
+    env.newProperty<float>("MYCN_amp_fraction", MYCN_amp_fraction);
     // Test 1 considers TERT rearrangement and ATRX inactivation too (all 24 clones).
     // Test 2 considers MYCN amplification only (first 12 clones only).
     // Do both tests for each value of MYCN_amp_fraction.
@@ -27,8 +27,10 @@ void data_layer_minus1(flamegpu::ModelDescription& model) {
     // Clones 7 to clones 12 should add up to MYCN_amp_fraction.
     // The remaining clones should add up to one minus MYCN_amp_fraction.
     std::array<float, 24> clones = {};
+    std::mt19937 gen(1);
+    std::uniform_real_distribution<> dis(0, 1.0);
     for(int i=0; i<24; i++){
-	clones[i] = FLAMEGPU->random.uniform<float>();
+	clones[i] = dis(gen);
     }
     float sum_MYCN_amp = clones[6] + clones[7] + clones[8] + clones[9] + clones[10] + clones[11];
     for(int i=6; i<12; i++){
@@ -39,24 +41,24 @@ void data_layer_minus1(flamegpu::ModelDescription& model) {
 	float sum_MYCN_amp_neg = clones[0] + clones[1] + clones[2] + clones[3] + clones[4] + clones[5] + clones[12] + clones[13] + clones[14] + clones[15] + clones[16] + clones[17]
 	 + clones[18] + clones[19] + clones[20] + clones[21] + clones[22] + clones[23];
 	for(int i=0; i<6; i++){
-		dummy = (1-MYCN_amp_fraction)*clones[i]/sum_MYCN_amp_neg;
+		float dummy = (1-MYCN_amp_fraction)*clones[i]/sum_MYCN_amp_neg;
 		clones[i] = dummy;
 
 	}
         for(int i=12; i<24; i++){
-                dummy = (1-MYCN_amp_fraction)*clones[i]/sum_MYCN_amp_neg;
+                float dummy = (1-MYCN_amp_fraction)*clones[i]/sum_MYCN_amp_neg;
 		clones[i] = dummy;
         }
     }
     else{
         float sum_MYCN_amp_neg = clones[0] + clones[1] + clones[2] + clones[3] + clones[4] + clones[5];
         for(int i=0; i<6; i++){
-                dummy = (1-MYCN_amp_fraction)*clones[i]/sum_MYCN_amp_neg;
+                float dummy = (1-MYCN_amp_fraction)*clones[i]/sum_MYCN_amp_neg;
                 clones[i] = dummy;
 
         }
         for(int i=12; i<24; i++){
-                dummy = 0;
+                float dummy = 0;
                 clones[i] = dummy;
         }
     }
@@ -407,23 +409,11 @@ FLAMEGPU_INIT_FUNCTION(InitDerivedEnvironment) {
     float cellularity = 0.17f + (FLAMEGPU->random.uniform<float>() * 0.78f);  // rng in range [0.17, 0.95)
     float theta_sc = 0.05f + (FLAMEGPU->random.uniform<float>() * 0.78f);  // rng in range [0.05, 0.83)
     float degdiff = FLAMEGPU->random.uniform<float>() * 0.8f;  // rng in range [0.0, 0.8)*/
-    std::array<float, 23> clones_dummy = FLAMEGPU->environment.getProperty<float, 23>("clones_dummy");
-    std::vector<float> dummy(clones_dummy.begin(), clones_dummy.end());
-    std::sort(dummy.begin(), dummy.end());
-    dummy.push_back(1.0f);
-    std::array<float, 24> clones;
-    for (unsigned int i = 0; i < dummy.size(); ++i) {
-        if (i == 0) {
-            clones[i] = dummy[i];
-        } else {
-            clones[i] = dummy[i] - dummy[i-1];
-        }
-    }
+
     /*FLAMEGPU->environment.setProperty<float>("O2", O2);
     FLAMEGPU->environment.setProperty<float>("cellularity", cellularity);
     FLAMEGPU->environment.setProperty<float>("theta_sc", theta_sc);
     FLAMEGPU->environment.setProperty<float>("degdiff", degdiff);*/
-    FLAMEGPU->environment.setProperty<float, 24>("clones", clones);
 
     /**
      * Data layer 0 (integration with imaging biomarkers).
