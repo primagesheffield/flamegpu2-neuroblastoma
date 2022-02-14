@@ -414,10 +414,26 @@ __device__ __forceinline__ bool Neuroblastoma_divide(flamegpu::DeviceAPI<flamegp
     return false;
 }
 
-FLAMEGPU_AGENT_FUNCTION(nb_cell_lifecycle, flamegpu::MessageNone, flamegpu::MessageNone) {
+FLAMEGPU_AGENT_FUNCTION(nb_sense, flamegpu::MessageNone, flamegpu::MessageNone) {
     Neuroblastoma_sense(FLAMEGPU);
     Neuroblastoma_cell_cycle(FLAMEGPU);
+    return flamegpu::ALIVE;
+}
+
+FLAMEGPU_AGENT_FUNCTION(nb_cell_lifecycle, flamegpu::MessageNone, flamegpu::MessageNone) {
+    const int s_apop = FLAMEGPU->getVariable<int>("apop");
+    const int s_necro = FLAMEGPU->getVariable<int>("necro");
     if (remove(FLAMEGPU)) {
+        // Notify the death
+        const glm::ivec3 gid = toGrid(FLAMEGPU, FLAMEGPU->getVariable<glm::vec3>("xyz"));
+        --FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nnb_grid")[gid.x][gid.y][gid.z];
+        if (s_apop == 1) {
+            // --FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nnba_grid")[gid.x][gid.y][gid.z];
+        } else if (s_necro == 1) {
+            --FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nnbn_grid")[gid.x][gid.y][gid.z];
+        } else {
+            --FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nnbl_grid")[gid.x][gid.y][gid.z];
+        }
         return flamegpu::DEAD;  // Kill cell
     } else if (Neuroblastoma_divide(FLAMEGPU)) {
         const glm::vec3 newLoc = drift(FLAMEGPU);
@@ -465,9 +481,9 @@ FLAMEGPU_AGENT_FUNCTION(nb_cell_lifecycle, flamegpu::MessageNone, flamegpu::Mess
         FLAMEGPU->agent_out.setVariable<int>("mobile", FLAMEGPU->getVariable<int>("mobile"));
         FLAMEGPU->agent_out.setVariable<int>("ATP", FLAMEGPU->getVariable<int>("ATP"));
         FLAMEGPU->agent_out.setVariable<unsigned int>("cycle", FLAMEGPU->getVariable<unsigned int>("cycle"));
-        FLAMEGPU->agent_out.setVariable<int>("apop", FLAMEGPU->getVariable<int>("apop"));
+        FLAMEGPU->agent_out.setVariable<int>("apop", s_apop);
         FLAMEGPU->agent_out.setVariable<int>("apop_signal", FLAMEGPU->getVariable<int>("apop_signal"));
-        FLAMEGPU->agent_out.setVariable<int>("necro", FLAMEGPU->getVariable<int>("necro"));
+        FLAMEGPU->agent_out.setVariable<int>("necro", s_necro);
         FLAMEGPU->agent_out.setVariable<int>("necro_signal", FLAMEGPU->getVariable<int>("necro_signal"));
         FLAMEGPU->agent_out.setVariable<int>("necro_critical", FLAMEGPU->getVariable<int>("necro_critical"));
         FLAMEGPU->agent_out.setVariable<int>("telo_count", FLAMEGPU->getVariable<int>("telo_count"));
@@ -503,8 +519,21 @@ FLAMEGPU_AGENT_FUNCTION(nb_cell_lifecycle, flamegpu::MessageNone, flamegpu::Mess
         FLAMEGPU->agent_out.setVariable<float>("force_magnitude", 0);  // This could be left to default init?
         FLAMEGPU->agent_out.setVariable<glm::vec3>("old_xyz", newLoc);
         FLAMEGPU->agent_out.setVariable<float>("move_dist", 0);  // This could be left to default init?
+        // Notify the birth
+        const glm::ivec3 gid = toGrid(FLAMEGPU, newLoc);
+        ++FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nnb_grid")[gid.x][gid.y][gid.z];
+        if (s_apop == 1) {
+            // ++FLAMEGPU->environmentv.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nnba_grid")[gid.x][gid.y][gid.z];
+        } else if (s_necro == 1) {
+            ++FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nnbn_grid")[gid.x][gid.y][gid.z];
+        } else {
+            ++FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nnbl_grid")[gid.x][gid.y][gid.z];
+        }
+        if (s_apop == 0 && s_necro == 0) {
+            FLAMEGPU->environment.getMacroProperty<unsigned int, 24>("NB_living_count")[FLAMEGPU->getVariable<int>("cloneID") - 1]++;
+        }
     }
-    if(FLAMEGPU->getVariable<int>("apop")==0 && FLAMEGPU->getVariable<int>("necro")==0){
+    if(s_apop == 0 && s_necro == 0){
     	FLAMEGPU->environment.getMacroProperty<unsigned int, 24>("NB_living_count")[FLAMEGPU->getVariable<int>("cloneID")-1]++;
     }
     return flamegpu::ALIVE;
@@ -639,6 +668,7 @@ flamegpu::AgentDescription& defineNeuroblastoma(flamegpu::ModelDescription& mode
     // Agent functions
     {
         nb.newFunction("output_oxygen_cell", output_oxygen_cell);
+        nb.newFunction("nb_sense", nb_sense);
         auto &t = nb.newFunction("nb_cell_lifecycle", nb_cell_lifecycle);
         t.setAllowAgentDeath(true);
         t.setAgentOutput(nb);

@@ -271,11 +271,26 @@ __device__ __forceinline__ bool Schwann_divide(flamegpu::DeviceAPI<flamegpu::Mes
 }
 
 
-FLAMEGPU_AGENT_FUNCTION(sc_cell_lifecycle, flamegpu::MessageNone, flamegpu::MessageNone) {
+FLAMEGPU_AGENT_FUNCTION(sc_sense, flamegpu::MessageNone, flamegpu::MessageNone) {
     Schwann_sense(FLAMEGPU);
     Schwann_cell_cycle(FLAMEGPU);
-
+    return flamegpu::ALIVE;
+}
+FLAMEGPU_AGENT_FUNCTION(sc_cell_lifecycle, flamegpu::MessageNone, flamegpu::MessageNone) {
+    const int s_apop = FLAMEGPU->getVariable<int>("apop");
+    const int s_necro = FLAMEGPU->getVariable<int>("necro");
     if (remove(FLAMEGPU)) {
+        // Notify the death
+        const glm::ivec3 gid = toGrid(FLAMEGPU, FLAMEGPU->getVariable<glm::vec3>("xyz"));
+        --FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nsc_grid")[gid.x][gid.y][gid.z];
+        if (s_apop == 1) {
+            // --FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nsca_grid")[gid.x][gid.y][gid.z];
+        } else if (s_necro == 1) {
+            --FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nscn_grid")[gid.x][gid.y][gid.z];
+        } else {
+            --FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nscl_grid")[gid.x][gid.y][gid.z];
+            //--Nscl_col_grid?
+        }
         return flamegpu::DEAD;  // Kill cell
     } else if (Schwann_divide(FLAMEGPU)) {
         const glm::vec3 newLoc = drift(FLAMEGPU);
@@ -288,9 +303,9 @@ FLAMEGPU_AGENT_FUNCTION(sc_cell_lifecycle, flamegpu::MessageNone, flamegpu::Mess
         FLAMEGPU->agent_out.setVariable<int>("mobile", FLAMEGPU->getVariable<int>("mobile"));
         FLAMEGPU->agent_out.setVariable<int>("ATP", FLAMEGPU->getVariable<int>("ATP"));
         FLAMEGPU->agent_out.setVariable<unsigned int>("cycle", FLAMEGPU->getVariable<unsigned int>("cycle"));
-        FLAMEGPU->agent_out.setVariable<int>("apop", FLAMEGPU->getVariable<int>("apop"));
+        FLAMEGPU->agent_out.setVariable<int>("apop", s_apop);
         FLAMEGPU->agent_out.setVariable<int>("apop_signal", FLAMEGPU->getVariable<int>("apop_signal"));
-        FLAMEGPU->agent_out.setVariable<int>("necro", FLAMEGPU->getVariable<int>("necro"));
+        FLAMEGPU->agent_out.setVariable<int>("necro", s_necro);
         FLAMEGPU->agent_out.setVariable<int>("necro_signal", FLAMEGPU->getVariable<int>("necro_signal"));
         FLAMEGPU->agent_out.setVariable<int>("necro_critical", FLAMEGPU->getVariable<int>("necro_critical"));
         FLAMEGPU->agent_out.setVariable<int>("telo_count", FLAMEGPU->getVariable<int>("telo_count"));
@@ -303,6 +318,17 @@ FLAMEGPU_AGENT_FUNCTION(sc_cell_lifecycle, flamegpu::MessageNone, flamegpu::Mess
         FLAMEGPU->agent_out.setVariable<int>("DNA_unreplicated", FLAMEGPU->getVariable<int>("DNA_unreplicated"));
         // Internal
         FLAMEGPU->agent_out.setVariable<float>("force_magnitude", 0);  // This could be left to default init?
+        // Notify the birth
+        const glm::ivec3 gid = toGrid(FLAMEGPU, newLoc);
+        ++FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nsc_grid")[gid.x][gid.y][gid.z];
+        if (s_apop == 1) {
+            // ++FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nsca_grid")[gid.x][gid.y][gid.z];
+        } else if (s_necro == 1) {
+            ++FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nscn_grid")[gid.x][gid.y][gid.z];
+        } else {
+            ++FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nscl_grid")[gid.x][gid.y][gid.z];
+            //++Nscl_col_grid?
+        }
     }
     return flamegpu::ALIVE;
 }
@@ -351,6 +377,7 @@ flamegpu::AgentDescription &defineSchwann(flamegpu::ModelDescription& model) {
     // Agent functions
     {
         sc.newFunction("output_matrix_grid_cell", output_matrix_grid_cell);
+        sc.newFunction("sc_sense", sc_sense);
         auto &t = sc.newFunction("sc_cell_lifecycle", sc_cell_lifecycle);
         t.setAllowAgentDeath(true);
         t.setAgentOutput(sc);
