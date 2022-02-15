@@ -63,6 +63,11 @@ void data_layer_minus1(flamegpu::ModelDescription& model) {
         }
     }
     env.newProperty<float, 24>("clones", clones);
+
+    // Create a neuroblast population counter for degdiff
+    env.newMacroProperty<int>("nb_living_degdiff");
+    // We can also create a regular env property if it will require logging
+    env.newProperty<int>("nb_living_degdiff", 0);
 }
 /**
  * integration with imaging biomarkers

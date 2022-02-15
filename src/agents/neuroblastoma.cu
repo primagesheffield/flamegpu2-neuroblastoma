@@ -214,6 +214,9 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
         FLAMEGPU->setVariable<float>("degdiff", s_degdiff);
         FLAMEGPU->setVariable<float>("cycdiff", 1.0f - s_degdiff);
 
+        // Count how many cells contributed to degdiff
+        ++FLAMEGPU->environment.getMacroProperty<int>("nb_living_degdiff");
+
         // Update apoptotic signals.
         // Source 1: CAS.
         // Source 2: Schwann cells.
@@ -535,6 +538,7 @@ FLAMEGPU_AGENT_FUNCTION(nb_cell_lifecycle, flamegpu::MessageNone, flamegpu::Mess
     }
     if(s_apop == 0 && s_necro == 0){
     	FLAMEGPU->environment.getMacroProperty<unsigned int, 24>("NB_living_count")[FLAMEGPU->getVariable<int>("cloneID")-1]++;
+
     }
     return flamegpu::ALIVE;
 }

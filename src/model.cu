@@ -26,6 +26,11 @@ FLAMEGPU_HOST_FUNCTION(hetNB_logging_fn) {
     else{
     FLAMEGPU->environment.setProperty<float>("NB_living_degdiff_average", 0);
     }
+
+    // Read back the counter, and reset it to zero
+    auto nb_living_degdiff = FLAMEGPU->environment.getMacroProperty<int>("nb_living_degdiff");
+    FLAMEGPU->environment.setProperty<int>("nb_living_degdiff", nb_living_degdiff);
+    nb_living_degdiff.zero();
 }
 
 void defineModel(flamegpu::ModelDescription& model) {
