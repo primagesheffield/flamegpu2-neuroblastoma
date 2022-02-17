@@ -1,6 +1,6 @@
 #include "header.h"
 
-const bool ENSEMBLE = false;
+const bool ENSEMBLE = true;
 int main(int argc, const char ** argv) {
     flamegpu::ModelDescription model("PRIMAGE: Neuroblastoma");
     defineModel(model);
@@ -24,7 +24,7 @@ int main(int argc, const char ** argv) {
          */
         flamegpu::RunPlanVector runs(model, 128);
         {
-            runs.setSteps(50);
+            runs.setSteps(3024);
             runs.setRandomSimulationSeed(12, 1);
         }
         /**
@@ -33,6 +33,9 @@ int main(int argc, const char ** argv) {
         flamegpu::StepLoggingConfig step_log_cfg(model);
         {
             step_log_cfg.setFrequency(1);
+            step_log_cfg.logTiming(true);
+            step_log_cfg.agent("Neuroblastoma").logCount();
+            step_log_cfg.agent("Schwann").logCount();
             step_log_cfg.logEnvironment("Nscl_count");
             step_log_cfg.logEnvironment("Nnbl_count");
         }
@@ -41,8 +44,8 @@ int main(int argc, const char ** argv) {
          */
         flamegpu::CUDAEnsemble cuda_ensemble(model, argc, argv);
         cuda_ensemble.Config().concurrent_runs = 1;
-        cuda_ensemble.Config().devices = { 0 };
-        cuda_ensemble.Config().out_directory = "ensemble_out";
+        cuda_ensemble.Config().devices = { 0, 1 };
+        cuda_ensemble.Config().out_directory = "fgpu2_perf";
         cuda_ensemble.Config().out_format = "json";
         cuda_ensemble.setStepLog(step_log_cfg);
         cuda_ensemble.simulate(runs);
