@@ -477,7 +477,7 @@ FLAMEGPU_INIT_FUNCTION(InitDerivedEnvironment) {
     const int TERT_rarngm = FLAMEGPU->environment.getProperty<int>("TERT_rarngm");
     int telo_count;
     if ((ALT == 1 || ATRX_inact == 1) && (MYCN_amp == 1 || TERT_rarngm == 1)){
-	telo_count = FLAMEGPU.random.uniform<int>(1, 2);
+        telo_count = FLAMEGPU->random.uniform<int>(1, 2);
     } else if (ALT == 1 || ATRX_inact == 1) {
         telo_count = 1;
     } else if (MYCN_amp == 1 || TERT_rarngm == 1) {
