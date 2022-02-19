@@ -44,8 +44,8 @@ int main(int argc, const char ** argv) {
          */
         flamegpu::CUDAEnsemble cuda_ensemble(model, argc, argv);
         cuda_ensemble.Config().concurrent_runs = 1;
-        cuda_ensemble.Config().devices = { 0, 1 };
-        cuda_ensemble.Config().out_directory = "fgpu2_perf";
+        cuda_ensemble.Config().devices = { 0 };
+        cuda_ensemble.Config().out_directory = "fgpu2_rtc_perf";
         cuda_ensemble.Config().out_format = "json";
         cuda_ensemble.setStepLog(step_log_cfg);
         cuda_ensemble.simulate(runs);
