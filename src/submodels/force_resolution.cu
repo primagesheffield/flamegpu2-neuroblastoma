@@ -239,6 +239,7 @@ flamegpu::SubModelDescription& defineForceResolution(flamegpu::ModelDescription&
     loc.newVariable<float>("Rj");
     loc.newVariable<flamegpu::id_t>("id");
     auto &nb = force_resolution.newAgent("Neuroblastoma");
+    nb.setSortPeriod(100);
     nb.newVariable<float, 3>("xyz");
     nb.newVariable<float, 3>("Fxyz");
     nb.newVariable<int>("neighbours");
@@ -254,6 +255,7 @@ flamegpu::SubModelDescription& defineForceResolution(flamegpu::ModelDescription&
     nb2.setMessageOutput(loc);
     nb3.setMessageInput(loc);
     auto &sc = force_resolution.newAgent("Schwann");
+    sc.setSortPeriod(100);
     sc.newVariable<float, 3>("xyz");
     sc.newVariable<float, 3>("Fxyz");
     sc.newVariable<int>("neighbours");
