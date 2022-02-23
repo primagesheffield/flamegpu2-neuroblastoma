@@ -41,6 +41,11 @@ void defineModel(flamegpu::ModelDescription& model) {
         auto& l_cycle = model.newLayer();
         l_cycle.addAgentFunction(nb.getFunction("nb_cell_lifecycle"));
         l_cycle.addAgentFunction(sc.getFunction("sc_cell_lifecycle"));
+        // Validation, counters, etc
+        auto& l_validation = model.newLayer();
+        l_validation.addAgentFunction(nb.getFunction("nb_validation"));
+        l_validation.addAgentFunction(sc.getFunction("sc_validation"));
+        model.newLayer().addHostFunction(host_validation);
     }
 }
 #ifdef VISUALISATION

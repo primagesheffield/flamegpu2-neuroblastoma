@@ -151,6 +151,7 @@ extern flamegpu::FLAMEGPU_HOST_FUNCTION_POINTER vasculature;
 extern flamegpu::FLAMEGPU_HOST_FUNCTION_POINTER reset_grids;
 extern flamegpu::FLAMEGPU_HOST_FUNCTION_POINTER alter2;
 extern flamegpu::FLAMEGPU_HOST_FUNCTION_POINTER CAexpand;
+extern flamegpu::FLAMEGPU_HOST_FUNCTION_POINTER host_validation;
 
 
 #endif  // SRC_HEADER_H_

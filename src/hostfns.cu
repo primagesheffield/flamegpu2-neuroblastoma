@@ -134,3 +134,11 @@ FLAMEGPU_HOST_FUNCTION(reset_grids) {
     FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nscl_grid").zero();
     FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nscl_col_grid").zero();
 }
+FLAMEGPU_HOST_FUNCTION(host_validation) {
+    const unsigned int validation_Nnbl = FLAMEGPU->environment.getMacroProperty<unsigned int>("validation_Nnbl");
+    const unsigned int validation_Nscl = FLAMEGPU->environment.getMacroProperty<unsigned int>("validation_Nscl");
+    FLAMEGPU->environment.setProperty<unsigned int>("validation_Nnbl", validation_Nnbl);
+    FLAMEGPU->environment.setProperty<unsigned int>("validation_Nscl", validation_Nscl);
+    FLAMEGPU->environment.getMacroProperty<unsigned int>("validation_Nnbl").zero();
+    FLAMEGPU->environment.getMacroProperty<unsigned int>("validation_Nscl").zero();
+}

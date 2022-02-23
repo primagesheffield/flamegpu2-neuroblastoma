@@ -311,6 +311,12 @@ FLAMEGPU_AGENT_FUNCTION(output_matrix_grid_cell, flamegpu::MessageNone, flamegpu
     increment_grid_sc(FLAMEGPU, gid);
     return flamegpu::ALIVE;
 }
+FLAMEGPU_AGENT_FUNCTION(sc_validation, flamegpu::MessageNone, flamegpu::MessageNone) {
+    if (FLAMEGPU->getVariable<int>("apop") == 0 && FLAMEGPU->getVariable<int>("necro") == 0) {
+        ++FLAMEGPU->environment.getMacroProperty<unsigned int>("validation_Nscl");
+    }
+    return flamegpu::ALIVE;
+}
 
 flamegpu::AgentDescription &defineSchwann(flamegpu::ModelDescription& model) {
     auto& sc = model.newAgent("Schwann");
@@ -354,6 +360,7 @@ flamegpu::AgentDescription &defineSchwann(flamegpu::ModelDescription& model) {
         auto &t = sc.newFunction("sc_cell_lifecycle", sc_cell_lifecycle);
         t.setAllowAgentDeath(true);
         t.setAgentOutput(sc);
+        sc.newFunction("sc_validation", sc_validation);
     }
     return sc;
 }
@@ -380,6 +387,7 @@ void initSchwann(flamegpu::HostAPI &FLAMEGPU) {
     const float theta_sc = FLAMEGPU.environment.getProperty<float>("theta_sc");
 
     const unsigned int SC_COUNT = (unsigned int)ceil(rho_tumour * V_tumour * cellularity * theta_sc);
+    unsigned int validation_Nscl = 0;
     for (unsigned int i = 0; i < SC_COUNT; ++i) {
         auto agt = SC.newAgent();
         // Data Layer 0 (integration with imaging biomarkers).
@@ -407,6 +415,7 @@ void initSchwann(flamegpu::HostAPI &FLAMEGPU) {
         agt.setVariable<int>("apop_signal", apop_signal_sc < 0 ? 0 : apop_signal_sc);
         agt.setVariable<int>("necro", necro_sc < 0 ? 0 : necro_sc);
         agt.setVariable<int>("necro_signal", necro_signal_sc < 0 ? 0 : necro_signal_sc);
+        validation_Nscl += (apop_sc < 0 ? 0 : apop_sc) == 0 && (necro_sc < 0 ? 0 : necro_sc) == 0 ? 1 : 0;
         agt.setVariable<int>("necro_critical", FLAMEGPU.random.uniform<int>(3, 168));  // Random int in range [3, 168]
         agt.setVariable<int>("telo_count", telo_count_sc < 0 ? FLAMEGPU.random.uniform<int>(25, 35) : telo_count_sc);  // Random int in range [25, 35]
         // Attribute Layer 1
@@ -415,4 +424,5 @@ void initSchwann(flamegpu::HostAPI &FLAMEGPU) {
         agt.setVariable<int>("DNA_damage", 0);
         agt.setVariable<int>("DNA_unreplicated", 0);
     }
+    FLAMEGPU.environment.setProperty<unsigned int>("validation_Nscl", validation_Nscl);
 }

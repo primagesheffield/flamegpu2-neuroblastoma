@@ -33,8 +33,8 @@ int main(int argc, const char ** argv) {
         flamegpu::StepLoggingConfig step_log_cfg(model);
         {
             step_log_cfg.setFrequency(1);
-            step_log_cfg.logEnvironment("Nscl_count");
-            step_log_cfg.logEnvironment("Nnbl_count");
+            step_log_cfg.logEnvironment("validation_Nscl");
+            step_log_cfg.logEnvironment("validation_Nnbl");
         }
         /**
          * Create Model Runner
