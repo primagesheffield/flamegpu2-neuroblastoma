@@ -355,6 +355,10 @@ void internal_derived(flamegpu::ModelDescription& model) {
     env.newProperty<unsigned int>("Nscl_count", 0);
     // VALIDATION:
     env.newProperty<unsigned int>("force_resolution_steps", 0);
+    env.newMacroProperty<unsigned int>("validation_Nnbl");
+    env.newMacroProperty<unsigned int>("validation_Nscl");
+    env.newProperty<unsigned int>("validation_Nnbl", 0);
+    env.newProperty<unsigned int>("validation_Nscl", 0);
 }
 FLAMEGPU_INIT_FUNCTION(InitDerivedEnvironment) {
     /**

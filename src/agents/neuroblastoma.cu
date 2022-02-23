@@ -508,6 +508,12 @@ FLAMEGPU_AGENT_FUNCTION(output_oxygen_cell, flamegpu::MessageNone, flamegpu::Mes
     increment_grid_nb(FLAMEGPU, gid);
     return flamegpu::ALIVE;
 }
+FLAMEGPU_AGENT_FUNCTION(nb_validation, flamegpu::MessageNone, flamegpu::MessageNone) {
+    if (FLAMEGPU->getVariable<int>("apop") == 0 && FLAMEGPU->getVariable<int>("necro") == 0) {
+        ++FLAMEGPU->environment.getMacroProperty<unsigned int>("validation_Nnbl");
+    }
+    return flamegpu::ALIVE;
+}
 
 
 flamegpu::AgentDescription& defineNeuroblastoma(flamegpu::ModelDescription& model) {
@@ -635,6 +641,7 @@ flamegpu::AgentDescription& defineNeuroblastoma(flamegpu::ModelDescription& mode
         auto &t = nb.newFunction("nb_cell_lifecycle", nb_cell_lifecycle);
         t.setAllowAgentDeath(true);
         t.setAgentOutput(nb);
+        nb.newFunction("nb_validation", nb_validation);
     }
     return nb;
 }
@@ -692,7 +699,7 @@ void initNeuroblastoma(flamegpu::HostAPI &FLAMEGPU) {
     const float theta_sc = FLAMEGPU.environment.getProperty<float>("theta_sc");
 
     const unsigned int NB_COUNT = (unsigned int)ceil(rho_tumour * V_tumour * cellularity * (1 - theta_sc));
-
+    unsigned int validation_Nnbl = 0;
     for (unsigned int i = 0; i < NB_COUNT; ++i) {
         auto agt = NB.newAgent();
         // Spatial coordinates (integration with imaging biomarkers).
@@ -771,6 +778,7 @@ void initNeuroblastoma(flamegpu::HostAPI &FLAMEGPU) {
         agt.setVariable<int>("apop_signal", apop_signal < 0 ? 0 : apop_signal);
         agt.setVariable<int>("necro", necro < 0 ? 0 : necro);
         agt.setVariable<int>("necro_signal", necro_signal < 0 ? 0 : necro_signal);
+        validation_Nnbl += (apop < 0 ? 0 : apop) == 0 && (necro < 0 ? 0 : necro) == 0 ? 1 : 0;
         agt.setVariable<int>("necro_critical", FLAMEGPU.random.uniform<int>(3, 168));  // Random int in range [3, 168]
         if (telo_count < 0) {
             agt.setVariable<int>("telo_count", FLAMEGPU.random.uniform<int>(25, 35));  // Random int in range [25, 35]
@@ -890,4 +898,5 @@ void initNeuroblastoma(flamegpu::HostAPI &FLAMEGPU) {
         // Internal.
         agt.setVariable<float>("force_magnitude", 0);
     }
+    FLAMEGPU.environment.setProperty<unsigned int>("validation_Nnbl", validation_Nnbl);
 }
