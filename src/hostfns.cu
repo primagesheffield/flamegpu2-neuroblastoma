@@ -135,12 +135,50 @@ FLAMEGPU_HOST_FUNCTION(reset_grids) {
     FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nscl_col_grid").zero();
 }
 FLAMEGPU_HOST_FUNCTION(host_validation) {
+    auto GridCell = FLAMEGPU->agent("GridCell");
+    auto Neuroblastoma = FLAMEGPU->agent("Neuroblastoma");
+    auto Schwann = FLAMEGPU->agent("Schwann");
     const unsigned int validation_Nnbl = FLAMEGPU->environment.getMacroProperty<unsigned int>("validation_Nnbl");
     const unsigned int validation_Nscl = FLAMEGPU->environment.getMacroProperty<unsigned int>("validation_Nscl");
     FLAMEGPU->environment.setProperty<unsigned int>("validation_Nnbl", validation_Nnbl);
     FLAMEGPU->environment.setProperty<unsigned int>("validation_Nscl", validation_Nscl);
     FLAMEGPU->environment.getMacroProperty<unsigned int>("validation_Nnbl").zero();
     FLAMEGPU->environment.getMacroProperty<unsigned int>("validation_Nscl").zero();
+    // Cellularity
+    const unsigned int NB_living_count = validation_Nnbl;
+    const unsigned int NB_apop_count = Neuroblastoma.sum<int>("apop");
+    const unsigned int NB_necro_count = Neuroblastoma.sum<int>("necro");
+    const unsigned int SC_living_count = validation_Nscl;
+    const unsigned int SC_apop_count = Schwann.sum<int>("apop");
+    const unsigned int SC_necro_count = Schwann.sum<int>("necro");
+    const unsigned int TOTAL_CELL_COUNT = NB_living_count + NB_apop_count + NB_necro_count + SC_living_count + SC_apop_count + SC_necro_count;
+    // Calculate each fraction (e.g. number of living SCs/number of all cells) and multiply it by (1-matrix).
+    const float ecm = GridCell.sum<float>("matrix_value") / glm::compMul(FLAMEGPU->environment.getProperty<glm::uvec3>("grid_dims"));
+    std::array<float, 6> cellularity = {};
+    if (TOTAL_CELL_COUNT) {
+        cellularity[0] = NB_living_count * (1.0f - ecm) / TOTAL_CELL_COUNT;
+        cellularity[1] = NB_apop_count * (1.0f - ecm) / TOTAL_CELL_COUNT;
+        cellularity[2] = NB_necro_count * (1.0f - ecm) / TOTAL_CELL_COUNT;
+        cellularity[3] = SC_living_count * (1.0f - ecm) / TOTAL_CELL_COUNT;
+        cellularity[4] = SC_apop_count * (1.0f - ecm) / TOTAL_CELL_COUNT;
+        cellularity[5] = SC_necro_count * (1.0f - ecm) / TOTAL_CELL_COUNT;
+    }
+    FLAMEGPU->environment.setProperty<float, 6>("validation_cellularity", cellularity);
+    // Tumour volume
+    float tumour_volume;
+    {
+        const int total_cell_count = Neuroblastoma.count() + Schwann.count();
+        if (total_cell_count) {
+            const float rho_tumour = FLAMEGPU->environment.getProperty<float>("rho_tumour");
+            const float matrix_dummy = FLAMEGPU->environment.getProperty<float>("matrix_dummy");
+            tumour_volume = total_cell_count / rho_tumour / (1 - matrix_dummy);
+        } else {
+            tumour_volume = FLAMEGPU->environment.getProperty<float>("V_tumour");  // initial tumour volume
+        }
+        // Convert tumour volume to mm3
+        tumour_volume /= 1e+9;
+    }
+    FLAMEGPU->environment.setProperty<float>("validation_tumour_volume", tumour_volume);
 }
 
 FLAMEGPU_HOST_FUNCTION(toggle_chemo) {

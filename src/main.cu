@@ -95,6 +95,8 @@ int main(int argc, const char ** argv) {
             step_log_cfg.setFrequency(1);
             step_log_cfg.logEnvironment("validation_Nscl");
             step_log_cfg.logEnvironment("validation_Nnbl");
+            step_log_cfg.logEnvironment("validation_cellularity");
+            step_log_cfg.logEnvironment("validation_tumour_volume");
         }
         /**
          * Create Model Runner
