@@ -3,6 +3,8 @@
 FLAMEGPU_AGENT_FUNCTION(alter, flamegpu::MessageNone, flamegpu::MessageNone) {
     const glm::uvec3 location = FLAMEGPU->getVariable<glm::uvec3>("xyz");
     const glm::uvec3 grid_origin = FLAMEGPU->environment.getProperty<glm::uvec3>("grid_origin");
+    const auto matrix_grid = FLAMEGPU->environment.getMacroProperty<float, GMD, GMD, GMD>("matrix_grid");
+    float matrix_value = matrix_grid[location.x][location.y][location.z].exchange(0);  // This is required to read+write in same fn
     // Skip inactive agents
     if (location.x < grid_origin.x || location.x >= GMD - grid_origin.x ||
         location.y < grid_origin.y || location.y >= GMD - grid_origin.y ||
@@ -15,8 +17,6 @@ FLAMEGPU_AGENT_FUNCTION(alter, flamegpu::MessageNone, flamegpu::MessageNone) {
         return flamegpu::ALIVE;
     }
 
-    const auto matrix_grid = FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("matrix_grid");
-    float matrix_value = matrix_grid[location.x][location.y][location.z].exchange(0);  // This is required to read+write in same fn
     const glm::uvec3 grid_span = FLAMEGPU->environment.getProperty<glm::uvec3>("grid_span");
     const glm::uvec3 grid_span_old = FLAMEGPU->environment.getProperty<glm::uvec3>("grid_span_old");
     // Apply CAexpand, if required, to grid members
