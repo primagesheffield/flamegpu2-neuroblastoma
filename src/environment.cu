@@ -382,7 +382,9 @@ FLAMEGPU_INIT_FUNCTION(InitDerivedEnvironment) {
     /**
      * Data layer 0 (integration with imaging biomarkers).
      */
-    const int histology_init = FLAMEGPU->environment.getProperty<int>("histology_init");
+    // Disabled for this test as they are manually configured
+    // Cellularity is redefined below
+     /*const int histology_init = FLAMEGPU->environment.getProperty<int>("histology_init");
     int histology;
     const int gradiff = FLAMEGPU->random.uniform<int>(0, 2);
     float cellularity = 0.05f + (FLAMEGPU->random.uniform<float>() * 0.9f);  // [0.83, 0.95)
@@ -437,7 +439,8 @@ FLAMEGPU_INIT_FUNCTION(InitDerivedEnvironment) {
     FLAMEGPU->environment.setProperty<int>("gradiff", gradiff);
     FLAMEGPU->environment.setProperty<float>("cellularity", cellularity);
     FLAMEGPU->environment.setProperty<float>("theta_sc", theta_sc);
-    FLAMEGPU->environment.setProperty<float>("O2", O2);
+    FLAMEGPU->environment.setProperty<float>("O2", O2);*/
+    const float cellularity = FLAMEGPU->environment.getProperty<float>("cellularity");
     /**
      * Data Layer 1 (integration with genetic/molecular biomarkers of neuroblasts).
      */
