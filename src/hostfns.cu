@@ -158,6 +158,6 @@ FLAMEGPU_HOST_FUNCTION(toggle_chemo) {
         }
     }
     FLAMEGPU->environment.setProperty<int>("CHEMO_ACTIVE", chemo_state);
-    chemo_index *= 6 ; // 6 effects per start/end time
+    chemo_index *= 6;  // 6 effects per start/end time
     FLAMEGPU->environment.setProperty<int>("CHEMO_OFFSET", chemo_index);
 }
