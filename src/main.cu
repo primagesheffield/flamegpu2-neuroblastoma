@@ -41,50 +41,50 @@ int main(int argc, const char ** argv) {
         flamegpu::RunPlanVector runs = runs_control;
         {  // 1a
             flamegpu::RunPlanVector runs_1a = runs_control;
-            runs_control.setOutputSubdirectory("group_1a");
+            runs_1a.setOutputSubdirectory("group_1a");
             std::array<float, 6> chemo_effects = { 0.3f, 0.3f, 0.3f, 0.3f, 0.3f, 0.3f };
-            runs_control.setProperty<float, 6>("chemo_effects", chemo_effects);
+            runs_1a.setProperty<float, 6>("chemo_effects", chemo_effects);
             runs += runs_1a;
         }
         {  // 1b
             flamegpu::RunPlanVector runs_1b = runs_control;
-            runs_control.setOutputSubdirectory("group_1b");
+            runs_1b.setOutputSubdirectory("group_1b");
             std::array<float, 6> chemo_effects = { 0.6f, 0.6f, 0.6f, 0.6f, 0.6f, 0.6f };
-            runs_control.setProperty<float, 6>("chemo_effects", chemo_effects);
+            runs_1b.setProperty<float, 6>("chemo_effects", chemo_effects);
             runs += runs_1b;
         }
         {  // 1c
             flamegpu::RunPlanVector runs_1c = runs_control;
-            runs_control.setOutputSubdirectory("group_1c");
+            runs_1c.setOutputSubdirectory("group_1c");
             std::array<float, 6> chemo_effects = { 0.9f, 0.9f, 0.9f, 0.9f, 0.9f, 0.9f };
-            runs_control.setProperty<float, 6>("chemo_effects", chemo_effects);
+            runs_1c.setProperty<float, 6>("chemo_effects", chemo_effects);
             runs += runs_1c;
         }
         {  // 2a
             flamegpu::RunPlanVector runs_2a = runs_control;
-            runs_control.setOutputSubdirectory("group_2a");
+            runs_2a.setOutputSubdirectory("group_2a");
             std::array<unsigned int, 336> chemo_end = { 168 };
             std::array<float, 6> chemo_effects = { 0.3f, 0.3f, 0.3f, 0.3f, 0.3f, 0.3f };
-            runs_control.setProperty<unsigned int, 336>("chemo_end", chemo_end);
-            runs_control.setProperty<float, 6>("chemo_effects", chemo_effects);
+            runs_2a.setProperty<unsigned int, 336>("chemo_end", chemo_end);
+            runs_2a.setProperty<float, 6>("chemo_effects", chemo_effects);
             runs += runs_2a;
         }
         {  // 2b
             flamegpu::RunPlanVector runs_2b = runs_control;
-            runs_control.setOutputSubdirectory("group_2b");
+            runs_2b.setOutputSubdirectory("group_2b");
             std::array<unsigned int, 336> chemo_end = { 168 };
             std::array<float, 6> chemo_effects = { 0.6f, 0.6f, 0.6f, 0.6f, 0.6f, 0.6f };
-            runs_control.setProperty<unsigned int, 336>("chemo_end", chemo_end);
-            runs_control.setProperty<float, 6>("chemo_effects", chemo_effects);
+            runs_2b.setProperty<unsigned int, 336>("chemo_end", chemo_end);
+            runs_2b.setProperty<float, 6>("chemo_effects", chemo_effects);
             runs += runs_2b;
         }
         {  // 2c
             flamegpu::RunPlanVector runs_2c = runs_control;
-            runs_control.setOutputSubdirectory("group_2c");
+            runs_2c.setOutputSubdirectory("group_2c");
             std::array<unsigned int, 336> chemo_end = { 168 };
             std::array<float, 6> chemo_effects = { 0.9f, 0.9f, 0.9f, 0.9f, 0.9f, 0.9f };
-            runs_control.setProperty<unsigned int, 336>("chemo_end", chemo_end);
-            runs_control.setProperty<float, 6>("chemo_effects", chemo_effects);
+            runs_2c.setProperty<unsigned int, 336>("chemo_end", chemo_end);
+            runs_2c.setProperty<float, 6>("chemo_effects", chemo_effects);
             runs += runs_2c;
         }
         /**
