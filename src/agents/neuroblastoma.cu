@@ -751,6 +751,7 @@ void initNeuroblastoma(flamegpu::HostAPI &FLAMEGPU) {
     const float V_tumour = FLAMEGPU.environment.getProperty<float>("V_tumour");
     const float cellularity = FLAMEGPU.environment.getProperty<float>("cellularity");
     const float theta_sc = FLAMEGPU.environment.getProperty<float>("theta_sc");
+    const float degdiff = FLAMEGPU.environment.getProperty<float>("degdiff");
 
     const unsigned int NB_COUNT = (unsigned int)ceil(rho_tumour * V_tumour * cellularity * (1 - theta_sc));
     unsigned int validation_Nnbl = 0;
@@ -846,37 +847,38 @@ void initNeuroblastoma(flamegpu::HostAPI &FLAMEGPU) {
             agt.setVariable<int>("telo_count", telo_count);
         }
 
-        if (histology == 0) {
-            if (gradiff == 0) {
-                agt.setVariable<float>("degdiff", 0);
-            } else if (gradiff == 1) {
-                agt.setVariable<float>("degdiff", FLAMEGPU.random.uniform<float>() / 5.0f);
-            } else if (gradiff == 2) {
-                agt.setVariable<float>("degdiff", 0.2f + (FLAMEGPU.random.uniform<float>() / 5.0f));
-            }
-        } else if (histology == 2) {
-            const float dummy = FLAMEGPU.random.uniform<float>();
-            if (dummy < 0.33) {
-                if (gradiff == 0) {
-                    agt.setVariable<float>("degdiff", 0);
-                } else if (gradiff == 1) {
-                    agt.setVariable<float>("degdiff", FLAMEGPU.random.uniform<float>() / 5.0f);
-                } else if (gradiff == 2) {
-                    agt.setVariable<float>("degdiff", 0.2f + (FLAMEGPU.random.uniform<float>() / 5.0f));
-                }
-            } else if (dummy < 0.66f) {
-                agt.setVariable<float>("degdiff", 0.4f + (FLAMEGPU.random.uniform<float>() / 5.0f));
-            } else {
-                agt.setVariable<float>("degdiff", 0.6f + (FLAMEGPU.random.uniform<float>() / 5.0f));
-            }
-        } else if (histology == 3) {
-            agt.setVariable<float>("degdiff", 0.4f + (FLAMEGPU.random.uniform<float>() / 5.0f));
-        } else if (histology == 5) {
-            agt.setVariable<float>("degdiff", 0.6f + (FLAMEGPU.random.uniform<float>() / 5.0f));
-        } else if (histology == 6) {
-            agt.setVariable<float>("degdiff", 0.8f + (FLAMEGPU.random.uniform<float>() / 5.0f));
-        }
-        agt.setVariable<float>("cycdiff", 1.0f - agt.getVariable<float>("degdiff"));
+        //if (histology == 0) {
+        //    if (gradiff == 0) {
+        //        agt.setVariable<float>("degdiff", 0);
+        //    } else if (gradiff == 1) {
+        //        agt.setVariable<float>("degdiff", FLAMEGPU.random.uniform<float>() / 5.0f);
+        //    } else if (gradiff == 2) {
+        //        agt.setVariable<float>("degdiff", 0.2f + (FLAMEGPU.random.uniform<float>() / 5.0f));
+        //    }
+        //} else if (histology == 2) {
+        //    const float dummy = FLAMEGPU.random.uniform<float>();
+        //    if (dummy < 0.33) {
+        //        if (gradiff == 0) {
+        //            agt.setVariable<float>("degdiff", 0);
+        //        } else if (gradiff == 1) {
+        //            agt.setVariable<float>("degdiff", FLAMEGPU.random.uniform<float>() / 5.0f);
+        //        } else if (gradiff == 2) {
+        //            agt.setVariable<float>("degdiff", 0.2f + (FLAMEGPU.random.uniform<float>() / 5.0f));
+        //        }
+        //    } else if (dummy < 0.66f) {
+        //        agt.setVariable<float>("degdiff", 0.4f + (FLAMEGPU.random.uniform<float>() / 5.0f));
+        //    } else {
+        //        agt.setVariable<float>("degdiff", 0.6f + (FLAMEGPU.random.uniform<float>() / 5.0f));
+        //    }
+        //} else if (histology == 3) {
+        //    agt.setVariable<float>("degdiff", 0.4f + (FLAMEGPU.random.uniform<float>() / 5.0f));
+        //} else if (histology == 5) {
+        //    agt.setVariable<float>("degdiff", 0.6f + (FLAMEGPU.random.uniform<float>() / 5.0f));
+        //} else if (histology == 6) {
+        //    agt.setVariable<float>("degdiff", 0.8f + (FLAMEGPU.random.uniform<float>() / 5.0f));
+        //}
+        agt.setVariable<float>("degdiff", degdiff);
+        agt.setVariable<float>("cycdiff", 1.0f - degdiff);
         // Attribute Layer 1.
         agt.setVariable<int>("hypoxia", 0);
         agt.setVariable<int>("nutrient", 1);
