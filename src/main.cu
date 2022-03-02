@@ -30,7 +30,7 @@ int main(int argc, const char ** argv) {
             runs_control.setProperty<float>("O2", 0.39f);
             runs_control.setProperty<float>("cellularity", 0.25f);
             runs_control.setProperty<float>("theta_sc", 0.05f);
-            runs_control.setProperty<float>("degdiff", 0.14f);  // This doesn't exist in the model!!!
+            runs_control.setPropertyUniformDistribution<float>("degdiff", 0.0f, 0.405f);
             std::array<unsigned int, 336> chemo_start = { 0 };
             std::array<unsigned int, 336> chemo_end = { 336 };
             std::array<float, 6> chemo_effects = { 0, 0, 0, 0, 0, 0 };
