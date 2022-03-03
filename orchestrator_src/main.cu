@@ -21,10 +21,10 @@ FLAMEGPU_EXIT_FUNCTION(ConstructPrimageOutput) {
     sim_out.diffusion_coefficient = 0;  // Unused
     sim_out.total_volume_ratio_updated = 0;  // Unused
     // Cellularity
-    const unsigned int NB_living_count = GridCell.sum<unsigned int>("Nnbl_grid");
+    const unsigned int NB_living_count = FLAMEGPU->environment.getProperty<unsigned int>("validation_Nnbl");
     const unsigned int NB_apop_count = Neuroblastoma.sum<int>("apop");
     const unsigned int NB_necro_count = Neuroblastoma.sum<int>("necro");
-    const unsigned int SC_living_count = GridCell.sum<unsigned int>("Nscl_grid");
+    const unsigned int SC_living_count = FLAMEGPU->environment.getProperty<unsigned int>("validation_Nscl");
     const unsigned int SC_apop_count = Schwann.sum<int>("apop");
     const unsigned int SC_necro_count = Schwann.sum<int>("necro");
     const unsigned int TOTAL_CELL_COUNT = NB_living_count + NB_apop_count + NB_necro_count + SC_living_count + SC_apop_count + SC_necro_count;
