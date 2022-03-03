@@ -20,7 +20,7 @@ void writeOrchestratorOutput(const OrchestratorOutput&out, const std::string &ou
         writer.Key("config");
         writer.StartArray();
         {
-            for (int i = 0; i < std::size(v.number); ++i)
+            for (unsigned int i = 0; i < std::size(v.number); ++i)
                 writer.Int(v.number[i]);
             writer.Bool(v.warn_flag);
         }
@@ -45,7 +45,7 @@ void writeOrchestratorOutput(const OrchestratorOutput&out, const std::string &ou
             writer.Double(out.total_volume_ratio_updated);
             writer.Key("cellularity");
             writer.StartArray();
-            for (int i = 0; i < std::size(out.cellularity); ++i)
+            for (unsigned int i = 0; i < std::size(out.cellularity); ++i)
                 writer.Double(out.cellularity[i]);
             writer.EndArray();
             writer.Key("tumour_volume");
