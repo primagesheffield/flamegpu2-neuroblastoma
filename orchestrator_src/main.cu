@@ -10,7 +10,7 @@ FLAMEGPU_EXIT_FUNCTION(ConstructPrimageOutput) {
     auto GridCell = FLAMEGPU->agent("GridCell");
     auto Neuroblastoma = FLAMEGPU->agent("Neuroblastoma");
     auto Schwann = FLAMEGPU->agent("Schwann");
-    memset(&sim_out, 0, sizeof(OrchestratorOutput));
+    sim_out = {};
     // @todo float delta_O2;
     sim_out.O2 = FLAMEGPU->environment.getProperty<float>("O2");
     // @todo float delta_ecm;
@@ -35,7 +35,7 @@ FLAMEGPU_EXIT_FUNCTION(ConstructPrimageOutput) {
         sim_out.cellularity[4] = SC_apop_count * (1.0f - sim_out.ecm) / TOTAL_CELL_COUNT;
         sim_out.cellularity[5] = SC_necro_count * (1.0f - sim_out.ecm) / TOTAL_CELL_COUNT;
     } else {
-        memset(sim_out.cellularity.data(), 0, sizeof(float) * 6);
+        sim_out.cellularity = {};
     }
     // Tumour volume
     {
