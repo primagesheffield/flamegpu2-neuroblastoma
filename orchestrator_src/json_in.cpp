@@ -36,7 +36,7 @@ class JSONStateReader_impl : public rapidjson::BaseReaderHandler<rapidjson::UTF8
  public:
     explicit JSONStateReader_impl(const std::string &_filename)
         : filename(_filename) {
-        memset(&input, 0, sizeof(OrchestratorInput));
+        input = {};
     }
     template<typename T>
     bool processValue(const T&val) {
@@ -204,16 +204,16 @@ class JSONStateReader_impl : public rapidjson::BaseReaderHandler<rapidjson::UTF8
         if (found_keys.size() == 33) {
             if (input.start_effects.size() == input.end_effects.size()) {
                 if (input.drug_effects.size() != 6 * input.end_effects.size()) {
-                    fprintf(stderr, "Input validation failed.\n'drug_effects' should be 6x the length of 'end_effects' should have the same length (%llu != %llu == 6 x %llu).\n",
+                    fprintf(stderr, "Input validation failed.\n'drug_effects' should be 6x the length of 'end_effects' should have the same length (%lu != %lu == 6 x %lu).\n",
                     input.drug_effects.size(), 6*input.end_effects.size(), input.end_effects.size());
                     throw std::exception();
                 } else if (input.start_effects.size() > 336) {
-                    fprintf(stderr, "Input validation failed.\nA maximum of 336 chemo events can be specified, %llu were specified.\n",
+                    fprintf(stderr, "Input validation failed.\nA maximum of 336 chemo events can be specified, %lu were specified.\n",
                     input.start_effects.size());
                     throw std::exception();
                 }
             } else {
-                fprintf(stderr, "Input validation failed.\n'start_effects' and 'end_effects' should have the same length (%llu != %llu).\n", input.start_effects.size(), input.end_effects.size());
+                fprintf(stderr, "Input validation failed.\n'start_effects' and 'end_effects' should have the same length (%lu != %lu).\n", input.start_effects.size(), input.end_effects.size());
                 throw std::exception();
             }
         } else {
