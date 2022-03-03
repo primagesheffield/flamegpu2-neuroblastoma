@@ -1,6 +1,3 @@
-#include <numeric>
-#include <algorithm>
-#include <functional>
 #include <glm/gtx/component_wise.hpp>
 
 #include "header.h"
@@ -132,7 +129,10 @@ int main(int argc, const char** argv) {
     sim.simulate();
     // Update delta outputs
     sim_out.delta_O2 = sim_out.O2 - input.O2;
-    sim_out.delta_ecm = sim_out.ecm - (1 - std::reduce(input.cellularity.begin(), input.cellularity.end(), 0, std::plus<>()));
+    float cellularity_sum = 0;
+    for (const &c : input.cellularity)
+        cellularity_sum += c;
+    sim_out.delta_ecm = sim_out.ecm - (1 - cellularity_sum);
     // Write orchestrator output to disk
     writeOrchestratorOutput(sim_out, cfg.primageOutputFile);
     return 0;
