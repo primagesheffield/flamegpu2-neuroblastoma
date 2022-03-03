@@ -734,12 +734,29 @@ void initNeuroblastoma(flamegpu::HostAPI &FLAMEGPU) {
     // Env properties required for calculating agent count
     const float rho_tumour = FLAMEGPU.environment.getProperty<float>("rho_tumour");
     const float V_tumour = FLAMEGPU.environment.getProperty<float>("V_tumour");
-    const float cellularity = FLAMEGPU.environment.getProperty<float>("cellularity");
     const float theta_sc = FLAMEGPU.environment.getProperty<float>("theta_sc");
 
-    const unsigned int NB_COUNT = (unsigned int)ceil(rho_tumour * V_tumour * cellularity * (1 - theta_sc));
+    const std::array<float, 6> cellularity = FLAMEGPU.environment.getProperty<float, 6>("cellularity");
+    const float total_cellularity = cellularity[0] + cellularity[1] + cellularity[2];
+    const int orchestrator_time = FLAMEGPU.environment.getProperty<int>("orchestrator_time");
+
+    const float nb_telomere_length_mean = FLAMEGPU.environment.getProperty<float>("nb_telomere_length_mean");
+    const float nb_telomere_length_sd = FLAMEGPU.environment.getProperty<float>("nb_telomere_length_sd");
+    const float extent_of_differentiation_mean = FLAMEGPU.environment.getProperty<float>("extent_of_differentiation_mean");
+    const float extent_of_differentiation_sd = FLAMEGPU.environment.getProperty<float>("extent_of_differentiation_sd");
+    const float nb_necro_signal_mean = FLAMEGPU.environment.getProperty<float>("nb_necro_signal_mean");
+    const float nb_necro_signal_sd = FLAMEGPU.environment.getProperty<float>("nb_necro_signal_sd");
+    const float nb_apop_signal_mean = FLAMEGPU.environment.getProperty<float>("nb_apop_signal_mean");
+    const float nb_apop_signal_sd = FLAMEGPU.environment.getProperty<float>("nb_apop_signal_sd");
+
+    const unsigned int NB_COUNT = (unsigned int)ceil(rho_tumour * V_tumour * total_cellularity * (1 - theta_sc));
     unsigned int validation_Nnbl = 0;
     for (unsigned int i = 0; i < NB_COUNT; ++i) {
+        // Decide cell type (living, apop, necro)
+        const float cell_rng = FLAMEGPU.random.uniform<float>() * total_cellularity;
+        const int IS_APOP = cell_rng >= cellularity[0] && cell_rng < cellularity[0] + cellularity[1];
+        const int IS_NECRO = cell_rng >= cellularity[0] + cellularity[1];
+
         auto agt = NB.newAgent();
         // Spatial coordinates (integration with imaging biomarkers).
         agt.setVariable<glm::vec3>("xyz",
@@ -813,35 +830,26 @@ void initNeuroblastoma(flamegpu::HostAPI &FLAMEGPU) {
             const unsigned int stage_extra = static_cast<unsigned int>(FLAMEGPU.random.uniform<float>() * static_cast<float>(cycle_stages[stage] - stage_start));
             agt.setVariable<unsigned int>("cycle", stage_start + stage_extra);
         }
-        agt.setVariable<int>("apop", apop < 0 ? 0 : apop);
-        agt.setVariable<int>("apop_signal", apop_signal < 0 ? 0 : apop_signal);
-        agt.setVariable<int>("necro", necro < 0 ? 0 : necro);
-        agt.setVariable<int>("necro_signal", necro_signal < 0 ? 0 : necro_signal);
-        validation_Nnbl += (apop < 0 ? 0 : apop) == 0 && (necro < 0 ? 0 : necro) == 0 ? 1 : 0;
+        agt.setVariable<int>("apop", IS_APOP);
+        agt.setVariable<int>("necro", IS_NECRO);
+        validation_Nnbl += IS_APOP || IS_NECRO ? 0 : 1;
         agt.setVariable<int>("necro_critical", FLAMEGPU.random.uniform<int>(3, 168));  // Random int in range [3, 168]
-        if (telo_count < 0) {
-            agt.setVariable<int>("telo_count", FLAMEGPU.random.uniform<int>(25, 35));  // Random int in range [25, 35]
-        } else if (telo_count == 1) {
-            agt.setVariable<int>("telo_count", FLAMEGPU.random.uniform<int>(41, 60));  // Random int in range [41, 60]
-        } else if (telo_count == 2) {
-            agt.setVariable<int>("telo_count", FLAMEGPU.random.uniform<int>(1, 20));  // Random int in range [1, 20]
-        } else if (telo_count == 3) {
-            agt.setVariable<int>("telo_count", FLAMEGPU.random.uniform<int>(21, 40));  // Random int in range [21, 40]
-        } else {
-            agt.setVariable<int>("telo_count", telo_count);
-        }
-
-        if (histology == 0) {
-            if (gradiff == 0) {
-                agt.setVariable<float>("degdiff", 0);
-            } else if (gradiff == 1) {
-                agt.setVariable<float>("degdiff", FLAMEGPU.random.uniform<float>() / 5.0f);
-            } else if (gradiff == 2) {
-                agt.setVariable<float>("degdiff", 0.2f + (FLAMEGPU.random.uniform<float>() / 5.0f));
+        if (orchestrator_time == 0) {
+            agt.setVariable<int>("necro_signal", necro_signal < 0 ? 0 : necro_signal);
+            agt.setVariable<int>("apop_signal", apop_signal < 0 ? 0 : apop_signal);
+            if (telo_count < 0) {
+                agt.setVariable<int>("telo_count", FLAMEGPU.random.uniform<int>(25, 35));  // Random int in range [25, 35]
+            } else if (telo_count == 1) {
+                agt.setVariable<int>("telo_count", FLAMEGPU.random.uniform<int>(41, 60));  // Random int in range [41, 60]
+            } else if (telo_count == 2) {
+                agt.setVariable<int>("telo_count", FLAMEGPU.random.uniform<int>(1, 20));  // Random int in range [1, 20]
+            } else if (telo_count == 3) {
+                agt.setVariable<int>("telo_count", FLAMEGPU.random.uniform<int>(21, 40));  // Random int in range [21, 40]
+            } else {
+                agt.setVariable<int>("telo_count", telo_count);
             }
-        } else if (histology == 2) {
-            const float dummy = FLAMEGPU.random.uniform<float>();
-            if (dummy < 0.33) {
+
+            if (histology == 0) {
                 if (gradiff == 0) {
                     agt.setVariable<float>("degdiff", 0);
                 } else if (gradiff == 1) {
@@ -849,17 +857,33 @@ void initNeuroblastoma(flamegpu::HostAPI &FLAMEGPU) {
                 } else if (gradiff == 2) {
                     agt.setVariable<float>("degdiff", 0.2f + (FLAMEGPU.random.uniform<float>() / 5.0f));
                 }
-            } else if (dummy < 0.66f) {
+            } else if (histology == 2) {
+                const float dummy = FLAMEGPU.random.uniform<float>();
+                if (dummy < 0.33) {
+                    if (gradiff == 0) {
+                        agt.setVariable<float>("degdiff", 0);
+                    } else if (gradiff == 1) {
+                        agt.setVariable<float>("degdiff", FLAMEGPU.random.uniform<float>() / 5.0f);
+                    } else if (gradiff == 2) {
+                        agt.setVariable<float>("degdiff", 0.2f + (FLAMEGPU.random.uniform<float>() / 5.0f));
+                    }
+                } else if (dummy < 0.66f) {
+                    agt.setVariable<float>("degdiff", 0.4f + (FLAMEGPU.random.uniform<float>() / 5.0f));
+                } else {
+                    agt.setVariable<float>("degdiff", 0.6f + (FLAMEGPU.random.uniform<float>() / 5.0f));
+                }
+            } else if (histology == 3) {
                 agt.setVariable<float>("degdiff", 0.4f + (FLAMEGPU.random.uniform<float>() / 5.0f));
-            } else {
+            } else if (histology == 5) {
                 agt.setVariable<float>("degdiff", 0.6f + (FLAMEGPU.random.uniform<float>() / 5.0f));
+            } else if (histology == 6) {
+                agt.setVariable<float>("degdiff", 0.8f + (FLAMEGPU.random.uniform<float>() / 5.0f));
             }
-        } else if (histology == 3) {
-            agt.setVariable<float>("degdiff", 0.4f + (FLAMEGPU.random.uniform<float>() / 5.0f));
-        } else if (histology == 5) {
-            agt.setVariable<float>("degdiff", 0.6f + (FLAMEGPU.random.uniform<float>() / 5.0f));
-        } else if (histology == 6) {
-            agt.setVariable<float>("degdiff", 0.8f + (FLAMEGPU.random.uniform<float>() / 5.0f));
+        } else {
+            agt.setVariable<int>("necro_signal", static_cast<int>((FLAMEGPU.random.normal<float>() * nb_apop_signal_sd) + nb_apop_signal_mean));
+            agt.setVariable<int>("apop_signal", static_cast<int>((FLAMEGPU.random.normal<float>() * nb_necro_signal_sd) + nb_necro_signal_mean));
+            agt.setVariable<int>("telo_count", static_cast<int>((FLAMEGPU.random.normal<float>() * nb_telomere_length_sd) + nb_telomere_length_mean));
+            agt.setVariable<float>("degdiff", (FLAMEGPU.random.normal<float>()* extent_of_differentiation_sd) + extent_of_differentiation_mean);
         }
         agt.setVariable<float>("cycdiff", 1.0f - agt.getVariable<float>("degdiff"));
         // Attribute Layer 1.

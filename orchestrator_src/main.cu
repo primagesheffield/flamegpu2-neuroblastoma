@@ -96,26 +96,26 @@ int main(int argc, const char** argv) {
     sim.setEnvironmentProperty<float>("V_tumour", input.V_tumour);
     sim.setEnvironmentProperty<float>("O2", input.O2);
     sim.setEnvironmentProperty<float, 6>("cellularity", input.cellularity);
-    // @todo orchestrator_time
+    sim.setEnvironmentProperty<int>("orchestrator_time", input.orchestrator_time);
     sim.setEnvironmentProperty<int>("MYCN_amp", input.MYCN_amp);
     sim.setEnvironmentProperty<int>("ALT", input.ALT);
     sim.setEnvironmentProperty<int>("ALK", input.ALK);
     sim.setEnvironmentProperty<int>("gradiff", input.gradiff);
     sim.setEnvironmentProperty<int>("histology_init", input.histology_init);
-    // @todo nb_telomere_length_mean
-    // @todo nb_telomere_length_sd
-    // @todo sc_telomere_length_mean
-    // @todo sc_telomere_length_sd
-    // @todo extent_of_differentiation_mean
-    // @todo extent_of_differentiation_sd
-    // @todo nb_necro_signal_mean
-    // @todo nb_necro_signal_sd
-    // @todo nb_apop_signal_mean
-    // @todo nb_apop_signal_sd
-    // @todo sc_necro_signal_mean
-    // @todo sc_necro_signal_sd
-    // @todo sc_apop_signal_mean
-    // @todo sc_apop_signal_sd
+    sim.setEnvironmentProperty<float>("nb_telomere_length_mean", input.nb_telomere_length_mean);
+    sim.setEnvironmentProperty<float>("nb_telomere_length_sd", input.nb_telomere_length_sd);
+    sim.setEnvironmentProperty<float>("sc_telomere_length_mean", input.sc_telomere_length_mean);
+    sim.setEnvironmentProperty<float>("sc_telomere_length_sd", input.sc_telomere_length_sd);
+    sim.setEnvironmentProperty<float>("extent_of_differentiation_mean", input.extent_of_differentiation_mean);
+    sim.setEnvironmentProperty<float>("extent_of_differentiation_sd", input.extent_of_differentiation_sd);
+    sim.setEnvironmentProperty<float>("nb_necro_signal_mean", input.nb_necro_signal_mean);
+    sim.setEnvironmentProperty<float>("nb_necro_signal_sd", input.nb_necro_signal_sd);
+    sim.setEnvironmentProperty<float>("nb_apop_signal_mean", input.nb_apop_signal_mean);
+    sim.setEnvironmentProperty<float>("nb_apop_signal_sd", input.nb_apop_signal_sd);
+    sim.setEnvironmentProperty<float>("sc_necro_signal_mean", input.sc_necro_signal_mean);
+    sim.setEnvironmentProperty<float>("sc_necro_signal_sd", input.sc_necro_signal_sd);
+    sim.setEnvironmentProperty<float>("sc_apop_signal_mean", input.sc_apop_signal_mean);
+    sim.setEnvironmentProperty<float>("sc_apop_signal_sd", input.sc_apop_signal_sd);
     std::array<float, 6 * 336> chemo_effects = { };
     memcpy(chemo_effects.data(), input.drug_effects.data(), min(input.drug_effects.size(), chemo_effects.size()) * sizeof(float));
     sim.setEnvironmentProperty<float, 6 * 336>("chemo_effects", chemo_effects);
@@ -131,7 +131,7 @@ int main(int argc, const char** argv) {
     // Update delta outputs
     sim_out.delta_O2 = sim_out.O2 - input.O2;
     float cellularity_sum = 0;
-    for (const &c : input.cellularity)
+    for (const float &c : input.cellularity)
         cellularity_sum += c;
     sim_out.delta_ecm = sim_out.ecm - (1 - cellularity_sum);
     // Write orchestrator output to disk
@@ -147,7 +147,7 @@ RunConfig parseArgs(int argc, const char** argv) {
     for (; i < argc; i++) {
         // Get arg as lowercase
         std::string arg(argv[i]);
-        std::transform(arg.begin(), arg.end(), arg.begin(), ::tolower);
+        std::transform(arg.begin(), arg.end(), arg.begin(), [](unsigned char c) { return std::use_facet< std::ctype<char>>(std::locale()).tolower(c); });
 
         // -device <uint>, Uses the specified cuda device, defaults to 0
         if (arg.compare("--device") == 0 || arg.compare("-d") == 0) {

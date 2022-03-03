@@ -397,12 +397,27 @@ void initSchwann(flamegpu::HostAPI &FLAMEGPU) {
     // Env properties required for calculating agent count
     const float rho_tumour = FLAMEGPU.environment.getProperty<float>("rho_tumour");
     const float V_tumour = FLAMEGPU.environment.getProperty<float>("V_tumour");
-    const float cellularity = FLAMEGPU.environment.getProperty<float>("cellularity");
     const float theta_sc = FLAMEGPU.environment.getProperty<float>("theta_sc");
 
-    const unsigned int SC_COUNT = (unsigned int)ceil(rho_tumour * V_tumour * cellularity * theta_sc);
+    const std::array<float, 6> cellularity = FLAMEGPU.environment.getProperty<float, 6>("cellularity");
+    const float total_cellularity = cellularity[3] + cellularity[4] + cellularity[5];
+    const int orchestrator_time = FLAMEGPU.environment.getProperty<int>("orchestrator_time");
+
+    const float sc_telomere_length_mean = FLAMEGPU.environment.getProperty<float>("sc_telomere_length_mean");
+    const float sc_telomere_length_sd = FLAMEGPU.environment.getProperty<float>("sc_telomere_length_sd");
+    const float sc_necro_signal_mean = FLAMEGPU.environment.getProperty<float>("sc_necro_signal_mean");
+    const float sc_necro_signal_sd = FLAMEGPU.environment.getProperty<float>("sc_necro_signal_sd");
+    const float sc_apop_signal_mean = FLAMEGPU.environment.getProperty<float>("sc_apop_signal_mean");
+    const float sc_apop_signal_sd = FLAMEGPU.environment.getProperty<float>("sc_apop_signal_sd");
+
+    const unsigned int SC_COUNT = (unsigned int)ceil(rho_tumour * V_tumour * total_cellularity * theta_sc);
     unsigned int validation_Nscl = 0;
     for (unsigned int i = 0; i < SC_COUNT; ++i) {
+        // Decide cell type (living, apop, necro)
+        const float cell_rng = FLAMEGPU.random.uniform<float>() * total_cellularity;
+        const int IS_APOP = cell_rng >= cellularity[3] && cell_rng < cellularity[3] + cellularity[4];
+        const int IS_NECRO = cell_rng >= cellularity[3] + cellularity[4];
+
         auto agt = SC.newAgent();
         // Data Layer 0 (integration with imaging biomarkers).
         agt.setVariable<glm::vec3>("xyz",
@@ -425,13 +440,19 @@ void initSchwann(flamegpu::HostAPI &FLAMEGPU) {
             const unsigned int stage_extra = static_cast<unsigned int>(FLAMEGPU.random.uniform<float>() * static_cast<float>(cycle_stages[stage] - stage_start));
             agt.setVariable<unsigned int>("cycle", stage_start + stage_extra);
         }
-        agt.setVariable<int>("apop", apop_sc < 0 ? 0 : apop_sc);
-        agt.setVariable<int>("apop_signal", apop_signal_sc < 0 ? 0 : apop_signal_sc);
-        agt.setVariable<int>("necro", necro_sc < 0 ? 0 : necro_sc);
-        agt.setVariable<int>("necro_signal", necro_signal_sc < 0 ? 0 : necro_signal_sc);
-        validation_Nscl += (apop_sc < 0 ? 0 : apop_sc) == 0 && (necro_sc < 0 ? 0 : necro_sc) == 0 ? 1 : 0;
+        agt.setVariable<int>("apop", IS_APOP);
+        agt.setVariable<int>("necro", IS_NECRO);
+        validation_Nscl += IS_APOP || IS_NECRO ? 0 : 1;
         agt.setVariable<int>("necro_critical", FLAMEGPU.random.uniform<int>(3, 168));  // Random int in range [3, 168]
-        agt.setVariable<int>("telo_count", telo_count_sc < 0 ? FLAMEGPU.random.uniform<int>(25, 35) : telo_count_sc);  // Random int in range [25, 35]
+        if (orchestrator_time == 0) {
+            agt.setVariable<int>("apop_signal", apop_signal_sc < 0 ? 0 : apop_signal_sc);
+            agt.setVariable<int>("necro_signal", necro_signal_sc < 0 ? 0 : necro_signal_sc);
+            agt.setVariable<int>("telo_count", telo_count_sc < 0 ? FLAMEGPU.random.uniform<int>(25, 35) : telo_count_sc);  // Random int in range [25, 35]
+        } else {
+            agt.setVariable<int>("necro_signal", static_cast<int>((FLAMEGPU.random.normal<float>() * sc_apop_signal_sd) + sc_apop_signal_mean));
+            agt.setVariable<int>("apop_signal", static_cast<int>((FLAMEGPU.random.normal<float>() * sc_necro_signal_sd) + sc_necro_signal_mean));
+            agt.setVariable<int>("telo_count", static_cast<int>((FLAMEGPU.random.normal<float>() * sc_telomere_length_sd) + sc_telomere_length_mean));
+        }
         // Attribute Layer 1
         agt.setVariable<int>("hypoxia", 0);
         agt.setVariable<int>("nutrient", 1);

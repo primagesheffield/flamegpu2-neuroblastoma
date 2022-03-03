@@ -48,8 +48,6 @@ void data_layer_0(flamegpu::ModelDescription& model) {
     // Default values of variables in toggle_chemo.
     env.newProperty<int>("CHEMO_ACTIVE", 0);
     env.newProperty<int>("CHEMO_OFFSET", -1);
-    // DERIVED: Initial cellularity in the tumour (continuous, 0 to 1).
-    env.newProperty<float>("cellularity", 0.5);
     // DERIVED: Fraction of Schwann cells in the cell population (continuous, 0 to 1).
     env.newProperty<float>("theta_sc", 0.5);
     // Sensitivity of the boundary displacement field to invasion into the boundary
@@ -374,6 +372,26 @@ void internal_derived(flamegpu::ModelDescription& model) {
     env.newMacroProperty<unsigned int>("validation_Nscl");
     env.newProperty<unsigned int>("validation_Nnbl", 0);
     env.newProperty<unsigned int>("validation_Nscl", 0);
+}
+void data_layer_primage(flamegpu::ModelDescription& model) {
+    auto& env = model.Environment();
+    // (living, apoptotic, necrotic neuroblasts and Schwann cells)
+    env.newProperty<float, 6>("cellularity", {});
+    env.newProperty<int>("orchestrator_time", 0);
+    env.newProperty<float>("nb_telomere_length_mean", 0);
+    env.newProperty<float>("nb_telomere_length_sd", 0);
+    env.newProperty<float>("sc_telomere_length_mean", 0);
+    env.newProperty<float>("sc_telomere_length_sd", 0);
+    env.newProperty<float>("extent_of_differentiation_mean", 0);
+    env.newProperty<float>("extent_of_differentiation_sd", 0);
+    env.newProperty<float>("nb_necro_signal_mean", 0);
+    env.newProperty<float>("nb_necro_signal_sd", 0);
+    env.newProperty<float>("nb_apop_signal_mean", 0);
+    env.newProperty<float>("nb_apop_signal_sd", 0);
+    env.newProperty<float>("sc_necro_signal_mean", 0);
+    env.newProperty<float>("sc_necro_signal_sd", 0);
+    env.newProperty<float>("sc_apop_signal_mean", 0);
+    env.newProperty<float>("sc_apop_signal_sd", 0);
 }
 FLAMEGPU_INIT_FUNCTION(InitDerivedEnvironment) {
     /**

@@ -131,7 +131,8 @@ void initGrid(flamegpu::HostAPI &FLAMEGPU) {
     if (FLAMEGPU.agent("GridCell").count() != 0)
         return;  // gc agents must have been loaded already
 
-    const float cellularity = FLAMEGPU.environment.getProperty<float>("cellularity");
+    const std::array<float, 6> cellularity6 = FLAMEGPU.environment.getProperty<float, 6>("cellularity");
+    const float cellularity = cellularity6[0] + cellularity6[1] + cellularity6[2] + cellularity6[3] + cellularity6[4] + cellularity6[5];
     const unsigned int GC_COUNT = (unsigned int)pow(GRID_MAX_DIMENSIONS, 3);
 
     for (unsigned int i = 0; i < GC_COUNT; ++i) {
