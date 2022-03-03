@@ -43,8 +43,8 @@ void data_layer_0(flamegpu::ModelDescription& model) {
     env.newProperty<unsigned int, 336>("chemo_end", chemo_end);
     // Probability that the following species is inhibited by the chemotherapeutic agents.
     // CHK1, JAB1, HIF, MYCN, TEP1, and p53.
-    std::array<float, 6> chemo_effects = {0.602666f, 0.602666f, 0.602666f, 0.602666f, 0.602666f, 0.602666f};
-    env.newProperty<float, 6>("chemo_effects", chemo_effects);
+    std::array<float, 6 * 336> chemo_effects = {0.602666f, 0.602666f, 0.602666f, 0.602666f, 0.602666f, 0.602666f};
+    env.newProperty<float, 6 * 336>("chemo_effects", chemo_effects);
     // Default values of variables in toggle_chemo.
     env.newProperty<int>("CHEMO_ACTIVE", 0);
     env.newProperty<int>("CHEMO_OFFSET", -1);

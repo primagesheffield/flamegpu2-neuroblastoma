@@ -107,12 +107,13 @@ __device__ __forceinline__ void Schwann_sense(flamegpu::DeviceAPI<flamegpu::Mess
             stress = 1;
         }
         const int CHEMO_ACTIVE = FLAMEGPU->environment.getProperty<int>("CHEMO_ACTIVE");
-        const float chemo0 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 0);
-        const float chemo1 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 1);
-        const float chemo2 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 2);
-        const float chemo3 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 3);
-        const float chemo4 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 4);
-        const float chemo5 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 5);
+        const int CHEMO_OFFSET = FLAMEGPU->environment.getProperty<int>("CHEMO_OFFSET");
+        const float chemo0 = FLAMEGPU->environment.getProperty<float>("chemo_effects", CHEMO_OFFSET + 0);
+        const float chemo1 = FLAMEGPU->environment.getProperty<float>("chemo_effects", CHEMO_OFFSET + 1);
+        const float chemo2 = FLAMEGPU->environment.getProperty<float>("chemo_effects", CHEMO_OFFSET + 2);
+        const float chemo3 = FLAMEGPU->environment.getProperty<float>("chemo_effects", CHEMO_OFFSET + 3);
+        const float chemo4 = FLAMEGPU->environment.getProperty<float>("chemo_effects", CHEMO_OFFSET + 4);
+        const float chemo5 = FLAMEGPU->environment.getProperty<float>("chemo_effects", CHEMO_OFFSET + 5);
         const glm::uvec4 cycle_stages = FLAMEGPU->environment.getProperty<glm::uvec4>("cycle_stages");
         int chemo = 0;
         if (CHEMO_ACTIVE && FLAMEGPU->random.uniform<float>() < (chemo0+chemo1+chemo2+chemo3+chemo4+chemo5)/6) {

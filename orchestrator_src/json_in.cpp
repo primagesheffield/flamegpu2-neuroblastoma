@@ -204,17 +204,21 @@ class JSONStateReader_impl : public rapidjson::BaseReaderHandler<rapidjson::UTF8
         if (found_keys.size() == 33) {
             if (input.start_effects.size() == input.end_effects.size()) {
                 if (input.drug_effects.size() != 6 * input.end_effects.size()) {
-                    fprintf(stderr, "Input validation failed.\n 'drug_effects' should be 6x the length of `end_effects' should have the same length (%llu != %llu == 6 x %llu).\n",
+                    fprintf(stderr, "Input validation failed.\n'drug_effects' should be 6x the length of 'end_effects' should have the same length (%llu != %llu == 6 x %llu).\n",
                     input.drug_effects.size(), 6*input.end_effects.size(), input.end_effects.size());
+                    throw std::exception();
+                } else if (input.start_effects.size() > 336) {
+                    fprintf(stderr, "Input validation failed.\nA maximum of 336 chemo events can be specified, %llu were specified.\n",
+                    input.start_effects.size());
                     throw std::exception();
                 }
             } else {
-                fprintf(stderr, "Input validation failed.\n 'start_effects' and `end_effects' should have the same length (%llu != %llu).\n", input.start_effects.size(), input.end_effects.size());
+                fprintf(stderr, "Input validation failed.\n'start_effects' and 'end_effects' should have the same length (%llu != %llu).\n", input.start_effects.size(), input.end_effects.size());
                 throw std::exception();
             }
         } else {
             // Report missing keys
-            fprintf(stderr, "Input validation failed.\n The following keys were missing from input:\n");
+            fprintf(stderr, "Input validation failed.\nThe following keys were missing from input:\n");
             if (!found_keys.count("version")) printf("version\n");
             if (!found_keys.count("config")) printf("config\n");
             if (!found_keys.count("seed")) printf("seed\n");

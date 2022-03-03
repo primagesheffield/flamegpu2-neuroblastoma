@@ -118,9 +118,15 @@ int main(int argc, const char** argv) {
     // @todo sc_necro_signal_sd
     // @todo sc_apop_signal_mean
     // @todo sc_apop_signal_sd
-    // @todo drug_effects
-    // @todo start_effects
-    // @todo end_effects
+    std::array<float, 6 * 336> chemo_effects = { };
+    memcpy(chemo_effects.data(), input.drug_effects.data(), min(input.drug_effects.size(), chemo_effects.size()) * sizeof(float));
+    sim.setEnvironmentProperty<float, 6 * 336>("chemo_effects", chemo_effects);
+    std::array<unsigned int, 336> chemo_start = { };
+    memcpy(chemo_start.data(), input.start_effects.data(), min(input.start_effects.size(), chemo_start.size()) * sizeof(unsigned int));
+    sim.setEnvironmentProperty<unsigned int, 336>("chemo_start", chemo_start);
+    std::array<unsigned int, 336> chemo_end = { };
+    memcpy(chemo_end.data(), input.end_effects.data(), min(input.end_effects.size(), chemo_end.size()) * sizeof(unsigned int));
+    sim.setEnvironmentProperty<unsigned int, 336>("chemo_end", chemo_end);
 
     // Run FGPU2
     sim.simulate();
