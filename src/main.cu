@@ -97,6 +97,7 @@ int main(int argc, const char ** argv) {
             step_log_cfg.logEnvironment("validation_Nnbl");
             step_log_cfg.logEnvironment("validation_cellularity");
             step_log_cfg.logEnvironment("validation_tumour_volume");
+            step_log_cfg.logEnvironment("grid_dims");
         }
         /**
          * Create Model Runner
