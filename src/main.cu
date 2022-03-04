@@ -98,7 +98,7 @@ int main(int argc, const char ** argv) {
             step_log_cfg.logEnvironment("validation_cellularity");
             step_log_cfg.logEnvironment("validation_tumour_volume");
             step_log_cfg.logEnvironment("grid_dims");
-            step_log_cfg.agent("Grid").logSum<int>("has_living_cells");
+            step_log_cfg.agent("GridCell").logSum<int>("has_cells");
         }
         /**
          * Create Model Runner
@@ -106,7 +106,7 @@ int main(int argc, const char ** argv) {
         flamegpu::CUDAEnsemble cuda_ensemble(model, argc, argv);
         cuda_ensemble.Config().concurrent_runs = 1;
         cuda_ensemble.Config().devices = { 0, 1, 2, 3 };
-        cuda_ensemble.Config().out_directory = "sensitivity_runs_grid2";
+        cuda_ensemble.Config().out_directory = "sensitivity_runs_grid3";
         cuda_ensemble.Config().out_format = "json";
         cuda_ensemble.setStepLog(step_log_cfg);
         cuda_ensemble.simulate(runs);
