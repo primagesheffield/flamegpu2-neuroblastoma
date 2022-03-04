@@ -99,6 +99,7 @@ int main(int argc, const char ** argv) {
             step_log_cfg.logEnvironment("validation_tumour_volume");
             step_log_cfg.logEnvironment("grid_dims");
             step_log_cfg.agent("GridCell").logSum<int>("has_cells");
+            step_log_cfg.agent("GridCell").logSum<int>("has_living_cells");
         }
         /**
          * Create Model Runner

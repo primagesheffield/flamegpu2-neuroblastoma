@@ -15,6 +15,7 @@ FLAMEGPU_AGENT_FUNCTION(alter, flamegpu::MessageNone, flamegpu::MessageNone) {
         FLAMEGPU->setVariable<float>("matrix_value", 0);
         FLAMEGPU->setVariable<unsigned int>("N_grid", 0);
         FLAMEGPU->setVariable<int>("has_cells", 0);
+        FLAMEGPU->setVariable<int>("has_living_cells", 0);
         return flamegpu::ALIVE;
     }
 
@@ -72,6 +73,7 @@ FLAMEGPU_AGENT_FUNCTION(alter, flamegpu::MessageNone, flamegpu::MessageNone) {
 
 
     FLAMEGPU->setVariable<int>("has_cells", s_N_grid > 0 ? 1 : 0);
+    FLAMEGPU->setVariable<int>("has_living_cells", s_Nnbl_grid + s_Nscl_grid > 0 ? 1 : 0);
 
     return flamegpu::ALIVE;
 }
@@ -90,6 +92,7 @@ flamegpu::AgentDescription &defineGrid(flamegpu::ModelDescription& model) {
         gc.newVariable<float>("matrix_value");
         gc.newVariable<unsigned int>("N_grid");
         gc.newVariable<int>("has_cells", 0);
+        gc.newVariable<int>("has_living_cells", 0);
     }
     // Agent Functions
     {
@@ -152,6 +155,7 @@ void initGrid(flamegpu::HostAPI &FLAMEGPU) {
         agt.setVariable<float>("matrix_value", 1.0f - cellularity);
         agt.setVariable<unsigned int>("N_grid", 0);
         agt.setVariable<int>("has_cells", 0);
+        agt.setVariable<int>("has_living_cells", 0);
     }
     auto matrix_grid = FLAMEGPU.environment.getMacroProperty<float, GMD, GMD, GMD>("matrix_grid");
     for (unsigned int x = 0; x < GRID_MAX_DIMENSIONS; ++x) {
