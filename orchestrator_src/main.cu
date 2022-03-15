@@ -93,7 +93,7 @@ int main(int argc, const char** argv) {
     sim.SimulationConfig().random_seed = input.seed;
     sim.setEnvironmentProperty<int>("TERT_rarngm", input.TERT_rarngm);
     sim.setEnvironmentProperty<int>("ATRX_inact", input.ATRX_inact);
-    sim.setEnvironmentProperty<float>("V_tumour", input.V_tumour);
+    sim.setEnvironmentProperty<float>("V_tumour", input.V_tumour * 1e+9);  // Convert from primage mm^3 to micron ^3
     sim.setEnvironmentProperty<float>("O2", input.O2);
     sim.setEnvironmentProperty<float, 6>("cellularity", input.cellularity);
     sim.setEnvironmentProperty<int>("orchestrator_time", input.orchestrator_time);
