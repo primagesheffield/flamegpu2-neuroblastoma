@@ -47,6 +47,7 @@ FLAMEGPU_EXIT_FUNCTION(ConstructPrimageOutput) {
         } else {
             sim_out.tumour_volume = FLAMEGPU->environment.getProperty<float>("V_tumour");  // initial tumour volume
         }
+        sim_out.total_volume_ratio_updated = FLAMEGPU->environment.getProperty<float>("V_tumour") / sim_out.tumour_volume;
         // Convert tumour volume to mm3
         sim_out.tumour_volume /= 1e+9;
     }
