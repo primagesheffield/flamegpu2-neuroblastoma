@@ -548,7 +548,9 @@ FLAMEGPU_INIT_FUNCTION(InitDerivedEnvironment) {
     FLAMEGPU->environment.setProperty<float>("A_grid", static_cast<float>(pow(2.0 * R_voxel, 2.0f)));
     // This variable represents vasculature()
     FLAMEGPU->environment.setProperty<float>("P_O2v", P_O2v_OFF ? 0.0f : P_O2v);
-    FLAMEGPU->environment.setProperty<float>("matrix_dummy", 1.0f - cellularity);
+    std::array<float, 6> h_env_cellularity = FLAMEGPU->environment.getProperty<float, 6>("cellularity");
+    float h_matrix_dummy = (1.0f - (h_env_cellularity[0] + h_env_cellularity[1] + h_env_cellularity[2] + h_env_cellularity[3] + h_env_cellularity[4] + h_env_cellularity[5]));
+    FLAMEGPU->environment.setProperty<float>("matrix_dummy", h_matrix_dummy);
 }
 // #define _USE_MATH_DEFINES
 // #include <math.h>
