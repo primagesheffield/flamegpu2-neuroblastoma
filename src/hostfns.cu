@@ -146,8 +146,8 @@ FLAMEGPU_HOST_FUNCTION(host_validation) {
 FLAMEGPU_HOST_FUNCTION(toggle_chemo) {
     int chemo_state = 0;
     int chemo_index = -1;
-    const std::array<unsigned int, 336> h_env_chemo_start = FLAMEGPU->environment.getProperty<unsigned int, 336>("chemo_start");
-    const std::array<unsigned int, 336> h_env_chemo_end = FLAMEGPU->environment.getProperty<unsigned int, 336>("chemo_end");
+    const std::array<unsigned int, CHEMO_LEN> h_env_chemo_start = FLAMEGPU->environment.getProperty<unsigned int, CHEMO_LEN>("chemo_start");
+    const std::array<unsigned int, CHEMO_LEN> h_env_chemo_end = FLAMEGPU->environment.getProperty<unsigned int, CHEMO_LEN>("chemo_end");
     for (unsigned int i = 0; i < sizeof(h_env_chemo_start) / sizeof(h_env_chemo_start[0]); ++i) {
         if (FLAMEGPU->getStepCounter() >= h_env_chemo_start[i]) {
             if (FLAMEGPU->getStepCounter() < h_env_chemo_end[i]) {

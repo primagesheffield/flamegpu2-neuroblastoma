@@ -9,6 +9,7 @@
 #include <set>
 
 #include "json.h"
+#include "header.h"
 /**
  * This is the main sax style parser for the json state
  * It stores it's current position within the hierarchy with mode, lastKey and current_variable_array_index
@@ -123,7 +124,7 @@ class JSONStateReader_impl : public rapidjson::BaseReaderHandler<rapidjson::UTF8
                     "in JSONStateReader::parse()\n", lastKey.c_str());
                 throw std::exception();
             }
-        } else if(mode.top() == Root && lastKey == "version") {
+        } else if (mode.top() == Root && lastKey == "version") {
             // Do nothing, we currently don't handle the version input
         } else {
             fprintf(stderr, "Unexpected value whilst parsing input file '%s'.\n", filename.c_str());
@@ -211,16 +212,17 @@ class JSONStateReader_impl : public rapidjson::BaseReaderHandler<rapidjson::UTF8
             if (input.start_effects.size() == input.end_effects.size()) {
                 if (input.drug_effects.size() != 6 * input.end_effects.size()) {
                     fprintf(stderr, "Input validation failed.\n'drug_effects' should be 6x the length of 'end_effects' should have the same length (%llu != %llu == 6 x %llu).\n",
-                        static_cast<unsigned long long>(input.drug_effects.size()), static_cast<unsigned long long>(6*input.end_effects.size()), static_cast<unsigned long long>(input.end_effects.size()));
+                        static_cast<uint64_t>(input.drug_effects.size()), static_cast<uint64_t>(6*input.end_effects.size()), static_cast<uint64_t>(input.end_effects.size()));
                     throw std::exception();
-                } else if (input.start_effects.size() > 336) {
-                    fprintf(stderr, "Input validation failed.\nA maximum of 336 chemo events can be specified, %llu were specified.\n",
-                    static_cast<unsigned long long>(input.start_effects.size()));
+                } else if (input.start_effects.size() > CHEMO_LEN) {
+                    fprintf(stderr, "Input validation failed.\nA maximum of %d chemo events can be specified, %llu were specified.\n",
+                    CHEMO_LEN,
+                    static_cast<uint64_t>(input.start_effects.size()));
                     throw std::exception();
                 }
             } else {
                 fprintf(stderr, "Input validation failed.\n'start_effects' and 'end_effects' should have the same length (%llu != %llu).\n",
-                    static_cast<unsigned long long>(input.start_effects.size()), static_cast<unsigned long long>(input.end_effects.size()));
+                    static_cast<uint64_t>(input.start_effects.size()), static_cast<uint64_t>(input.end_effects.size()));
                 throw std::exception();
             }
         } else {
