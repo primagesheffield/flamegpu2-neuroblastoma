@@ -14,7 +14,7 @@
  * It stores it's current position within the hierarchy with mode, lastKey and current_variable_array_index
  */
 class JSONStateReader_impl : public rapidjson::BaseReaderHandler<rapidjson::UTF8<>, JSONStateReader_impl>  {
-    enum Mode{ Nop, Root, Config, Environment, VariableArray };
+    enum Mode{ Nop, Root, Config, Environment, Version, VariableArray };
     std::stack<Mode> mode;
     std::set<std::string> found_keys;
     std::string lastKey;
@@ -123,6 +123,8 @@ class JSONStateReader_impl : public rapidjson::BaseReaderHandler<rapidjson::UTF8
                     "in JSONStateReader::parse()\n", lastKey.c_str());
                 throw std::exception();
             }
+        } else if(mode.top() == Root && lastKey == "version") {
+            // Do nothing, we currently don't handle the version input
         } else {
             fprintf(stderr, "Unexpected value whilst parsing input file '%s'.\n", filename.c_str());
             throw std::exception();
@@ -152,11 +154,15 @@ class JSONStateReader_impl : public rapidjson::BaseReaderHandler<rapidjson::UTF8
         } else if (mode.top() == Root) {
             if (lastKey == "config") {
                 mode.push(Config);
-            } else if (lastKey == "environment") {
-                mode.push(Environment);
+            } else if (lastKey == "version") {
+                mode.push(Version);
             } else {
                 fprintf(stderr, "Unexpected object start whilst parsing input file '%s'.\n", filename.c_str());
                 throw std::exception();
+            }
+        } else if (mode.top() == Config) {
+            if (lastKey == "environment") {
+                mode.push(Environment);
             }
         } else {
             fprintf(stderr, "Unexpected object start whilst parsing input file '%s'.\n", filename.c_str());
@@ -166,7 +172,7 @@ class JSONStateReader_impl : public rapidjson::BaseReaderHandler<rapidjson::UTF8
     }
     bool Key(const char* str, rapidjson::SizeType, bool) {
         lastKey = str;
-        if (found_keys.insert(lastKey).second) {
+        if (!found_keys.insert(lastKey).second) {
             fprintf(stderr, "Unexpected duplicate of key '%s' found.\n", lastKey.c_str());
             throw std::exception();
         }
@@ -181,7 +187,7 @@ class JSONStateReader_impl : public rapidjson::BaseReaderHandler<rapidjson::UTF8
             fprintf(stderr, "Array start when current_variable_array_index !=0, in file '%s'. This should never happen.\n", filename.c_str());
             throw std::exception();
         }
-        if (mode.top() == Environment) {
+        if (mode.top() == Environment || mode.top() == Root) {
             mode.push(VariableArray);
         } else {
             fprintf(stderr, "Unexpected array start whilst parsing input file '%s'.\n", filename.c_str());
