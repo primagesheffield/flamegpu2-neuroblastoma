@@ -11,13 +11,10 @@ FLAMEGPU_EXIT_FUNCTION(ConstructPrimageOutput) {
     auto Neuroblastoma = FLAMEGPU->agent("Neuroblastoma");
     auto Schwann = FLAMEGPU->agent("Schwann");
     sim_out = {};
-    // @todo float delta_O2;
     sim_out.O2 = FLAMEGPU->environment.getProperty<float>("O2");
-    // @todo float delta_ecm;
     sim_out.ecm = GridCell.sum<float>("matrix_value") / glm::compMul(FLAMEGPU->environment.getProperty<glm::uvec3>("grid_dims"));
     sim_out.material_properties = 0;  // Unused
     sim_out.diffusion_coefficient = 0;  // Unused
-    sim_out.total_volume_ratio_updated = 0;  // Unused
     // Cellularity
     const unsigned int NB_living_count = FLAMEGPU->environment.getProperty<unsigned int>("validation_Nnbl");
     const unsigned int NB_apop_count = Neuroblastoma.sum<int>("apop");

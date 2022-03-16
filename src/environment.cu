@@ -400,9 +400,8 @@ FLAMEGPU_INIT_FUNCTION(InitDerivedEnvironment) {
     const int histology_init = FLAMEGPU->environment.getProperty<int>("histology_init");
     int histology;
     const int gradiff = FLAMEGPU->environment.getProperty<int>("gradiff");
-    float cellularity;
     float theta_sc;
-    const float O2 = (2/72.0f) + (FLAMEGPU->random.uniform<float>() * (30 / 72.0f));  // rng in range [2/72, 32/72]
+    //const float O2 = (2/72.0f) + (FLAMEGPU->random.uniform<float>() * (30 / 72.0f));  // rng in range [2/72, 32/72]
     if (histology_init == 1) {
         if (FLAMEGPU->random.uniform<float>() < 0.5f) {
             histology = 2;
@@ -420,50 +419,39 @@ FLAMEGPU_INIT_FUNCTION(InitDerivedEnvironment) {
     }
     if (histology == 0) {
         if (gradiff == 0) {
-            cellularity = 0.83f + (FLAMEGPU->random.uniform<float>() * 0.12f);  // [0.83, 0.95)
             theta_sc = 0.05f + (FLAMEGPU->random.uniform<float>() * 0.12f);  // [0.05, 0.17)
         } else if (gradiff == 1) {
-            cellularity = 0.67f + (FLAMEGPU->random.uniform<float>() * 0.16f);  // [0.67, 0.83)
             theta_sc = 0.17f + (FLAMEGPU->random.uniform<float>() * 0.16f);  // [0.17, 0.33)
         } else if (gradiff == 2) {
-            cellularity = 0.5f + (FLAMEGPU->random.uniform<float>() * 0.17f);  // [0.5, 0.67)
             theta_sc = 0.33f + (FLAMEGPU->random.uniform<float>() * 0.17f);  // [0.33, 0.5)
         }
     } else if (histology == 2) {
         float dummy = FLAMEGPU->random.uniform<float>();
         if (dummy < 0.33f) {
             if (gradiff == 0) {
-                cellularity = 0.83f + (FLAMEGPU->random.uniform<float>() * 0.12f);  // [0.83, 0.95)
                 theta_sc =  0.05f + (FLAMEGPU->random.uniform<float>() * 0.12f);  // [0.05, 0.17)
             } else if (gradiff == 1) {
-                cellularity = 0.67f + (FLAMEGPU->random.uniform<float>() * 0.16f);  // [0.67, 0.83)
                 theta_sc = 0.17f + (FLAMEGPU->random.uniform<float>() * 0.16f);  // [0.17, 0.33)
             } else if (gradiff == 2) {
-                cellularity = 0.5f + (FLAMEGPU->random.uniform<float>() * 0.17f);  // [0.5, 0.67)
                 theta_sc = 0.33f + (FLAMEGPU->random.uniform<float>() * 0.17f);  // [0.33, 0.5)
             }
         } else if (dummy < 0.66f) {
-            cellularity = 0.33f + (FLAMEGPU->random.uniform<float>() * 0.17f);  // [0.33, 0.5)
             theta_sc = 0.5f + (FLAMEGPU->random.uniform<float>() * 0.17f);  // [0.5, 0.67)
         } else {
-            cellularity = 0.17f + (FLAMEGPU->random.uniform<float>() * 0.16f);  // [0.17, 0.33)
             theta_sc = 0.67f + (FLAMEGPU->random.uniform<float>() * 0.16f);  // [0.67, 0.83)
         }
     } else if (histology == 3) {
-        cellularity = 0.33f + (FLAMEGPU->random.uniform<float>() * 0.17f);  // [0.33, 0.5)
         theta_sc = 0.5f + (FLAMEGPU->random.uniform<float>() * 0.17f);  // [0.5, 0.67)
     } else if (histology == 5) {
-        cellularity = 0.17f + (FLAMEGPU->random.uniform<float>() * 0.16f);  // [0.17, 0.33)
         theta_sc = 0.67f + (FLAMEGPU->random.uniform<float>() * 0.16f);  // [0.67, 0.83)
     } else if (histology == 6) {
-        cellularity = 0.05f + (FLAMEGPU->random.uniform<float>() * 0.12f);  // [0.05, 0.17)
         theta_sc = 0.83f + (FLAMEGPU->random.uniform<float>() * 0.12f);  // [0.83, 0.95)
     }
     FLAMEGPU->environment.setProperty<int>("histology", histology);
     FLAMEGPU->environment.setProperty<int>("gradiff", gradiff);
     // FLAMEGPU->environment.setProperty<float>("cellularity", cellularity);
     FLAMEGPU->environment.setProperty<float>("theta_sc", theta_sc);
-    FLAMEGPU->environment.setProperty<float>("O2", O2);
+    //FLAMEGPU->environment.setProperty<float>("O2", O2);
     /**
      * Data Layer 1 (integration with genetic/molecular biomarkers of neuroblasts).
      */
