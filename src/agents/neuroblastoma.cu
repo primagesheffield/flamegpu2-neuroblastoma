@@ -9,13 +9,16 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
         // Update attribute layer 1, part 1.
         // Detect the presence of stressors.
         // The probability for necrosis due to hypoxia is given in a paper (Warren and Partridge, 2016).
+        // Drug delivery is assumed to be instantaneous.
         // Note that the effects of p53 and p73 on DNA_damage are considered before p53 and p73 are updated.
         const float O2 = FLAMEGPU->environment.getProperty<float>("O2");
         const float Cs_O2 = FLAMEGPU->environment.getProperty<float>("Cs_O2");
         const float C50_necro = FLAMEGPU->environment.getProperty<float>("C50_necro");
+        const float P_apopChemo = FLAMEGPU->environment.getProperty<float>("P_apopChemo");
         int s_DNA_damage = FLAMEGPU->getVariable<int>("DNA_damage");
         const int s_hypoxia = FLAMEGPU->random.uniform<float>() < (1 - O2 * Cs_O2 / (O2 * Cs_O2 + C50_necro)) ? 1 : 0;
         const int s_nutrient = FLAMEGPU->random.uniform<float>() < (1 - O2 * Cs_O2 / (O2 * Cs_O2 + C50_necro)) ? 0 : 1;
+        const int CHEMO_ACTIVE = FLAMEGPU->environment.getProperty<int>("CHEMO_ACTIVE");
 
         if (s_DNA_damage == 1) {
             if (FLAMEGPU->getVariable<int>("p53") == 1 || FLAMEGPU->getVariable<int>("p73") == 1)
@@ -26,6 +29,20 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
             if ((FLAMEGPU->random.uniform<float>() < (1.0f - static_cast<float>(FLAMEGPU->getVariable<int>("telo_count")) / telo_critical) * step_size)
             || (FLAMEGPU->random.uniform<float>() < P_DNA_damageHypo * step_size && s_hypoxia == 1)) {
                 s_DNA_damage = 1;
+            } else {
+                const float chemo0 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 0);
+                const float chemo1 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 1);
+                const float chemo2 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 2);
+                const float chemo3 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 3);
+                const float chemo4 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 4);
+                const float chemo5 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 5);
+                const unsigned int s_cycle = FLAMEGPU->getVariable<unsigned int>("cycle");
+                const glm::uvec4 cycle_stages = FLAMEGPU->environment.getProperty<glm::uvec4>("cycle_stages");
+                if (CHEMO_ACTIVE && FLAMEGPU->random.uniform<float>() < (chemo0 + chemo1 + chemo2 + chemo3 + chemo4 + chemo5) / 6) {
+                    if (cycle_stages[1] < s_cycle && s_cycle < cycle_stages[2] && FLAMEGPU->random.uniform<float>() < P_apopChemo * step_size) {
+                        s_DNA_damage = 1;
+                    }
+                }
             }
         }
         FLAMEGPU->setVariable<int>("DNA_damage", s_DNA_damage);
@@ -87,7 +104,6 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
         // Let the intracellular signalling molecules respond to changes.
         // Note that the effects of p53 and p73 on HIF are considered before p53 and p73 are updated.
         // Chemotherapy inhibits CHK1, JAB1, HIF, MYCN, and p53. It is assumed that drug delivery is instantaneous.
-        const int CHEMO_ACTIVE = FLAMEGPU->environment.getProperty<int>("CHEMO_ACTIVE");
         const float s_MYCN_fn = FLAMEGPU->getVariable<float>("MYCN_fn");
         const float s_MAPK_RAS_fn = FLAMEGPU->getVariable<float>("MAPK_RAS_fn");
         const float s_JAB1_fn = FLAMEGPU->getVariable<float>("JAB1_fn");
@@ -247,15 +263,18 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
 
         // Update apoptotic signals.
         // Source 1: CAS.
-        // Source 2: Schwann cells.
+        // Source 2: Missing DNA damage response pathways.
+        // Source 3: Schwann cells.
         const float nbapop_jux = FLAMEGPU->environment.getProperty<float>("nbapop_jux");
         const float nbapop_para = FLAMEGPU->environment.getProperty<float>("nbapop_para");
-        const float P_apopChemo = FLAMEGPU->environment.getProperty<float>("P_apopChemo");
         const float P_apoprp = FLAMEGPU->environment.getProperty<float>("P_apoprp");
+        const float P_DNA_damage_pathways = FLAMEGPU->environment.getProperty<float>("P_DNA_damage_pathways");
         int s_apop_signal = FLAMEGPU->getVariable<int>("apop_signal");
-        const unsigned int s_cycle = FLAMEGPU->getVariable<unsigned int>("cycle");
         stress = 0;
         if (s_CAS == 1) {
+            s_apop_signal += 1 * step_size;
+            stress = 1;
+        } else if (s_DNA_damage == 1 && s_ATP == 1 && FLAMEGPU->random.uniform<float>() < step_size * P_DNA_damage_pathways) {
             s_apop_signal += 1 * step_size;
             stress = 1;
         }

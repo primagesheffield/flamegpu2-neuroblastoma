@@ -191,6 +191,9 @@ void cell_death_parameters(flamegpu::ModelDescription& model) {
     // Probability of gaining an apoptotic signal due to chemotherapy in an hour.
     // Assumed to be 10 % .
     env.newProperty<float>("P_apopChemo", 0.276331829f);  // Calibration LHC#564
+    // Probability of DNA damages triggering CAS-independent apoptotic pathways in an hour.
+    // Assumed to be 10 % .
+    env.newProperty<float>("P_DNA_damage_pathways", 0.1f);
     // Probability of losing an apoptotic signal in an unstressed cell in an hour.
     // Assumed to be 1 % .
     env.newProperty<float>("P_apoprp", 0.957831979f);  // Calibration LHC#564

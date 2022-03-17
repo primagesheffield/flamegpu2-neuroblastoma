@@ -8,14 +8,19 @@ __device__ __forceinline__ void Schwann_sense(flamegpu::DeviceAPI<flamegpu::Mess
     if (s_apop == 0 && s_necro == 0) {
         // Detect the presence of stressors.
         // The probability for necrosis due to hypoxia is given in a paper(Warren and Partridge, 2016).
+        // 1. Hypoxia and lack of nutrients.
+        // 2. Shortened telomeres.
+        // 3. Chemotherapy, assuming drug delivery is instantaneous.
         const float O2 = FLAMEGPU->environment.getProperty<float>("O2");
         const float Cs_O2 = FLAMEGPU->environment.getProperty<float>("Cs_O2");
         const float C50_necro = FLAMEGPU->environment.getProperty<float>("C50_necro");
         const float P_DNA_damagerp = FLAMEGPU->environment.getProperty<float>("P_DNA_damagerp");
+        const float P_apopChemo = FLAMEGPU->environment.getProperty<float>("P_apopChemo");
         int s_DNA_damage = FLAMEGPU->getVariable<int>("DNA_damage");
         const int s_telo_count = FLAMEGPU->getVariable<int>("telo_count");
         const int s_hypoxia = FLAMEGPU->random.uniform<float>() < (1 - O2 * Cs_O2 / (O2 * Cs_O2 + C50_necro)) ? 1 : 0;
         const int s_nutrient = FLAMEGPU->random.uniform<float>() < (1 - O2 * Cs_O2 / (O2 * Cs_O2 + C50_necro)) ? 0 : 1;
+        const int CHEMO_ACTIVE = FLAMEGPU->environment.getProperty<int>("CHEMO_ACTIVE");
 
         if (s_DNA_damage == 0) {
             const float P_DNA_damageHypo = FLAMEGPU->environment.getProperty<float>("P_DNA_damageHypo");
@@ -24,6 +29,20 @@ __device__ __forceinline__ void Schwann_sense(flamegpu::DeviceAPI<flamegpu::Mess
                 s_DNA_damage = 1;
             } else if (FLAMEGPU->random.uniform<float>() < P_DNA_damageHypo*step_size && s_hypoxia == 1) {
                 s_DNA_damage = 1;
+            } else {
+                const float chemo0 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 0);
+                const float chemo1 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 1);
+                const float chemo2 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 2);
+                const float chemo3 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 3);
+                const float chemo4 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 4);
+                const float chemo5 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 5);
+                const unsigned int s_cycle = FLAMEGPU->getVariable<unsigned int>("cycle");
+                const glm::uvec4 cycle_stages = FLAMEGPU->environment.getProperty<glm::uvec4>("cycle_stages");
+                if (CHEMO_ACTIVE && FLAMEGPU->random.uniform<float>() < (chemo0 + chemo1 + chemo2 + chemo3 + chemo4 + chemo5) / 6) {
+                    if (cycle_stages[1] < s_cycle && s_cycle < cycle_stages[2] && FLAMEGPU->random.uniform<float>() < P_apopChemo * step_size) {
+                        s_DNA_damage = 1;
+                    }
+                }
             }
         } else if (FLAMEGPU->random.uniform<float>() < P_DNA_damagerp*step_size) {
             s_DNA_damage = 0;
@@ -94,9 +113,7 @@ __device__ __forceinline__ void Schwann_sense(flamegpu::DeviceAPI<flamegpu::Mess
         FLAMEGPU->setVariable<int>("necro_signal", s_necro_signal);
 
         // Update apoptotic signals.
-        // Source 1: CAS is activated by DNA damage or hypoxia.
-        // Source 2 : Chemotherapy, assuming drug delivery is instantaneous.
-        const float P_apopChemo = FLAMEGPU->environment.getProperty<float>("P_apopChemo");
+        // CAS is activated by DNA damage or hypoxia.
         const float P_apoprp = FLAMEGPU->environment.getProperty<float>("P_apoprp");
         int s_apop_signal = FLAMEGPU->getVariable<int>("apop_signal");
         const unsigned int s_cycle = FLAMEGPU->getVariable<unsigned int>("cycle");
@@ -106,22 +123,7 @@ __device__ __forceinline__ void Schwann_sense(flamegpu::DeviceAPI<flamegpu::Mess
             s_apop_signal += 1 * step_size;
             stress = 1;
         }
-        const int CHEMO_ACTIVE = FLAMEGPU->environment.getProperty<int>("CHEMO_ACTIVE");
-        const float chemo0 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 0);
-        const float chemo1 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 1);
-        const float chemo2 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 2);
-        const float chemo3 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 3);
-        const float chemo4 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 4);
-        const float chemo5 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 5);
-        const glm::uvec4 cycle_stages = FLAMEGPU->environment.getProperty<glm::uvec4>("cycle_stages");
-        int chemo = 0;
-        if (CHEMO_ACTIVE && FLAMEGPU->random.uniform<float>() < (chemo0+chemo1+chemo2+chemo3+chemo4+chemo5)/6) {
-            chemo = 1;
-        }
-        if (chemo == 1 && cycle_stages[1] < s_cycle && s_cycle < cycle_stages[2] && FLAMEGPU->random.uniform<float>() < P_apopChemo * step_size) {
-            s_apop_signal += 1 * step_size;
-            stress = 1;
-        }
+
         if (s_apop_signal > 0 && (FLAMEGPU->random.uniform<float>() < P_apoprp*step_size) && stress == 0) {
             s_apop_signal -= 1 * step_size;
         }
