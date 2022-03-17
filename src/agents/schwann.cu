@@ -134,12 +134,16 @@ __device__ __forceinline__ void Schwann_sense(flamegpu::DeviceAPI<flamegpu::Mess
         if (s_apop_signal >= apop_critical) {
             FLAMEGPU->setVariable<int>("mobile", 0);
             FLAMEGPU->setVariable<int>("ATP", 0);
-            FLAMEGPU->setVariable<float>("degdiff", 0);
+            FLAMEGPU->setVariable<int>("apop_signal", 0);
+            FLAMEGPU->setVariable<int>("necro_signal", 0);
+            FLAMEGPU->setVariable<int>("telo_count", 0);
             FLAMEGPU->setVariable<int>("apop", 1);
         } else if (s_necro_signal >= s_necro_critical) {
             FLAMEGPU->setVariable<int>("mobile", 0);
             FLAMEGPU->setVariable<int>("ATP", 0);
-            FLAMEGPU->setVariable<float>("degdiff", 0);
+            FLAMEGPU->setVariable<int>("apop_signal", 0);
+            FLAMEGPU->setVariable<int>("necro_signal", 0);
+            FLAMEGPU->setVariable<int>("telo_count", 0);
             FLAMEGPU->setVariable<int>("necro", 1);
         }
 
@@ -444,7 +448,11 @@ void initSchwann(flamegpu::HostAPI &FLAMEGPU) {
         agt.setVariable<int>("necro", IS_NECRO);
         validation_Nscl += IS_APOP || IS_NECRO ? 0 : 1;
         agt.setVariable<int>("necro_critical", FLAMEGPU.random.uniform<int>(3, 168));  // Random int in range [3, 168]
-        if (orchestrator_time == 0) {
+        if (IS_APOP || IS_NECRO) {
+            agt.setVariable<int>("apop_signal", 0);
+            agt.setVariable<int>("necro_signal", 0);
+            agt.setVariable<int>("telo_count", 0);
+        } else if (orchestrator_time == 0) {
             agt.setVariable<int>("apop_signal", apop_signal_sc < 0 ? 0 : apop_signal_sc);
             agt.setVariable<int>("necro_signal", necro_signal_sc < 0 ? 0 : necro_signal_sc);
             agt.setVariable<int>("telo_count", telo_count_sc < 0 ? FLAMEGPU.random.uniform<int>(25, 35) : telo_count_sc);  // Random int in range [25, 35]
