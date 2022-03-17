@@ -65,7 +65,9 @@ FLAMEGPU_EXIT_FUNCTION(ConstructPrimageOutput) {
         sim_out.nb_necro_signal_mean = Neuroblastoma.sum<int>("necro_signal") / static_cast<float>(NB_living_count);
         sim_out.nb_apop_signal_mean = Neuroblastoma.sum<int>("apop_signal") / static_cast<float>(NB_living_count);
         sim_out.extent_of_differentiation_mean = Neuroblastoma.sum<float>("degdiff") / static_cast<float>(NB_living_count);
-        // Calc Mean^2 sum
+        // Calc the numerator of the sd equation (refered to as mean2 here)
+        // The custom transform/reduce, only accounts for variables with non zero values
+        // Dead cells are all zero, but some living cells too
         gpuErrchk(cudaMemcpyToSymbol(mean2_mean, &sim_out.nb_telomere_length_mean, sizeof(float)));
         double nb_telomere_length_mean2 = Neuroblastoma.transformReduce<int, double>("telo_count", mean2_transform, mean2_sum, 0);
         gpuErrchk(cudaMemcpyToSymbol(mean2_mean, &sim_out.nb_necro_signal_mean, sizeof(float)));
@@ -74,7 +76,7 @@ FLAMEGPU_EXIT_FUNCTION(ConstructPrimageOutput) {
         double nb_apop_signal_mean2 = Neuroblastoma.transformReduce<int, double>("apop_signal", mean2_transform, mean2_sum, 0);
         gpuErrchk(cudaMemcpyToSymbol(mean2_mean, &sim_out.extent_of_differentiation_mean, sizeof(float)));
         double extent_of_differentiation_mean2 = Neuroblastoma.transformReduce<float, double>("degdiff", mean2_transform, mean2_sum, 0);
-        // Account for living cells with zero value
+        // Therefore, we add living cells with zero value to the sum too
         const auto nb_telomere_length_count0 = Neuroblastoma.count<int>("telo_count", 0);
         nb_telomere_length_mean2 += (nb_telomere_length_count0 - (NB_apop_count + NB_necro_count)) * pow(sim_out.nb_telomere_length_mean, 2);
         const auto nb_necro_signal_count0 = Neuroblastoma.count<int>("necro_signal", 0);
@@ -83,35 +85,37 @@ FLAMEGPU_EXIT_FUNCTION(ConstructPrimageOutput) {
         nb_apop_signal_mean2 += (nb_telomere_length_count0 - (NB_apop_count + NB_necro_count)) * pow(sim_out.nb_apop_signal_mean, 2);
         const auto extent_of_differentiation_count0 = Neuroblastoma.count<float>("degdiff", 0);
         extent_of_differentiation_mean2 += (extent_of_differentiation_count0 - (NB_apop_count + NB_necro_count)) * pow(sim_out.extent_of_differentiation_mean, 2);
-        // Divide for the sd
-        sim_out.nb_telomere_length_sd = static_cast<float>(nb_telomere_length_mean2 / NB_living_count);
-        sim_out.nb_necro_signal_sd = static_cast<float>(nb_necro_signal_mean2 / NB_living_count);
-        sim_out.nb_apop_signal_sd = static_cast<float>(nb_apop_signal_mean2 / NB_living_count);
-        sim_out.extent_of_differentiation_sd = static_cast<float>(extent_of_differentiation_mean2 / NB_living_count);
+        // Divide and sqrt for the sd
+        sim_out.nb_telomere_length_sd = static_cast<float>(sqrt(nb_telomere_length_mean2 / NB_living_count));
+        sim_out.nb_necro_signal_sd = static_cast<float>(sqrt(nb_necro_signal_mean2 / NB_living_count));
+        sim_out.nb_apop_signal_sd = static_cast<float>(sqrt(nb_apop_signal_mean2 / NB_living_count));
+        sim_out.extent_of_differentiation_sd = static_cast<float>(sqrt(extent_of_differentiation_mean2 / NB_living_count));
     }
     if (SC_living_count) {
         // Calc mean (living cells only)
         sim_out.sc_telomere_length_mean = Schwann.sum<int>("telo_count") / static_cast<float>(SC_living_count);
         sim_out.sc_necro_signal_mean = Schwann.sum<int>("necro_signal") / static_cast<float>(SC_living_count);
         sim_out.sc_apop_signal_mean = Schwann.sum<int>("apop_signal") / static_cast<float>(SC_living_count);
-        // Calc Mean^2 sum
+        // Calc the numerator of the sd equation (refered to as mean2 here)
+        // The custom transform/reduce, only accounts for variables with non zero values
+        // Dead cells are all zero, but some living cells too
         gpuErrchk(cudaMemcpyToSymbol(mean2_mean, &sim_out.sc_telomere_length_mean, sizeof(float)));
         double sc_telomere_length_mean2 = Schwann.transformReduce<int, double>("telo_count", mean2_transform, mean2_sum, 0);
         gpuErrchk(cudaMemcpyToSymbol(mean2_mean, &sim_out.sc_necro_signal_mean, sizeof(float)));
         double sc_necro_signal_mean2 = Schwann.transformReduce<int, double>("necro_signal", mean2_transform, mean2_sum, 0);
         gpuErrchk(cudaMemcpyToSymbol(mean2_mean, &sim_out.sc_apop_signal_mean, sizeof(float)));
         double sc_apop_signal_mean2 = Schwann.transformReduce<int, double>("apop_signal", mean2_transform, mean2_sum, 0);
-        // Account for living cells with zero value
+        // Therefore, we add living cells with zero value to the sum too
         const auto sc_telomere_length_count0 = Schwann.count<int>("telo_count", 0);
         sc_telomere_length_mean2 += (sc_telomere_length_count0 - (SC_apop_count + SC_necro_count)) * pow(sim_out.sc_telomere_length_mean, 2);
         const auto sc_necro_signal_count0 = Schwann.count<int>("necro_signal", 0);
         sc_necro_signal_mean2 += (sc_necro_signal_count0 - (SC_apop_count + SC_necro_count)) * pow(sim_out.sc_necro_signal_mean, 2);
         const auto sc_apop_signal_count0 = Schwann.count<int>("apop_signal", 0);
         sc_apop_signal_mean2 += (sc_telomere_length_count0 - (SC_apop_count + SC_necro_count)) * pow(sim_out.sc_apop_signal_mean, 2);
-        // Divide for the sd
-        sim_out.sc_telomere_length_sd = static_cast<float>(sc_telomere_length_mean2 / SC_living_count);
-        sim_out.sc_necro_signal_sd = static_cast<float>(sc_necro_signal_mean2 / SC_living_count);
-        sim_out.sc_apop_signal_sd = static_cast<float>(sc_apop_signal_mean2 / SC_living_count);
+        // Divide and sqrt for the sd
+        sim_out.sc_telomere_length_sd = static_cast<float>(sqrt(sc_telomere_length_mean2 / SC_living_count));
+        sim_out.sc_necro_signal_sd = static_cast<float>(sqrt(sc_necro_signal_mean2 / SC_living_count));
+        sim_out.sc_apop_signal_sd = static_cast<float>(sqrt(sc_apop_signal_mean2 / SC_living_count));
     }
 }
 int main(int argc, const char** argv) {
