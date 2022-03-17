@@ -5,6 +5,16 @@
 #include "main.h"
 #include "json.h"
 
+__device__ float mean2_mean;
+FLAMEGPU_CUSTOM_TRANSFORM(mean2_transform, a) {
+    if (a != 0)
+        return static_cast<double>((a - mean2_mean) * (a - mean2_mean));
+    return 0;
+}
+FLAMEGPU_CUSTOM_REDUCTION(mean2_sum, a, b) {
+    return a + b;
+}
+
 OrchestratorOutput sim_out;
 FLAMEGPU_EXIT_FUNCTION(ConstructPrimageOutput) {
     auto GridCell = FLAMEGPU->agent("GridCell");
@@ -50,29 +60,58 @@ FLAMEGPU_EXIT_FUNCTION(ConstructPrimageOutput) {
     }
     if (NB_living_count) {
         sim_out.ratio_VEGF_NB_SC = Schwann.count() ? Neuroblastoma.sum<int>("VEGF") / static_cast<float>(Schwann.count()) : 0;
-        const auto telomere_length = Neuroblastoma.meanStandardDeviation<int>("telo_count");
-        sim_out.nb_telomere_length_mean = static_cast<float>(telomere_length.first);
-        sim_out.nb_telomere_length_sd = static_cast<float>(telomere_length.second);
-        const auto necro_signal = Neuroblastoma.meanStandardDeviation<int>("necro_signal");
-        sim_out.nb_necro_signal_mean = static_cast<float>(necro_signal.first);
-        sim_out.nb_necro_signal_sd = static_cast<float>(necro_signal.second);
-        const auto apop_signal = Neuroblastoma.meanStandardDeviation<int>("apop_signal");
-        sim_out.nb_apop_signal_mean = static_cast<float>(apop_signal.first);
-        sim_out.nb_apop_signal_sd = static_cast<float>(apop_signal.second);
-        const auto degdiff = Neuroblastoma.meanStandardDeviation<float>("degdiff");
-        sim_out.extent_of_differentiation_mean = static_cast<float>(degdiff.first);
-        sim_out.extent_of_differentiation_sd = static_cast<float>(degdiff.second);
+        // Calc mean (living cells only)
+        sim_out.nb_telomere_length_mean = Neuroblastoma.sum<int>("telo_count") / static_cast<float>(NB_living_count);
+        sim_out.nb_necro_signal_mean = Neuroblastoma.sum<int>("necro_signal") / static_cast<float>(NB_living_count);
+        sim_out.nb_apop_signal_mean = Neuroblastoma.sum<int>("apop_signal") / static_cast<float>(NB_living_count);
+        sim_out.extent_of_differentiation_mean = Neuroblastoma.sum<float>("degdiff") / static_cast<float>(NB_living_count);
+        // Calc Mean^2 sum
+        gpuErrchk(cudaMemcpyToSymbol(mean2_mean, &sim_out.nb_telomere_length_mean, sizeof(float)));
+        double nb_telomere_length_mean2 = Neuroblastoma.transformReduce<int, double>("telo_count", mean2_transform, mean2_sum, 0);
+        gpuErrchk(cudaMemcpyToSymbol(mean2_mean, &sim_out.nb_necro_signal_mean, sizeof(float)));
+        double nb_necro_signal_mean2 = Neuroblastoma.transformReduce<int, double>("necro_signal", mean2_transform, mean2_sum, 0);
+        gpuErrchk(cudaMemcpyToSymbol(mean2_mean, &sim_out.nb_apop_signal_mean, sizeof(float)));
+        double nb_apop_signal_mean2 = Neuroblastoma.transformReduce<int, double>("apop_signal", mean2_transform, mean2_sum, 0);
+        gpuErrchk(cudaMemcpyToSymbol(mean2_mean, &sim_out.extent_of_differentiation_mean, sizeof(float)));
+        double extent_of_differentiation_mean2 = Neuroblastoma.transformReduce<float, double>("degdiff", mean2_transform, mean2_sum, 0);
+        // Account for living cells with zero value
+        const auto nb_telomere_length_count0 = Neuroblastoma.count<int>("telo_count", 0);
+        nb_telomere_length_mean2 += (nb_telomere_length_count0 - (NB_apop_count + NB_necro_count)) * pow(sim_out.nb_telomere_length_mean, 2);
+        const auto nb_necro_signal_count0 = Neuroblastoma.count<int>("necro_signal", 0);
+        nb_necro_signal_mean2 += (nb_necro_signal_count0 - (NB_apop_count + NB_necro_count)) * pow(sim_out.nb_necro_signal_mean, 2);
+        const auto nb_apop_signal_count0 = Neuroblastoma.count<int>("apop_signal", 0);
+        nb_apop_signal_mean2 += (nb_telomere_length_count0 - (NB_apop_count + NB_necro_count)) * pow(sim_out.nb_apop_signal_mean, 2);
+        const auto extent_of_differentiation_count0 = Neuroblastoma.count<float>("degdiff", 0);
+        extent_of_differentiation_mean2 += (extent_of_differentiation_count0 - (NB_apop_count + NB_necro_count)) * pow(sim_out.extent_of_differentiation_mean, 2);
+        // Divide for the sd
+        sim_out.nb_telomere_length_sd = static_cast<float>(nb_telomere_length_mean2 / NB_living_count);
+        sim_out.nb_necro_signal_sd = static_cast<float>(nb_necro_signal_mean2 / NB_living_count);
+        sim_out.nb_apop_signal_sd = static_cast<float>(nb_apop_signal_mean2 / NB_living_count);
+        sim_out.extent_of_differentiation_sd = static_cast<float>(extent_of_differentiation_mean2 / NB_living_count);
     }
     if (SC_living_count) {
-        const auto telomere_length = Schwann.meanStandardDeviation<int>("telo_count");
-        sim_out.sc_telomere_length_mean = static_cast<float>(telomere_length.first);
-        sim_out.sc_telomere_length_sd = static_cast<float>(telomere_length.second);
-        const auto necro_signal = Schwann.meanStandardDeviation<int>("necro_signal");
-        sim_out.sc_necro_signal_mean = static_cast<float>(necro_signal.first);
-        sim_out.sc_necro_signal_sd = static_cast<float>(necro_signal.second);
-        const auto apop_signal = Schwann.meanStandardDeviation<int>("apop_signal");
-        sim_out.sc_apop_signal_mean = static_cast<float>(apop_signal.first);
-        sim_out.sc_apop_signal_sd = static_cast<float>(apop_signal.second);
+        // Calc mean (living cells only)
+        sim_out.sc_telomere_length_mean = Schwann.sum<int>("telo_count") / static_cast<float>(SC_living_count);
+        sim_out.sc_necro_signal_mean = Schwann.sum<int>("necro_signal") / static_cast<float>(SC_living_count);
+        sim_out.sc_apop_signal_mean = Schwann.sum<int>("apop_signal") / static_cast<float>(SC_living_count);
+        // Calc Mean^2 sum
+        gpuErrchk(cudaMemcpyToSymbol(mean2_mean, &sim_out.sc_telomere_length_mean, sizeof(float)));
+        double sc_telomere_length_mean2 = Schwann.transformReduce<int, double>("telo_count", mean2_transform, mean2_sum, 0);
+        gpuErrchk(cudaMemcpyToSymbol(mean2_mean, &sim_out.sc_necro_signal_mean, sizeof(float)));
+        double sc_necro_signal_mean2 = Schwann.transformReduce<int, double>("necro_signal", mean2_transform, mean2_sum, 0);
+        gpuErrchk(cudaMemcpyToSymbol(mean2_mean, &sim_out.sc_apop_signal_mean, sizeof(float)));
+        double sc_apop_signal_mean2 = Schwann.transformReduce<int, double>("apop_signal", mean2_transform, mean2_sum, 0);
+        // Account for living cells with zero value
+        const auto sc_telomere_length_count0 = Schwann.count<int>("telo_count", 0);
+        sc_telomere_length_mean2 += (sc_telomere_length_count0 - (SC_apop_count + SC_necro_count)) * pow(sim_out.sc_telomere_length_mean, 2);
+        const auto sc_necro_signal_count0 = Schwann.count<int>("necro_signal", 0);
+        sc_necro_signal_mean2 += (sc_necro_signal_count0 - (SC_apop_count + SC_necro_count)) * pow(sim_out.sc_necro_signal_mean, 2);
+        const auto sc_apop_signal_count0 = Schwann.count<int>("apop_signal", 0);
+        sc_apop_signal_mean2 += (sc_telomere_length_count0 - (SC_apop_count + SC_necro_count)) * pow(sim_out.sc_apop_signal_mean, 2);
+        // Divide for the sd
+        sim_out.sc_telomere_length_sd = static_cast<float>(sc_telomere_length_mean2 / SC_living_count);
+        sim_out.sc_necro_signal_sd = static_cast<float>(sc_necro_signal_mean2 / SC_living_count);
+        sim_out.sc_apop_signal_sd = static_cast<float>(sc_apop_signal_mean2 / SC_living_count);
     }
 }
 int main(int argc, const char** argv) {
@@ -91,7 +130,7 @@ int main(int argc, const char** argv) {
     sim.SimulationConfig().random_seed = input.seed;
     sim.setEnvironmentProperty<int>("TERT_rarngm", input.TERT_rarngm);
     sim.setEnvironmentProperty<int>("ATRX_inact", input.ATRX_inact);
-    sim.setEnvironmentProperty<float>("V_tumour", input.V_tumour * 1e+9);  // Convert from primage mm^3 to micron ^3
+    sim.setEnvironmentProperty<float>("V_tumour", static_cast<float>(input.V_tumour * 1e+9));  // Convert from primage mm^3 to micron ^3
     sim.setEnvironmentProperty<float>("O2", input.O2);
     sim.setEnvironmentProperty<float, 6>("cellularity", input.cellularity);
     sim.setEnvironmentProperty<int>("orchestrator_time", input.orchestrator_time);
