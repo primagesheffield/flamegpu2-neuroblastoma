@@ -372,6 +372,7 @@ void internal_derived(flamegpu::ModelDescription& model) {
     env.newMacroProperty<unsigned int>("validation_Nscl");
     env.newProperty<unsigned int>("validation_Nnbl", 0);
     env.newProperty<unsigned int>("validation_Nscl", 0);
+    env.newProperty<float, 6>("validation_cellularity", {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f});
 }
 void data_layer_primage(flamegpu::ModelDescription& model) {
     auto& env = model.Environment();
@@ -539,6 +540,7 @@ FLAMEGPU_INIT_FUNCTION(InitDerivedEnvironment) {
     std::array<float, 6> h_env_cellularity = FLAMEGPU->environment.getProperty<float, 6>("cellularity");
     float h_matrix_dummy = (1.0f - (h_env_cellularity[0] + h_env_cellularity[1] + h_env_cellularity[2] + h_env_cellularity[3] + h_env_cellularity[4] + h_env_cellularity[5]));
     FLAMEGPU->environment.setProperty<float>("matrix_dummy", h_matrix_dummy);
+    FLAMEGPU->environment.setProperty<float, 6>("validation_cellularity", h_env_cellularity);
 }
 // #define _USE_MATH_DEFINES
 // #include <math.h>

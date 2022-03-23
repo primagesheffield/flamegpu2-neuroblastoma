@@ -10,6 +10,7 @@ struct RunConfig {
     std::string inFile;
     std::string primageOutputFile;
     unsigned int device = 0;
+    std::string validation_path;
 };
 RunConfig parseArgs(int argc, const char** argv);
 
