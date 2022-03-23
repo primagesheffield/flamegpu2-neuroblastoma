@@ -137,6 +137,7 @@ __device__ __forceinline__ void Schwann_sense(flamegpu::DeviceAPI<flamegpu::Mess
             FLAMEGPU->setVariable<int>("apop_signal", 0);
             FLAMEGPU->setVariable<int>("necro_signal", 0);
             FLAMEGPU->setVariable<int>("telo_count", 0);
+            FLAMEGPU->setVariable<float>("degdiff", 0);
             FLAMEGPU->setVariable<int>("apop", 1);
         } else if (s_necro_signal >= s_necro_critical) {
             FLAMEGPU->setVariable<int>("mobile", 0);
@@ -144,6 +145,7 @@ __device__ __forceinline__ void Schwann_sense(flamegpu::DeviceAPI<flamegpu::Mess
             FLAMEGPU->setVariable<int>("apop_signal", 0);
             FLAMEGPU->setVariable<int>("necro_signal", 0);
             FLAMEGPU->setVariable<int>("telo_count", 0);
+            FLAMEGPU->setVariable<float>("degdiff", 0);
             FLAMEGPU->setVariable<int>("necro", 1);
         }
 
