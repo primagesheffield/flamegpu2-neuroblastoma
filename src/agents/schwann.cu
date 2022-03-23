@@ -457,8 +457,8 @@ void initSchwann(flamegpu::HostAPI &FLAMEGPU) {
             agt.setVariable<int>("necro_signal", necro_signal_sc < 0 ? 0 : necro_signal_sc);
             agt.setVariable<int>("telo_count", telo_count_sc < 0 ? FLAMEGPU.random.uniform<int>(25, 35) : telo_count_sc);  // Random int in range [25, 35]
         } else {
-            agt.setVariable<int>("necro_signal", std::max(0, static_cast<int>((FLAMEGPU.random.normal<float>() * sc_apop_signal_sd) + sc_apop_signal_mean)));
-            agt.setVariable<int>("apop_signal", std::max(0, static_cast<int>((FLAMEGPU.random.normal<float>() * sc_necro_signal_sd) + sc_necro_signal_mean)));
+            agt.setVariable<int>("apop_signal", std::max(0, static_cast<int>((FLAMEGPU.random.normal<float>() * sc_apop_signal_sd) + sc_apop_signal_mean)));
+            agt.setVariable<int>("necro_signal", std::max(0, static_cast<int>((FLAMEGPU.random.normal<float>() * sc_necro_signal_sd) + sc_necro_signal_mean)));
             agt.setVariable<int>("telo_count", std::max(0, static_cast<int>((FLAMEGPU.random.normal<float>() * sc_telomere_length_sd) + sc_telomere_length_mean)));
         }
         // Attribute Layer 1
