@@ -200,6 +200,9 @@ int main(int argc, const char** argv) {
         step_log_cfg.logEnvironment("P_necroIS");
         step_log_cfg.logEnvironment("force_resolution_steps");
         step_log_cfg.logEnvironment("validation_cellularity");
+        step_log_cfg.logEnvironment("V_grid");
+        step_log_cfg.logEnvironment("P_matrix");
+        step_log_cfg.logEnvironment("matrix_dummy");
         step_log_cfg.agent("Neuroblastoma").logCount();
         step_log_cfg.agent("Neuroblastoma").logMean<int>("apop");
         step_log_cfg.agent("Neuroblastoma").logMean<int>("necro");
@@ -247,6 +250,8 @@ int main(int argc, const char** argv) {
         step_log_cfg.agent("Schwann").logMean<int>("nutrient");
         step_log_cfg.agent("Schwann").logMean<int>("telo_count");
         step_log_cfg.agent("Schwann").logMean<int>("neighbours");
+        step_log_cfg.agent("GridCell").logMean<float>("matrix_value");
+        step_log_cfg.agent("GridCell").logSum<float>("matrix_value");
         step_log_cfg.logEnvironment("grid_origin");
         step_log_cfg.logEnvironment("grid_dims");
     }
