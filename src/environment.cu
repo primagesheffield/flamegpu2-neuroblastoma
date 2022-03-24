@@ -460,11 +460,12 @@ FLAMEGPU_INIT_FUNCTION(InitDerivedEnvironment) {
     /**
      * Data Layer 1 (integration with genetic/molecular biomarkers of neuroblasts).
      */
-    FLAMEGPU->environment.setProperty<int>("MYCN_amp", FLAMEGPU->random.uniform<int>(0, 1));
-    FLAMEGPU->environment.setProperty<int>("TERT_rarngm", FLAMEGPU->random.uniform<int>(0, 1));
-    FLAMEGPU->environment.setProperty<int>("ATRX_inact", FLAMEGPU->random.uniform<int>(0, 1));
-    FLAMEGPU->environment.setProperty<int>("ALT", FLAMEGPU->random.uniform<int>(0, 1));
-    FLAMEGPU->environment.setProperty<int>("ALK", FLAMEGPU->random.uniform<int>(0, 2));
+    // Configured manually for this experiment
+    // FLAMEGPU->environment.setProperty<int>("MYCN_amp", FLAMEGPU->random.uniform<int>(0, 1));
+    // FLAMEGPU->environment.setProperty<int>("TERT_rarngm", FLAMEGPU->random.uniform<int>(0, 1));
+    // FLAMEGPU->environment.setProperty<int>("ATRX_inact", FLAMEGPU->random.uniform<int>(0, 1));
+    // FLAMEGPU->environment.setProperty<int>("ALT", FLAMEGPU->random.uniform<int>(0, 1));
+    // FLAMEGPU->environment.setProperty<int>("ALK", FLAMEGPU->random.uniform<int>(0, 2));
     /**
      * Data Layer 2 (integration with genetic/molecular biomarkers of neuroblasts).
      */
