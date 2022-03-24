@@ -380,6 +380,19 @@ void internal_derived(flamegpu::ModelDescription& model) {
     env.newProperty<float, 6>("validation_cellularity", {0, 0, 0, 0, 0, 0});
     env.newProperty<float>("validation_tumour_volume", 0);
     env.newProperty<float>("degdiff", 0);
+    // Histograms
+    env.newMacroProperty<unsigned int, 42>("histogram_nbl");
+    env.newMacroProperty<unsigned int, 42>("histogram_nba");
+    env.newMacroProperty<unsigned int, 42>("histogram_nbn");
+    env.newMacroProperty<unsigned int, 42>("histogram_scl");
+    env.newMacroProperty<unsigned int, 42>("histogram_sca");
+    env.newMacroProperty<unsigned int, 42>("histogram_scn");
+    env.newProperty<unsigned int, 42>("histogram_nbl", {});
+    env.newProperty<unsigned int, 42>("histogram_nba", {});
+    env.newProperty<unsigned int, 42>("histogram_nbn", {});
+    env.newProperty<unsigned int, 42>("histogram_scl", {});
+    env.newProperty<unsigned int, 42>("histogram_sca", {});
+    env.newProperty<unsigned int, 42>("histogram_scn", {});
 }
 FLAMEGPU_INIT_FUNCTION(InitDerivedEnvironment) {
     /**

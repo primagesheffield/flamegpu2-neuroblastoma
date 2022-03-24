@@ -133,6 +133,17 @@ FLAMEGPU_HOST_FUNCTION(reset_grids) {
     FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nnbl_grid").zero();
     FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nscl_grid").zero();
     FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nscl_col_grid").zero();
+
+    // Histograms
+    FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nnba_grid").zero();
+    FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nsca_grid").zero();
+    FLAMEGPU->environment.getMacroProperty<unsigned int, 42>("histogram_nbl").zero();
+    FLAMEGPU->environment.getMacroProperty<unsigned int, 42>("histogram_nba").zero();
+    FLAMEGPU->environment.getMacroProperty<unsigned int, 42>("histogram_nbn").zero();
+    FLAMEGPU->environment.getMacroProperty<unsigned int, 42>("histogram_scl").zero();
+    FLAMEGPU->environment.getMacroProperty<unsigned int, 42>("histogram_sca").zero();
+    FLAMEGPU->environment.getMacroProperty<unsigned int, 42>("histogram_scn").zero();
+
 }
 FLAMEGPU_HOST_FUNCTION(host_validation) {
     auto GridCell = FLAMEGPU->agent("GridCell");
@@ -179,6 +190,36 @@ FLAMEGPU_HOST_FUNCTION(host_validation) {
         tumour_volume /= 1e+9;
     }
     FLAMEGPU->environment.setProperty<float>("validation_tumour_volume", tumour_volume);
+    // Histograms
+    std::array<unsigned int, 42> histogram_nbl = {};
+    std::array<unsigned int, 42> histogram_nba = {};
+    std::array<unsigned int, 42> histogram_nbn = {};
+    std::array<unsigned int, 42> histogram_scl = {};
+    std::array<unsigned int, 42> histogram_sca = {};
+    std::array<unsigned int, 42> histogram_scn = {};
+
+    const auto h_nbl = FLAMEGPU->environment.getMacroProperty<unsigned int, 42>("histogram_nbl");
+    const auto h_nba = FLAMEGPU->environment.getMacroProperty<unsigned int, 42>("histogram_nba");
+    const auto h_nbn = FLAMEGPU->environment.getMacroProperty<unsigned int, 42>("histogram_nbn");
+    const auto h_scl = FLAMEGPU->environment.getMacroProperty<unsigned int, 42>("histogram_scl");
+    const auto h_sca = FLAMEGPU->environment.getMacroProperty<unsigned int, 42>("histogram_sca");
+    const auto h_scn = FLAMEGPU->environment.getMacroProperty<unsigned int, 42>("histogram_scn");
+
+    for (int i = 0; i < 42; ++i) {
+        histogram_nbl[i] = h_nbl[i];
+        histogram_nba[i] = h_nba[i];
+        histogram_nbn[i] = h_nbn[i];
+        histogram_scl[i] = h_scl[i];
+        histogram_sca[i] = h_sca[i];
+        histogram_scn[i] = h_scn[i];
+    }
+
+    FLAMEGPU->environment.setProperty<unsigned int, 42>("histogram_nbl", histogram_nbl);
+    FLAMEGPU->environment.setProperty<unsigned int, 42>("histogram_nba", histogram_nba);
+    FLAMEGPU->environment.setProperty<unsigned int, 42>("histogram_nbn", histogram_nbn);
+    FLAMEGPU->environment.setProperty<unsigned int, 42>("histogram_scl", histogram_scl);
+    FLAMEGPU->environment.setProperty<unsigned int, 42>("histogram_sca", histogram_sca);
+    FLAMEGPU->environment.setProperty<unsigned int, 42>("histogram_scn", histogram_scn);
 }
 
 FLAMEGPU_HOST_FUNCTION(toggle_chemo) {

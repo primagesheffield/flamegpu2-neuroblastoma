@@ -98,6 +98,12 @@ int main(int argc, const char ** argv) {
             step_log_cfg.logEnvironment("validation_cellularity");
             step_log_cfg.logEnvironment("validation_tumour_volume");
             step_log_cfg.logEnvironment("grid_dims");
+            step_log_cfg.logEnvironment("histogram_nbl");
+            step_log_cfg.logEnvironment("histogram_nba");
+            step_log_cfg.logEnvironment("histogram_nbn");
+            step_log_cfg.logEnvironment("histogram_scl");
+            step_log_cfg.logEnvironment("histogram_sca");
+            step_log_cfg.logEnvironment("histogram_scn");
             step_log_cfg.agent("GridCell").logSum<int>("has_cells");
             step_log_cfg.agent("GridCell").logSum<int>("has_living_cells");
         }
