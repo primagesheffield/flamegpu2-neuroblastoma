@@ -29,8 +29,13 @@ int main(int argc, const char ** argv) {
             runs_control.setRandomSimulationSeed(12, 1);
             runs_control.setProperty<float>("O2", 0.39f);
             runs_control.setProperty<float>("cellularity", 0.25f);
-            runs_control.setProperty<float>("theta_sc", 0.05f);
-            runs_control.setPropertyUniformDistribution<float>("degdiff", 0.0f, 0.405f);
+            runs_control.setPropertyUniformDistribution<float>("theta_sc", 0.05f, 0.17f);
+            runs_control.setProperty<float>("degdiff", 0.0f);
+            runs_control.setProperty<int>("MYCN_amp", 1);
+            runs_control.setProperty<int>("TERT_rarngm", 0);
+            runs_control.setProperty<int>("ATRX_inact", 0);
+            runs_control.setProperty<int>("ALT", 0);
+            runs_control.setProperty<int>("ALK", 1);
             std::array<unsigned int, 336> chemo_start = { 0 };
             std::array<unsigned int, 336> chemo_end = { 336 };
             std::array<float, 6> chemo_effects = { 0, 0, 0, 0, 0, 0 };
