@@ -74,7 +74,21 @@ FLAMEGPU_AGENT_FUNCTION(alter, flamegpu::MessageNone, flamegpu::MessageNone) {
 
     FLAMEGPU->setVariable<int>("has_cells", s_N_grid > 0 ? 1 : 0);
     FLAMEGPU->setVariable<int>("has_living_cells", s_Nnbl_grid + s_Nscl_grid > 0 ? 1 : 0);
-
+    // Histogram
+    const auto Nnba_grid = FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nnba_grid");
+    const auto Nsca_grid = FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nsca_grid");
+    const auto Nnbn_grid = FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nnbn_grid");
+    const auto Nscn_grid = FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nscn_grid");
+    unsigned int s_Nnba_grid = Nnba_grid[location.x][location.y][location.z];
+    unsigned int s_Nsca_grid = Nsca_grid[location.x][location.y][location.z];
+    unsigned int s_Nnbn_grid = Nnbn_grid[location.x][location.y][location.z];
+    unsigned int s_Nscn_grid = Nscn_grid[location.x][location.y][location.z];
+    ++FLAMEGPU->environment.getMacroProperty<unsigned int, 42>("histogram_nbl")[glm::max(s_Nnbl_grid, 41u)];
+    ++FLAMEGPU->environment.getMacroProperty<unsigned int, 42>("histogram_nba")[glm::max(s_Nnba_grid, 41u)];
+    ++FLAMEGPU->environment.getMacroProperty<unsigned int, 42>("histogram_nbn")[glm::max(s_Nnbn_grid, 41u)];
+    ++FLAMEGPU->environment.getMacroProperty<unsigned int, 42>("histogram_scl")[glm::max(s_Nscl_grid, 41u)];
+    ++FLAMEGPU->environment.getMacroProperty<unsigned int, 42>("histogram_sca")[glm::max(s_Nsca_grid, 41u)];
+    ++FLAMEGPU->environment.getMacroProperty<unsigned int, 42>("histogram_scn")[glm::max(s_Nscn_grid, 41u)];
     return flamegpu::ALIVE;
 }
 
