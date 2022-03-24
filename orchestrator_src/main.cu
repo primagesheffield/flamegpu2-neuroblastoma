@@ -134,6 +134,7 @@ int main(int argc, const char** argv) {
     sim.SimulationConfig().step_log_file = cfg.validation_path;
     sim.SimulationConfig().steps = input.steps;
     sim.SimulationConfig().random_seed = input.seed;
+    sim.CUDAConfig().device_id = cfg.device;
     sim.applyConfig();
     sim.setEnvironmentProperty<int>("TERT_rarngm", input.TERT_rarngm);
     sim.setEnvironmentProperty<int>("ATRX_inact", input.ATRX_inact);
