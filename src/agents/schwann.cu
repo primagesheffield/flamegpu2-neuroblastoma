@@ -27,11 +27,7 @@ __device__ __forceinline__ void Schwann_sense(flamegpu::DeviceAPI<flamegpu::Mess
         const float chemo3 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 3);
         const float chemo4 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 4);
         const float chemo5 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 5);
-	if (CHEMO_ACTIVE && FLAMEGPU->random.uniform<float>() < (chemo0 + chemo1 + chemo2 + chemo3 + chemo4 + chemo5) / 6){
-		const int chemo_status = 1;
-	} else {
-		const int chemo_status = 0;
-	}
+	const int chemo_status = (CHEMO_ACTIVE && FLAMEGPU->random.uniform<float>() < (chemo0 + chemo1 + chemo2 + chemo3 + chemo4 + chemo5) / 6) ? 1 : 0;
         if (s_DNA_damage == 0) {
             const float P_DNA_damageHypo = FLAMEGPU->environment.getProperty<float>("P_DNA_damageHypo");
             const int telo_critical = FLAMEGPU->environment.getProperty<int>("telo_critical");
