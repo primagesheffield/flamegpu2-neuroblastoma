@@ -835,13 +835,13 @@ void initNeuroblastoma(flamegpu::HostAPI &FLAMEGPU) {
         validation_Nnbl += (apop < 0 ? 0 : apop) == 0 && (necro < 0 ? 0 : necro) == 0 ? 1 : 0;
         agt.setVariable<int>("necro_critical", FLAMEGPU.random.uniform<int>(3, 168));  // Random int in range [3, 168]
         if (telo_count < 0) {
-            agt.setVariable<int>("telo_count", FLAMEGPU.random.uniform<int>(25, 35));  // Random int in range [25, 35]
+            agt.setVariable<int>("telo_count", FLAMEGPU.random.uniform<int>(35, 45));  // Random int in range [35, 45]
         } else if (telo_count == 1) {
-            agt.setVariable<int>("telo_count", FLAMEGPU.random.uniform<int>(41, 60));  // Random int in range [41, 60]
+            agt.setVariable<int>("telo_count", FLAMEGPU.random.uniform<int>(47, 60));  // Random int in range [47, 60]
         } else if (telo_count == 2) {
-            agt.setVariable<int>("telo_count", FLAMEGPU.random.uniform<int>(1, 20));  // Random int in range [1, 20]
+            agt.setVariable<int>("telo_count", FLAMEGPU.random.uniform<int>(21, 33));  // Random int in range [21, 33]
         } else if (telo_count == 3) {
-            agt.setVariable<int>("telo_count", FLAMEGPU.random.uniform<int>(21, 40));  // Random int in range [21, 40]
+            agt.setVariable<int>("telo_count", FLAMEGPU.random.uniform<int>(34, 46));  // Random int in range [34, 46]
         } else {
             agt.setVariable<int>("telo_count", telo_count);
         }

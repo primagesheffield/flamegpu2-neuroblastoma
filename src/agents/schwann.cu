@@ -21,7 +21,17 @@ __device__ __forceinline__ void Schwann_sense(flamegpu::DeviceAPI<flamegpu::Mess
         const int s_hypoxia = FLAMEGPU->random.uniform<float>() < (1 - O2 * Cs_O2 / (O2 * Cs_O2 + C50_necro)) ? 1 : 0;
         const int s_nutrient = FLAMEGPU->random.uniform<float>() < (1 - O2 * Cs_O2 / (O2 * Cs_O2 + C50_necro)) ? 0 : 1;
         const int CHEMO_ACTIVE = FLAMEGPU->environment.getProperty<int>("CHEMO_ACTIVE");
-
+        const float chemo0 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 0);
+        const float chemo1 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 1);
+        const float chemo2 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 2);
+        const float chemo3 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 3);
+        const float chemo4 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 4);
+        const float chemo5 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 5);
+	if (CHEMO_ACTIVE && FLAMEGPU->random.uniform<float>() < (chemo0 + chemo1 + chemo2 + chemo3 + chemo4 + chemo5) / 6){
+		const int chemo_status = 1;
+	} else {
+		const int chemo_status = 0;
+	}
         if (s_DNA_damage == 0) {
             const float P_DNA_damageHypo = FLAMEGPU->environment.getProperty<float>("P_DNA_damageHypo");
             const int telo_critical = FLAMEGPU->environment.getProperty<int>("telo_critical");
@@ -30,28 +40,22 @@ __device__ __forceinline__ void Schwann_sense(flamegpu::DeviceAPI<flamegpu::Mess
             } else if (FLAMEGPU->random.uniform<float>() < P_DNA_damageHypo*step_size && s_hypoxia == 1) {
                 s_DNA_damage = 1;
             } else {
-                const float chemo0 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 0);
-                const float chemo1 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 1);
-                const float chemo2 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 2);
-                const float chemo3 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 3);
-                const float chemo4 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 4);
-                const float chemo5 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 5);
                 const unsigned int s_cycle = FLAMEGPU->getVariable<unsigned int>("cycle");
                 const glm::uvec4 cycle_stages = FLAMEGPU->environment.getProperty<glm::uvec4>("cycle_stages");
-                if (CHEMO_ACTIVE && FLAMEGPU->random.uniform<float>() < (chemo0 + chemo1 + chemo2 + chemo3 + chemo4 + chemo5) / 6) {
+                if (chemo_status == 1) {
                     if (cycle_stages[1] < s_cycle && s_cycle < cycle_stages[2] && FLAMEGPU->random.uniform<float>() < P_apopChemo * step_size) {
                         s_DNA_damage = 1;
                     }
                 }
             }
-        } else if (FLAMEGPU->random.uniform<float>() < P_DNA_damagerp*step_size) {
+        } else if (chemo_status == 0 && FLAMEGPU->random.uniform<float>() < P_DNA_damagerp*step_size) {
             s_DNA_damage = 0;
         }
 
         const int s_DNA_unreplicated = FLAMEGPU->getVariable<int>("DNA_unreplicated");
         if (s_DNA_unreplicated == 1) {
             const float P_unrepDNArp = FLAMEGPU->environment.getProperty<float>("P_unrepDNArp");
-            if (FLAMEGPU->random.uniform<float>() < P_unrepDNArp*step_size) {
+            if (chemo_status == 0 && FLAMEGPU->random.uniform<float>() < P_unrepDNArp*step_size) {
                 FLAMEGPU->setVariable<int>("DNA_unreplicated", 0);
             }
         }
@@ -118,11 +122,18 @@ __device__ __forceinline__ void Schwann_sense(flamegpu::DeviceAPI<flamegpu::Mess
         int s_apop_signal = FLAMEGPU->getVariable<int>("apop_signal");
         const unsigned int s_cycle = FLAMEGPU->getVariable<unsigned int>("cycle");
         const int s_ATP = FLAMEGPU->getVariable<int>("ATP");  // Could set this above, rather than get
+	const float P_DNA_damage_pathways = FLAMEGPU->environment.getProperty<float>("P_DNA_damage_pathways");
         stress = 0;
-        if ((s_DNA_damage == 1 || s_hypoxia == 1) && s_ATP == 1) {
+        if (s_hypoxia == 1 && s_ATP == 1) {
             s_apop_signal += 1 * step_size;
             stress = 1;
-        }
+        } else if (chemo_status == 0 && s_DNA_damage == 1 && s_ATP == 1){
+            s_apop_signal += 1 * step_size;
+            stress = 1;
+	} else if (s_DNA_damage == 1 && s_ATP == 1 && FLAMEGPU->random.uniform<float>() <  P_DNA_damage_pathways*step_size){
+            s_apop_signal += 1 * step_size;
+            stress = 1;
+	}
 
         if (s_apop_signal > 0 && (FLAMEGPU->random.uniform<float>() < P_apoprp*step_size) && stress == 0) {
             s_apop_signal -= 1 * step_size;
@@ -430,7 +441,7 @@ void initSchwann(flamegpu::HostAPI &FLAMEGPU) {
         agt.setVariable<int>("necro_signal", necro_signal_sc < 0 ? 0 : necro_signal_sc);
         validation_Nscl += (apop_sc < 0 ? 0 : apop_sc) == 0 && (necro_sc < 0 ? 0 : necro_sc) == 0 ? 1 : 0;
         agt.setVariable<int>("necro_critical", FLAMEGPU.random.uniform<int>(3, 168));  // Random int in range [3, 168]
-        agt.setVariable<int>("telo_count", telo_count_sc < 0 ? FLAMEGPU.random.uniform<int>(25, 35) : telo_count_sc);  // Random int in range [25, 35]
+        agt.setVariable<int>("telo_count", telo_count_sc < 0 ? FLAMEGPU.random.uniform<int>(35, 45) : telo_count_sc);  // Random int in range [35, 45]
         // Attribute Layer 1
         agt.setVariable<int>("hypoxia", 0);
         agt.setVariable<int>("nutrient", 1);
