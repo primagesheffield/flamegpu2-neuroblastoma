@@ -20,77 +20,51 @@ int main(int argc, const char ** argv) {
 #endif
     } else {
         /**
-         * Create a run plan
+         * Create the template run plan
          */
-        flamegpu::RunPlanVector runs_control(model, 10);
+        flamegpu::RunPlanVector runs_control(model, 50);
+        runs_control.setRandomPropertySeed(34523);  // Ensure that repeated runs use the same Random values to init ALK
         {
-            runs_control.setOutputSubdirectory("control");
             runs_control.setSteps(336);
             runs_control.setRandomSimulationSeed(12, 1);
-            runs_control.setProperty<float>("O2", 0.39f);
-            runs_control.setProperty<float>("cellularity", 0.25f);
-            runs_control.setPropertyUniformDistribution<float>("theta_sc", 0.05f, 0.17f);
-            runs_control.setProperty<float>("degdiff", 0.0f);
+            // specialised: output subdir
+            // specialised: cellularity
+            // specialised: O2
+            // specialised: P_DNA_damage_pathways
+            runs_control.setProperty<int>("histology_init", 0);
+            runs_control.setProperty<int>("gradiff", 1);
+            // Mutations
             runs_control.setProperty<int>("MYCN_amp", 1);
             runs_control.setProperty<int>("TERT_rarngm", 0);
             runs_control.setProperty<int>("ATRX_inact", 0);
             runs_control.setProperty<int>("ALT", 0);
-            runs_control.setProperty<int>("ALK", 1);
+            runs_control.setPropertyUniformRandom<int>("ALK", 0, 2);
+            // Chemo
             std::array<unsigned int, 336> chemo_start = { 0 };
             std::array<unsigned int, 336> chemo_end = { 336 };
-            std::array<float, 6> chemo_effects = { 0, 0, 0, 0, 0, 0 };
+            std::array<float, 6> chemo_effects = {1, 1, 1, 1, 1, 1 };
             runs_control.setProperty<unsigned int, 336>("chemo_start", chemo_start);
             runs_control.setProperty<unsigned int, 336>("chemo_end", chemo_end);
             runs_control.setProperty<float, 6>("chemo_effects", chemo_effects);
         }
-        flamegpu::RunPlanVector runs = runs_control;
-        {  // 1a
-            flamegpu::RunPlanVector runs_1a = runs_control;
-            runs_1a.setOutputSubdirectory("group_1a");
-            std::array<float, 6> chemo_effects = { 0.3f, 0.3f, 0.3f, 0.3f, 0.3f, 0.3f };
-            runs_1a.setProperty<float, 6>("chemo_effects", chemo_effects);
-            runs += runs_1a;
-        }
-        {  // 1b
-            flamegpu::RunPlanVector runs_1b = runs_control;
-            runs_1b.setOutputSubdirectory("group_1b");
-            std::array<float, 6> chemo_effects = { 0.6f, 0.6f, 0.6f, 0.6f, 0.6f, 0.6f };
-            runs_1b.setProperty<float, 6>("chemo_effects", chemo_effects);
-            runs += runs_1b;
-        }
-        {  // 1c
-            flamegpu::RunPlanVector runs_1c = runs_control;
-            runs_1c.setOutputSubdirectory("group_1c");
-            std::array<float, 6> chemo_effects = { 0.9f, 0.9f, 0.9f, 0.9f, 0.9f, 0.9f };
-            runs_1c.setProperty<float, 6>("chemo_effects", chemo_effects);
-            runs += runs_1c;
-        }
-        {  // 2a
-            flamegpu::RunPlanVector runs_2a = runs_control;
-            runs_2a.setOutputSubdirectory("group_2a");
-            std::array<unsigned int, 336> chemo_end = { 168 };
-            std::array<float, 6> chemo_effects = { 0.3f, 0.3f, 0.3f, 0.3f, 0.3f, 0.3f };
-            runs_2a.setProperty<unsigned int, 336>("chemo_end", chemo_end);
-            runs_2a.setProperty<float, 6>("chemo_effects", chemo_effects);
-            runs += runs_2a;
-        }
-        {  // 2b
-            flamegpu::RunPlanVector runs_2b = runs_control;
-            runs_2b.setOutputSubdirectory("group_2b");
-            std::array<unsigned int, 336> chemo_end = { 168 };
-            std::array<float, 6> chemo_effects = { 0.6f, 0.6f, 0.6f, 0.6f, 0.6f, 0.6f };
-            runs_2b.setProperty<unsigned int, 336>("chemo_end", chemo_end);
-            runs_2b.setProperty<float, 6>("chemo_effects", chemo_effects);
-            runs += runs_2b;
-        }
-        {  // 2c
-            flamegpu::RunPlanVector runs_2c = runs_control;
-            runs_2c.setOutputSubdirectory("group_2c");
-            std::array<unsigned int, 336> chemo_end = { 168 };
-            std::array<float, 6> chemo_effects = { 0.9f, 0.9f, 0.9f, 0.9f, 0.9f, 0.9f };
-            runs_2c.setProperty<unsigned int, 336>("chemo_end", chemo_end);
-            runs_2c.setProperty<float, 6>("chemo_effects", chemo_effects);
-            runs += runs_2c;
+        // Create an empty run plan vector to build all the specialised copies into
+        flamegpu::RunPlanVector runs(model, 0);
+        for (const float &cellularity : {0.2f, 0.5f, 0.8f}) {
+            for (const float &O2 : {0.1f, 0.5f, 0.9f}) {
+                for (const float &P_DNA_damage_pathways : {0.3f, 0.6f, 0.9f}) {
+                    flamegpu::RunPlanVector runs_t = runs_control;
+                    // Dynamically generate a name for sub directory
+                    char subdir[80];
+                    sprintf(subdir, "c_%g_o_%g_p_%g", cellularity, O2, P_DNA_damage_pathways);
+                    runs_t.setOutputSubdirectory(subdir);
+                    // Fill in specialised parameters
+                    runs_control.setProperty<float>("cellularity", cellularity);
+                    runs_control.setProperty<float>("O2", O2);
+                    runs_control.setProperty<float>("P_DNA_damage_pathways", P_DNA_damage_pathways);                    
+                    // Append to the main run plan vector
+                    runs += runs_t;
+                }
+            }
         }
         /**
          * Create a logging config
@@ -118,7 +92,7 @@ int main(int argc, const char ** argv) {
         flamegpu::CUDAEnsemble cuda_ensemble(model, argc, argv);
         cuda_ensemble.Config().concurrent_runs = 1;
         cuda_ensemble.Config().devices = { 0, 1, 2, 3 };
-        cuda_ensemble.Config().out_directory = "sensitivity_runs_grid3";
+        cuda_ensemble.Config().out_directory = "sense_calibration_B29FF3BE";
         cuda_ensemble.Config().out_format = "json";
         cuda_ensemble.setStepLog(step_log_cfg);
         cuda_ensemble.simulate(runs);
