@@ -1,3 +1,7 @@
+# SLURM log files
+*.err
+*.out
+
 # Model output files
 *.xml
 *.bin
