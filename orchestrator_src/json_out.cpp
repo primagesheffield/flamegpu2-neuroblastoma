@@ -17,7 +17,7 @@ void writeOrchestratorOutput(const OrchestratorOutput&out, const std::string &ou
     {
         // Version block
         Version v;
-        writer.Key("config");
+        writer.Key("version");
         writer.StartArray();
         {
             for (unsigned int i = 0; i < std::size(v.number); ++i)
