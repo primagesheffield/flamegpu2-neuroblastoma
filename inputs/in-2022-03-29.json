@@ -1,0 +1,60 @@
+{
+    "version": [
+        0,
+        13,
+        5,
+        false
+    ],
+    "config": {
+        "seed": 12,
+        "steps": 336,
+        "environment": {
+            "TERT_rarngm": 0,
+            "ATRX_inact": 1,
+            "V_tumour": 1.73475,
+            "O2": 0.29687,
+            "cellularity": [
+                0.5,
+                0.0,
+                0.0,
+                0.3,
+                0.0,
+                0.0
+            ],
+            "orchestrator_time": 330,
+            "MYCN_amp": 0,
+            "ALT": 1,
+            "ALK": 0,
+            "gradiff": 2,
+            "histology_init": 1,
+            "nb_telomere_length_mean": 50,
+            "nb_telomere_length_sd": 0.1,
+            "sc_telomere_length_mean": 50,
+            "sc_telomere_length_sd": 0.1,
+            "extent_of_differentiation_mean": 0.5,
+            "extent_of_differentiation_sd": 0.1,
+            "nb_necro_signal_mean": 0.7,
+            "nb_necro_signal_sd": 0.01,
+            "nb_apop_signal_mean": 0.7,
+            "nb_apop_signal_sd": 0.01,
+            "sc_necro_signal_mean": 0.3,
+            "sc_necro_signal_sd": 0.01,
+            "sc_apop_signal_mean": 0.3,
+            "sc_apop_signal_sd": 0.01,
+            "drug_effects": [
+                1.0,
+                1.0,
+                0.0,
+                1.0,
+                1.0,
+                0.0
+            ],
+            "start_effects": [
+                330
+            ],
+            "end_effects": [
+                500
+            ]
+        }
+    }
+}
