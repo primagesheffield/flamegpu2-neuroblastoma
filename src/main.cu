@@ -42,7 +42,7 @@ int main(int argc, const char ** argv) {
             // Chemo
             std::array<unsigned int, 336> chemo_start = { 0 };
             std::array<unsigned int, 336> chemo_end = { 336 };
-            std::array<float, 6> chemo_effects = {1, 1, 1, 1, 1, 1 };
+            std::array<float, 6> chemo_effects = {0.95f, 0.95f, 0.95f, 0.95f, 0.95f, 0.95f };
             runs_control.setProperty<unsigned int, 336>("chemo_start", chemo_start);
             runs_control.setProperty<unsigned int, 336>("chemo_end", chemo_end);
             runs_control.setProperty<float, 6>("chemo_effects", chemo_effects);
@@ -92,7 +92,7 @@ int main(int argc, const char ** argv) {
         flamegpu::CUDAEnsemble cuda_ensemble(model, argc, argv);
         cuda_ensemble.Config().concurrent_runs = 1;
         cuda_ensemble.Config().devices = { 0, 1, 2, 3 };
-        cuda_ensemble.Config().out_directory = "sense_calibration_B29FF3BE";
+        cuda_ensemble.Config().out_directory = "sense_calibration_B29FF3BE_v2";
         cuda_ensemble.Config().out_format = "json";
         cuda_ensemble.setStepLog(step_log_cfg);
         cuda_ensemble.simulate(runs);
