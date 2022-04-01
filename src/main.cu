@@ -65,8 +65,8 @@ int main(int argc, const char ** argv) {
             sprintf(subdir, "lhc_%d", i+1);
             runs_t.setOutputSubdirectory(subdir);
             // Fill in specialised parameters
-            runs_control.setProperty<float>("P_apopChemo", static_cast<float>(P_apopChemo_data[i]));
-            runs_control.setProperty<float>("P_DNA_damage_pathways", static_cast<float>(P_DNA_damage_pathways_data[i]));                                
+            runs_t.setProperty<float>("P_apopChemo", static_cast<float>(P_apopChemo_data[i]));
+            runs_t.setProperty<float>("P_DNA_damage_pathways", static_cast<float>(P_DNA_damage_pathways_data[i]));                                
             // Append to the main run plan vector
             runs += runs_t;
           
