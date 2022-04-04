@@ -12,8 +12,10 @@ FLAMEGPU_INIT_FUNCTION(ModelInit) {
     const unsigned int TOTAL_CELL_COUNT = validation_Nnbl + validation_Nscl;
     const float ecm = 1.0f - FLAMEGPU->environment.getProperty<float>("cellularity");
     std::array<float, 6> cellularity = {};
-    cellularity[0] = validation_Nnbl * (1.0f - ecm) / TOTAL_CELL_COUNT;
-    cellularity[3] = validation_Nscl * (1.0f - ecm) / TOTAL_CELL_COUNT;
+    if (TOTAL_CELL_COUNT) {
+        cellularity[0] = validation_Nnbl * (1.0f - ecm) / TOTAL_CELL_COUNT;
+        cellularity[3] = validation_Nscl * (1.0f - ecm) / TOTAL_CELL_COUNT;
+    }
     FLAMEGPU->environment.setProperty<float, 6>("validation_cellularity", cellularity);
     float tumour_volume = FLAMEGPU->environment.getProperty<float>("V_tumour");  // initial tumour volume
     // Convert tumour volume to mm3
