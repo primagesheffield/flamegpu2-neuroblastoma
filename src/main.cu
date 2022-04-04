@@ -34,7 +34,7 @@ int main(int argc, const char ** argv) {
             for (int i = 0; i < 10; ++i) {              
                 for (int j = 0; j < 10; ++j) {
                   const int id = i * 10 + j;
-                  runs_control[id].setProperty<float>("cellularity", i/9.0f);
+                  runs_control[id].setProperty<float>("cellularity", (i+1)/11.0f);
                   runs_control[id].setProperty<float>("O2", j/9.0f);
                 }
             }
