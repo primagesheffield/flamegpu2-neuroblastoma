@@ -123,13 +123,13 @@ __device__ __forceinline__ void Schwann_sense(flamegpu::DeviceAPI<flamegpu::Mess
         if (s_hypoxia == 1 && s_ATP == 1) {
             s_apop_signal += 1 * step_size;
             stress = 1;
-        } else if (chemo_status == 0 && s_DNA_damage == 1 && s_ATP == 1){
+        } else if (chemo_status == 0 && s_DNA_damage == 1 && s_ATP == 1) {
             s_apop_signal += 1 * step_size;
             stress = 1;
-	    } else if (s_DNA_damage == 1 && s_ATP == 1 && FLAMEGPU->random.uniform<float>() <  P_DNA_damage_pathways*step_size){
+        } else if (s_DNA_damage == 1 && s_ATP == 1 && FLAMEGPU->random.uniform<float>() <  P_DNA_damage_pathways*step_size) {
             s_apop_signal += 1 * step_size;
             stress = 1;
-	    }
+        }
 
         if (s_apop_signal > 0 && (FLAMEGPU->random.uniform<float>() < P_apoprp*step_size) && stress == 0) {
             s_apop_signal -= 1 * step_size;

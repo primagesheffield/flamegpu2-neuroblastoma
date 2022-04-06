@@ -64,7 +64,7 @@ FLAMEGPU_EXIT_FUNCTION(ConstructPrimageOutput) {
                 static_cast<unsigned int>(h_scl[k]) + static_cast<unsigned int>(h_sca[k]) + static_cast<unsigned int>(h_scn[k]));
             if (k < threshold)
                 t *= k / threshold;
-            dummy_V += t;                
+            dummy_V += t;
         }
         // Tumour volume to mm3
         sim_out.tumour_volume = static_cast<float>(dummy_V);
