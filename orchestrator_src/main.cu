@@ -82,7 +82,7 @@ FLAMEGPU_EXIT_FUNCTION(ConstructPrimageOutput) {
         const auto nb_necro_signal_count0 = Neuroblastoma.count<int>("necro_signal", 0);
         nb_necro_signal_mean2 += (nb_necro_signal_count0 - (NB_apop_count + NB_necro_count)) * pow(sim_out.nb_necro_signal_mean, 2);
         const auto nb_apop_signal_count0 = Neuroblastoma.count<int>("apop_signal", 0);
-        nb_apop_signal_mean2 += (nb_telomere_length_count0 - (NB_apop_count + NB_necro_count)) * pow(sim_out.nb_apop_signal_mean, 2);
+        nb_apop_signal_mean2 += (nb_apop_signal_count0 - (NB_apop_count + NB_necro_count)) * pow(sim_out.nb_apop_signal_mean, 2);
         const auto extent_of_differentiation_count0 = Neuroblastoma.count<float>("degdiff", 0);
         extent_of_differentiation_mean2 += (extent_of_differentiation_count0 - (NB_apop_count + NB_necro_count)) * pow(sim_out.extent_of_differentiation_mean, 2);
         // Divide and sqrt for the sd
