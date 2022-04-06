@@ -221,7 +221,7 @@ class JSONStateReader_impl : public rapidjson::BaseReaderHandler<rapidjson::UTF8
                     throw std::exception();
                 }
             } else {
-                fprintf(stderr, "Input validation failed.\n'start_effects' and 'end_effects' should have the same length (%lu != %lu).\n",
+                fprintf(stderr, "Input validation failed.\n'start_effects' and 'end_effects' should have the same length (%u != %u).\n",
                     static_cast<uint32_t>(input.start_effects.size()), static_cast<uint32_t>(input.end_effects.size()));
                 throw std::exception();
             }
