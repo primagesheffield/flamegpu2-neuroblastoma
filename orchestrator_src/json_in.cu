@@ -211,18 +211,18 @@ class JSONStateReader_impl : public rapidjson::BaseReaderHandler<rapidjson::UTF8
         if (found_keys.size() == 33) {
             if (input.start_effects.size() == input.end_effects.size()) {
                 if (input.drug_effects.size() != 6 * input.end_effects.size()) {
-                    fprintf(stderr, "Input validation failed.\n'drug_effects' should be 6x the length of 'end_effects' should have the same length (%llu != %llu == 6 x %llu).\n",
-                        static_cast<uint64_t>(input.drug_effects.size()), static_cast<uint64_t>(6*input.end_effects.size()), static_cast<uint64_t>(input.end_effects.size()));
+                    fprintf(stderr, "Input validation failed.\n'drug_effects' should be 6x the length of 'end_effects' should have the same length (%u != %u == 6 x %u).\n",
+                        static_cast<uint32_t>(input.drug_effects.size()), static_cast<uint32_t>(6*input.end_effects.size()), static_cast<uint32_t>(input.end_effects.size()));
                     throw std::exception();
                 } else if (input.start_effects.size() > CHEMO_LEN) {
-                    fprintf(stderr, "Input validation failed.\nA maximum of %d chemo events can be specified, %llu were specified.\n",
+                    fprintf(stderr, "Input validation failed.\nA maximum of %d chemo events can be specified, %u were specified.\n",
                     CHEMO_LEN,
-                    static_cast<uint64_t>(input.start_effects.size()));
+                    static_cast<uint32_t>(input.start_effects.size()));
                     throw std::exception();
                 }
             } else {
-                fprintf(stderr, "Input validation failed.\n'start_effects' and 'end_effects' should have the same length (%llu != %llu).\n",
-                    static_cast<uint64_t>(input.start_effects.size()), static_cast<uint64_t>(input.end_effects.size()));
+                fprintf(stderr, "Input validation failed.\n'start_effects' and 'end_effects' should have the same length (%lu != %lu).\n",
+                    static_cast<uint32_t>(input.start_effects.size()), static_cast<uint32_t>(input.end_effects.size()));
                 throw std::exception();
             }
         } else {
