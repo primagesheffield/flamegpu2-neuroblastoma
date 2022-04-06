@@ -133,6 +133,15 @@ FLAMEGPU_HOST_FUNCTION(reset_grids) {
     FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nnbl_grid").zero();
     FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nscl_grid").zero();
     FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nscl_col_grid").zero();
+    // Histograms
+    FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nnba_grid").zero();
+    FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nsca_grid").zero();
+    FLAMEGPU->environment.getMacroProperty<unsigned int, 42>("histogram_nbl").zero();
+    FLAMEGPU->environment.getMacroProperty<unsigned int, 42>("histogram_nba").zero();
+    FLAMEGPU->environment.getMacroProperty<unsigned int, 42>("histogram_nbn").zero();
+    FLAMEGPU->environment.getMacroProperty<unsigned int, 42>("histogram_scl").zero();
+    FLAMEGPU->environment.getMacroProperty<unsigned int, 42>("histogram_sca").zero();
+    FLAMEGPU->environment.getMacroProperty<unsigned int, 42>("histogram_scn").zero();
 }
 FLAMEGPU_HOST_FUNCTION(host_validation) {
     const unsigned int validation_Nnbl = FLAMEGPU->environment.getMacroProperty<unsigned int>("validation_Nnbl");

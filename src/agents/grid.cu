@@ -69,6 +69,21 @@ FLAMEGPU_AGENT_FUNCTION(alter, flamegpu::MessageNone, flamegpu::MessageNone) {
     auto N_grid = FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("N_grid");
     N_grid[location.x][location.y][location.z].exchange(s_N_grid);
 
+    // Histogram
+    const auto Nnba_grid = FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nnba_grid");
+    const auto Nsca_grid = FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nsca_grid");
+    const auto Nnbn_grid = FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nnbn_grid");
+    const auto Nscn_grid = FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nscn_grid");
+    unsigned int s_Nnba_grid = Nnba_grid[location.x][location.y][location.z];
+    unsigned int s_Nsca_grid = Nsca_grid[location.x][location.y][location.z];
+    unsigned int s_Nnbn_grid = Nnbn_grid[location.x][location.y][location.z];
+    unsigned int s_Nscn_grid = Nscn_grid[location.x][location.y][location.z];
+    ++FLAMEGPU->environment.getMacroProperty<unsigned int, 42>("histogram_nbl")[glm::min(s_Nnbl_grid, 41u)];
+    ++FLAMEGPU->environment.getMacroProperty<unsigned int, 42>("histogram_nba")[glm::min(s_Nnba_grid, 41u)];
+    ++FLAMEGPU->environment.getMacroProperty<unsigned int, 42>("histogram_nbn")[glm::min(s_Nnbn_grid, 41u)];
+    ++FLAMEGPU->environment.getMacroProperty<unsigned int, 42>("histogram_scl")[glm::min(s_Nscl_grid, 41u)];
+    ++FLAMEGPU->environment.getMacroProperty<unsigned int, 42>("histogram_sca")[glm::min(s_Nsca_grid, 41u)];
+    ++FLAMEGPU->environment.getMacroProperty<unsigned int, 42>("histogram_scn")[glm::min(s_Nscn_grid, 41u)];
     return flamegpu::ALIVE;
 }
 

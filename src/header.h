@@ -86,7 +86,7 @@ __device__ __forceinline__ void increment_grid_nb(flamegpu::DeviceAPI<Mi, Mo>* F
     // Notify that we are present
     ++env.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nnb_grid")[gid.x][gid.y][gid.z];
     if (FLAMEGPU->template getVariable<int>("apop") == 1) {
-        // ++env.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nnba_grid")[gid.x][gid.y][gid.z];
+        ++env.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nnba_grid")[gid.x][gid.y][gid.z];
     } else if (FLAMEGPU->template getVariable<int>("necro") == 1) {
         ++env.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nnbn_grid")[gid.x][gid.y][gid.z];
     } else {
@@ -102,7 +102,7 @@ __device__ void increment_grid_sc(flamegpu::DeviceAPI<Mi, Mo>* FLAMEGPU, const g
     // Notify that we are present
     ++env.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nsc_grid")[gid.x][gid.y][gid.z];
     if (FLAMEGPU->template getVariable<int>("apop") == 1) {
-        // ++env.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nsca_grid")[gid.x][gid.y][gid.z];
+        ++env.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nsca_grid")[gid.x][gid.y][gid.z];
     } else if (FLAMEGPU->template getVariable<int>("necro") == 1) {
         ++env.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nscn_grid")[gid.x][gid.y][gid.z];
     } else {
