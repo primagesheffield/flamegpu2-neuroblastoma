@@ -55,11 +55,11 @@ FLAMEGPU_EXIT_FUNCTION(ConstructPrimageOutput) {
         const float cellularity = sim_out.cellularity[0] + sim_out.cellularity[1] + sim_out.cellularity[2] + sim_out.cellularity[3] + sim_out.cellularity[4] + sim_out.cellularity[5];
         const float rho_tumour = FLAMEGPU->environment.getProperty<float>("rho_tumour");
         const float R_voxel = FLAMEGPU->environment.getProperty<float>("R_voxel");
-        const float V_voxel = pow(2 * R_voxel, 3);
+        const float V_voxel = powf(2 * R_voxel, 3.0f);
         const float threshold = rho_tumour * cellularity * V_voxel;
         double dummy_V = 0;
         for (int k = 0; k < 42; ++k) {
-            float t = (1 / 1e9) * V_voxel * (
+            double t = (1 / 1e9) * V_voxel * (
                 static_cast<unsigned int>(h_nbl[k]) + static_cast<unsigned int>(h_nba[k]) + static_cast<unsigned int>(h_nbn[k]) +
                 static_cast<unsigned int>(h_scl[k]) + static_cast<unsigned int>(h_sca[k]) + static_cast<unsigned int>(h_scn[k]));
             if (k < threshold)
@@ -68,7 +68,7 @@ FLAMEGPU_EXIT_FUNCTION(ConstructPrimageOutput) {
         }
         // Tumour volume to mm3
         sim_out.tumour_volume = static_cast<float>(dummy_V);
-        sim_out.total_volume_ratio_updated = ((1 / 1e9) * FLAMEGPU->environment.getProperty<float>("V_tumour")) / sim_out.tumour_volume;
+        sim_out.total_volume_ratio_updated = static_cast<float>((1 / 1e9) * FLAMEGPU->environment.getProperty<float>("V_tumour")) / sim_out.tumour_volume;
     }
     if (NB_living_count) {
         sim_out.ratio_VEGF_NB_SC = Schwann.count() ? Neuroblastoma.sum<int>("VEGF") / static_cast<float>(Schwann.count()) : 0;
