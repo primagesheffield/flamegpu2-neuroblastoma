@@ -177,7 +177,7 @@ FLAMEGPU_EXIT_CONDITION(calculate_convergence) {
     const float dt = FLAMEGPU->environment.getProperty<float>("dt");
     const unsigned int step_size = FLAMEGPU->environment.getProperty<unsigned int>("step_size");
 
-    if (FLAMEGPU->getStepCounter() + 1 < FLAMEGPU->environment.getProperty<unsigned int>("min_force_resolution_steps")) {
+    if (FLAMEGPU->getStepCounter() + 1 < FLAMEGPU->environment.getProperty<int>("min_force_resolution_steps")) {
         // Force resolution must always run at least 2 steps, maybe more
         // First pass step counter == 0, 2nd == 1 etc
         return flamegpu::CONTINUE;
