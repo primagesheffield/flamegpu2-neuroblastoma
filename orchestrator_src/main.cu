@@ -66,9 +66,8 @@ FLAMEGPU_EXIT_FUNCTION(ConstructPrimageOutput) {
                 t *= k / threshold;
             dummy_V += t;
         }
-        // Tumour volume to mm3
         sim_out.tumour_volume = static_cast<float>(dummy_V);
-        sim_out.total_volume_ratio_updated = static_cast<float>((1 / 1e9) * FLAMEGPU->environment.getProperty<float>("V_tumour")) / sim_out.tumour_volume;
+        sim_out.total_volume_ratio_updated = sim_out.tumour_volume / static_cast<float>((1 / 1e9) * FLAMEGPU->environment.getProperty<float>("V_tumour"));
     }
     if (NB_living_count) {
         sim_out.ratio_VEGF_NB_SC = Schwann.count() ? Neuroblastoma.sum<int>("VEGF") / static_cast<float>(Schwann.count()) : 0;
