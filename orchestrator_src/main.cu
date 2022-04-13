@@ -15,6 +15,54 @@ FLAMEGPU_CUSTOM_REDUCTION(mean2_sum, a, b) {
     return a + b;
 }
 
+float init_volume_calculated = 0;
+FLAMEGPU_STEP_FUNCTION(TrackInitVolume) {
+    if (FLAMEGPU->getStepCounter() == 0) {
+        auto GridCell = FLAMEGPU->agent("GridCell");
+        auto Neuroblastoma = FLAMEGPU->agent("Neuroblastoma");
+        auto Schwann = FLAMEGPU->agent("Schwann");
+        const float ecm = GridCell.sum<float>("matrix_value") / glm::compMul(FLAMEGPU->environment.getProperty<glm::uvec3>("grid_dims"));
+        // Cellularity
+        const unsigned int NB_living_count = FLAMEGPU->environment.getProperty<unsigned int>("validation_Nnbl");
+        const unsigned int NB_apop_count = Neuroblastoma.sum<int>("apop");
+        const unsigned int NB_necro_count = Neuroblastoma.sum<int>("necro");
+        const unsigned int SC_living_count = FLAMEGPU->environment.getProperty<unsigned int>("validation_Nscl");
+        const unsigned int SC_apop_count = Schwann.sum<int>("apop");
+        const unsigned int SC_necro_count = Schwann.sum<int>("necro");
+        const unsigned int TOTAL_CELL_COUNT = NB_living_count + NB_apop_count + NB_necro_count + SC_living_count + SC_apop_count + SC_necro_count;
+        // Calculate each fraction (e.g. number of living SCs/number of all cells) and multiply it by (1-matrix).
+        float cellularity[6] = {};
+        if (TOTAL_CELL_COUNT) {
+            cellularity[0] = NB_living_count * (1.0f - ecm) / TOTAL_CELL_COUNT;
+            cellularity[1] = NB_apop_count * (1.0f - ecm) / TOTAL_CELL_COUNT;
+            cellularity[2] = NB_necro_count * (1.0f - ecm) / TOTAL_CELL_COUNT;
+            cellularity[3] = SC_living_count * (1.0f - ecm) / TOTAL_CELL_COUNT;
+            cellularity[4] = SC_apop_count * (1.0f - ecm) / TOTAL_CELL_COUNT;
+            cellularity[5] = SC_necro_count * (1.0f - ecm) / TOTAL_CELL_COUNT;
+        }
+        const auto h_nbl = FLAMEGPU->environment.getMacroProperty<unsigned int, 42>("histogram_nbl");
+        const auto h_nba = FLAMEGPU->environment.getMacroProperty<unsigned int, 42>("histogram_nba");
+        const auto h_nbn = FLAMEGPU->environment.getMacroProperty<unsigned int, 42>("histogram_nbn");
+        const auto h_scl = FLAMEGPU->environment.getMacroProperty<unsigned int, 42>("histogram_scl");
+        const auto h_sca = FLAMEGPU->environment.getMacroProperty<unsigned int, 42>("histogram_sca");
+        const auto h_scn = FLAMEGPU->environment.getMacroProperty<unsigned int, 42>("histogram_scn");
+        const float cellularity_total = cellularity[0] + cellularity[1] + cellularity[2] + cellularity[3] + cellularity[4] + cellularity[5];
+        const float rho_tumour = FLAMEGPU->environment.getProperty<float>("rho_tumour");
+        const float R_voxel = FLAMEGPU->environment.getProperty<float>("R_voxel");
+        const float V_voxel = powf(2 * R_voxel, 3.0f);
+        const float threshold = rho_tumour * cellularity_total * V_voxel;
+        double dummy_V = 0;
+        for (int k = 0; k < 42; ++k) {
+            double t = (1 / 1e9) * V_voxel * (
+                static_cast<unsigned int>(h_nbl[k]) + static_cast<unsigned int>(h_nba[k]) + static_cast<unsigned int>(h_nbn[k]) +
+                static_cast<unsigned int>(h_scl[k]) + static_cast<unsigned int>(h_sca[k]) + static_cast<unsigned int>(h_scn[k]));
+            if (k < threshold)
+                t *= k / threshold;
+            dummy_V += t;
+        }
+        init_volume_calculated = static_cast<float>(dummy_V);
+    }
+}
 OrchestratorOutput sim_out;
 FLAMEGPU_EXIT_FUNCTION(ConstructPrimageOutput) {
     auto GridCell = FLAMEGPU->agent("GridCell");
@@ -67,7 +115,7 @@ FLAMEGPU_EXIT_FUNCTION(ConstructPrimageOutput) {
             dummy_V += t;
         }
         sim_out.tumour_volume = static_cast<float>(dummy_V);
-        sim_out.total_volume_ratio_updated = sim_out.tumour_volume / static_cast<float>((1 / 1e9) * FLAMEGPU->environment.getProperty<float>("V_tumour"));
+        sim_out.total_volume_ratio_updated = sim_out.tumour_volume / init_volume_calculated;
     }
     if (NB_living_count) {
         sim_out.ratio_VEGF_NB_SC = Schwann.count() ? Neuroblastoma.sum<int>("VEGF") / static_cast<float>(Schwann.count()) : 0;
@@ -138,6 +186,7 @@ int main(int argc, const char** argv) {
     flamegpu::ModelDescription model("PRIMAGE: Neuroblastoma");
     defineModel(model);
     // Add function to construct orchestrator output
+    model.addStepFunction(TrackInitVolume);
     model.addExitFunction(ConstructPrimageOutput);
     // Construct fgpu2 inputs
     flamegpu::CUDASimulation sim(model);
