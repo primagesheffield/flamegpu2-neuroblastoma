@@ -30,12 +30,13 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
             || (FLAMEGPU->random.uniform<float>() < P_DNA_damageHypo * step_size && s_hypoxia == 1)) {
                 s_DNA_damage = 1;
             } else {
-                const float chemo0 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 0);
-                const float chemo1 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 1);
-                const float chemo2 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 2);
-                const float chemo3 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 3);
-                const float chemo4 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 4);
-                const float chemo5 = FLAMEGPU->environment.getProperty<float>("chemo_effects", 5);
+                const int CHEMO_OFFSET = CHEMO_ACTIVE ? FLAMEGPU->environment.getProperty<int>("CHEMO_OFFSET") : 0;
+                const float chemo0 = FLAMEGPU->environment.getProperty<float>("chemo_effects", CHEMO_OFFSET + 0);
+                const float chemo1 = FLAMEGPU->environment.getProperty<float>("chemo_effects", CHEMO_OFFSET + 1);
+                const float chemo2 = FLAMEGPU->environment.getProperty<float>("chemo_effects", CHEMO_OFFSET + 2);
+                const float chemo3 = FLAMEGPU->environment.getProperty<float>("chemo_effects", CHEMO_OFFSET + 3);
+                const float chemo4 = FLAMEGPU->environment.getProperty<float>("chemo_effects", CHEMO_OFFSET + 4);
+                const float chemo5 = FLAMEGPU->environment.getProperty<float>("chemo_effects", CHEMO_OFFSET + 5);
                 const unsigned int s_cycle = FLAMEGPU->getVariable<unsigned int>("cycle");
                 const glm::uvec4 cycle_stages = FLAMEGPU->environment.getProperty<glm::uvec4>("cycle_stages");
                 if (CHEMO_ACTIVE && FLAMEGPU->random.uniform<float>() < (chemo0 + chemo1 + chemo2 + chemo3 + chemo4 + chemo5) / 6) {
@@ -104,7 +105,7 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
         // Let the intracellular signalling molecules respond to changes.
         // Note that the effects of p53 and p73 on HIF are considered before p53 and p73 are updated.
         // Chemotherapy inhibits CHK1, JAB1, HIF, MYCN, and p53. It is assumed that drug delivery is instantaneous.
-        const int CHEMO_OFFSET = FLAMEGPU->environment.getProperty<int>("CHEMO_OFFSET");
+        const int CHEMO_OFFSET = CHEMO_ACTIVE ? FLAMEGPU->environment.getProperty<int>("CHEMO_OFFSET") : 0;
         const float s_MYCN_fn = FLAMEGPU->getVariable<float>("MYCN_fn");
         const float s_MAPK_RAS_fn = FLAMEGPU->getVariable<float>("MAPK_RAS_fn");
         const float s_JAB1_fn = FLAMEGPU->getVariable<float>("JAB1_fn");
