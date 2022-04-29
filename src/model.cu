@@ -37,6 +37,7 @@ void defineModel(flamegpu::ModelDescription& model) {
      */
     {   // Attach init/step/exit functions and exit condition
         model.addInitFunction(ModelInit);
+	model.newLayer().addHostFunction(update_boundary_max);
         // Force resolution
         model.newLayer().addSubModel(forceResolution);
         // Expand grid

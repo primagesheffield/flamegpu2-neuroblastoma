@@ -153,5 +153,6 @@ extern flamegpu::FLAMEGPU_HOST_FUNCTION_POINTER alter2;
 extern flamegpu::FLAMEGPU_HOST_FUNCTION_POINTER CAexpand;
 extern flamegpu::FLAMEGPU_HOST_FUNCTION_POINTER toggle_chemo;
 extern flamegpu::FLAMEGPU_HOST_FUNCTION_POINTER host_validation;
+extern flamegpu::FLAMEGPU_HOST_FUNCTION_POINTER update_boundary_max;
 
 #endif  // SRC_HEADER_H_

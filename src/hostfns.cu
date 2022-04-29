@@ -240,3 +240,9 @@ FLAMEGPU_HOST_FUNCTION(toggle_chemo) {
     chemo_index *= 6;  // 6 effects per start/end time
     FLAMEGPU->environment.setProperty<int>("CHEMO_OFFSET", chemo_index);
 }
+
+FLAMEGPU_HOST_FUNCTION(update_boundary_max) {
+    if(FLAMEGPU->getStepCounter()==1250){
+	FLAMEGPU->environment.setProperty<float>("boundary_max", 1000.0f);
+    }
+}
