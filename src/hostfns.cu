@@ -242,7 +242,11 @@ FLAMEGPU_HOST_FUNCTION(toggle_chemo) {
 }
 
 FLAMEGPU_HOST_FUNCTION(update_boundary_max) {
-    if(FLAMEGPU->getStepCounter()==1250){
-	FLAMEGPU->environment.setProperty<float>("boundary_max", 1000.0f);
+    if(FLAMEGPU->getStepCounter()==125){
+	const float boundary_max = 1000.0f;
+	FLAMEGPU->environment.setProperty<float>("boundary_max", boundary_max);
+	const float R_tumour = FLAMEGPU->environment.getProperty<float>("R_tumour");
+	FLAMEGPU->environment.setProperty<glm::vec3>("bc_minus", glm::vec3(-boundary_max * R_tumour));
+	FLAMEGPU->environment.setProperty<glm::vec3>("bc_plus", glm::vec3(boundary_max * R_tumour));
     }
 }
