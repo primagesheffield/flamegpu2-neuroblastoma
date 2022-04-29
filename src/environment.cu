@@ -141,6 +141,8 @@ void cell_cycle_parameters(flamegpu::ModelDescription& model) {
     env.newProperty<unsigned int, 4>("cycle_stages", cycle_stages);
     // Efficiency of glycolysis compared to oxidative phosphorylation (du Plessis et al., 2015).
     env.newProperty<float>("glycoEff", 1 / 15.0f);
+    // Parameter controlling overall cycling rate of neuroblasts.
+    env.newProperty<float>("P_cycle_nb", 0.344412213f);
     // Basal probability of cycling for Schwann cells (Ambros and Ambros et al., 2001).
     // https:// pubmed.ncbi.nlm.nih.gov/11464875/
     env.newProperty<float>("P_cycle_sc", 0.344412213f);  // Calibration LHC#564
@@ -188,10 +190,10 @@ void cell_death_parameters(flamegpu::ModelDescription& model) {
     env.newProperty<float>("P_telorp", 0.08895382f);  // Calibration LHC#564
     // Probability of gaining an apoptotic signal due to chemotherapy in an hour.
     // Assumed to be 10 % .
-    env.newProperty<float>("P_apopChemo", 0.4216f);  // Calibration LHC_Calibrate2#46
+    env.newProperty<float>("P_apopChemo", 0.4216f);  // Calibration 2022-04-12 (index 46 in LHC_Calibrate2.csv)
     // Probability of DNA damages triggering CAS-independent apoptotic pathways in an hour.
     // Assumed to be 10 % .
-    env.newProperty<float>("P_DNA_damage_pathways", 0.1368f);  // Calibration LHC_Calibrate2#46
+    env.newProperty<float>("P_DNA_damage_pathways", 0.1368f);  // Calibration 2022-04-12 (index 46 in LHC_Calibrate2.csv)
     // Probability of losing an apoptotic signal in an unstressed cell in an hour.
     // Assumed to be 1 % .
     env.newProperty<float>("P_apoprp", 0.957831979f);  // Calibration LHC#564
@@ -254,7 +256,7 @@ void mechanical_model_parameters(flamegpu::ModelDescription& model) {
     env.newProperty<float>("k1", static_cast<float>(2.2e-3));
     // A cell's search distance in the search for neighbours (microns).
     // Calibrated.
-    env.newProperty<float>("R_neighbours", 1.05f * (2.0f * 1.5f * env.getProperty<float>("R_cell")));  // @todo: Confirm msg radius > this
+    env.newProperty<float>("R_neighbours", 3.15f*env.getProperty<float>("R_cell"));  // @todo: Confirm msg radius > this
     // Number of other cells allowed within a cell's search distance before contact inhibition activates.
     // Assumed.
     env.newProperty<int>("N_neighbours", 2);
