@@ -142,10 +142,10 @@ void cell_cycle_parameters(flamegpu::ModelDescription& model) {
     // Efficiency of glycolysis compared to oxidative phosphorylation (du Plessis et al., 2015).
     env.newProperty<float>("glycoEff", 1 / 15.0f);
     // Parameter controlling overall cycling rate of neuroblasts.
-    env.newProperty<float>("P_cycle_nb", 0.344412213f);
+    env.newProperty<float>("P_cycle_nb", 0.215276f);  // Calibration LHC_Cal3b#993
     // Basal probability of cycling for Schwann cells (Ambros and Ambros et al., 2001).
     // https:// pubmed.ncbi.nlm.nih.gov/11464875/
-    env.newProperty<float>("P_cycle_sc", 0.344412213f);  // Calibration LHC#564
+    env.newProperty<float>("P_cycle_sc", 0.12581f);  // Calibration LHC_Cal3b#993
 }
 /**
  * neuroblasts and Schwann cells
@@ -212,16 +212,16 @@ void nb_sc_crosstalk_parameters(flamegpu::ModelDescription& model) {
     auto& env = model.Environment();
     // Scaling factor for the influence of neuroblasts on Schwann cell proliferation, juxtacrine.
     // 0.5 is assumed.
-    float scpro_jux = 0.040184733f;  // Calibration LHC#564
+    float scpro_jux = 0.00509f;    // Calibration LHC_Cal3b#993
     // Scaling factor for the influence of Schwann cells on neuroblast differentiation, juxtacrine.
     // 1 is assumed.
-    float nbdiff_jux = 0.39577123f;  // Calibration LHC#564
+    float nbdiff_jux = 0.217386f;    // Calibration LHC_Cal3b#993
     // Amount of neuroblast differentiation achieved in an hour, triggered by Schwann cells.
     // 0.01 is assumed.
-    float nbdiff_amount = 0.241650418f;  // Calibration LHC#564
+    float nbdiff_amount = 0.26821f;    // Calibration LHC_Cal3b#993
     // Scaling factor for the influence of Schwann cells on neuroblast apoptosis, juxtacrine.
     // 0.1 is assumed.
-    float nbapop_jux = 0.088949834f;  // Calibration LHC#564
+    float nbapop_jux = 0.05062f;    // Calibration LHC_Cal3b#993
     // Scaling factor for the influence of neuroblasts on Schwann cell proliferation, paracrine.
     // 0.05 is assumed.
     float scpro_para = scpro_jux / 10;
