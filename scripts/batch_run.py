@@ -1,7 +1,6 @@
 from stat import S_ISREG, ST_CTIME, ST_MODE, ST_MTIME
 import os, sys, time, re, math
 import shutil
-import numpy as np
 from JSON import save
 from JSON import EnvMini
 import shlex, subprocess
@@ -35,6 +34,8 @@ thread_j = [None]*max_threads; # Input index
 thread_j2 = [None]*max_threads; # Output index
 errs = [None]*max_threads;
 
+if not os.path.exists("temp"):
+    os.mkdir("temp")
 for i in range(max_threads):
   errs[i] = open("temp/err_%d.txt"%(i), "wb");
 

@@ -1,6 +1,6 @@
 import json
 from json import JSONEncoder
-import numpy
+#import numpy
 
 class EnvMini:
     def __init__(self):
@@ -13,8 +13,8 @@ class NBEncoder(JSONEncoder):
     def default(self, object):
         if isinstance(object, EnvMini):
             return object.__dict__
-        elif isinstance(object, numpy.generic): 
-            return object.item()
+        #elif isinstance(object, numpy.generic): 
+        #    return object.item()
         else:
             # call base class implementation which takes care of
             # raising exceptions for unsupported types
