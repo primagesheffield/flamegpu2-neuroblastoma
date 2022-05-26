@@ -2,6 +2,9 @@
 *.err
 *.out
 
+# Py script outputs
+*.csv
+
 # Model output files
 *.xml
 *.bin
@@ -30,6 +33,7 @@ docs/
 bin/
 obj/
 build*/
+*temp/
 
 # Editor configuration files/directories
 .vscode

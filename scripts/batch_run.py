@@ -21,11 +21,11 @@ elif int(sys.argv[2]) > 4 or int(sys.argv[2]) < 1:
     print("This script doesn't actually check hardware counts, modify script if required.");
     exit()
     
-FGPUNB_EXECUTABLE = "build/bin/Release/orchestrator_FGPUNB"
+FGPUNB_EXECUTABLE = "../build/bin/Release/orchestrator_FGPUNB"
 RUN_STRING = "%s -d %d -i \"%s\" --primage \"%s\""
 INPUT_CSV = None
 with open(sys.argv[1]) as csvfile:
-    INPUT_CSV = csv.reader(csvfile)
+    INPUT_CSV = list(csv.reader(csvfile))
 OUTPUT_CSV_NAME = sys.argv[1].rsplit(".", 1)[0] + "_out.csv"
 TEMP_OUTPUT_CSV_NAME = sys.argv[1].rsplit(".", 1)[0] + "_out_t.csv"
 INPUT_FILE_PATH = "temp/input_%d.json"
@@ -37,7 +37,7 @@ thread_j2 = [None]*max_threads; # Output index
 errs = [None]*max_threads;
 
 for i in range(max_threads):
-  errs[i] = open("out/err_%d.txt"%(i), "wb");
+  errs[i] = open("temp/err_%d.txt"%(i), "wb");
 
 # Manually create the output CSVs headings
 csv_outputs = [[
@@ -143,10 +143,11 @@ def startRun(j, g) :
         t = getattr(env_mini, split_name[0])
         t[int(split_name[1])] = float(INPUT_CSV[j][i])
         setattr(env_mini, split_name[0], t)
-      elif float(int(INPUT_CSV[j][i])) == float(INPUT_CSV[j][i]):
-        setattr(env_mini, INPUT_CSV[0][i], int(INPUT_CSV[j][i]))
-      else:
-        setattr(env_mini, INPUT_CSV[0][i], float(INPUT_CSV[j][i]))
+      else:      
+        try:
+            setattr(env_mini, INPUT_CSV[0][i], int(INPUT_CSV[j][i]))
+        except ValueError:
+            setattr(env_mini, INPUT_CSV[0][i], float(INPUT_CSV[j][i]))
       # Copy the value across to the output csv
       csv_outputs[thread_j2[g]][d_csv_outputs["in_"+INPUT_CSV[0][i]]] = INPUT_CSV[j][i]
     # Export the CSV
@@ -169,13 +170,14 @@ def cleanupRun(g) :
     with open(file) as json_file:
         data = json.load(json_file)
         # Update output tables
-        for key, val in data["primage"]:
+        for key, val in data["primage"].items():
             # Special case for cellularity array
             if isinstance(val, list):
-                for i in range(val):
-                    csv_outputs[thread_j2[g]][d_csv_outputs["out_"+key+"_"+i]] = float(val[i])
+                for i in range(len(val)):
+                    csv_outputs[thread_j2[g]][d_csv_outputs["out_"+str(key)+"_"+str(i)]] = float(val[i])
             else:
-                csv_outputs[thread_j2[g]][d_csv_outputs["out_"+key]] = float(val)
+                if "out_"+str(key) in d_csv_outputs: # Skip unwanted outputs
+                    csv_outputs[thread_j2[g]][d_csv_outputs["out_"+str(key)]] = float(val)
 
     # Delete input/output files
     #shutil.move(OUTPUT_FILE_PATH%(g), OUTPUT_SPARE_PATH%(thread_j[g]));
@@ -185,7 +187,7 @@ def cleanupRun(g) :
     thread_j[g] = None;
     thread_j2[g] = None;
     completed += 1
-    print("\r%d/%d Completed!"%(completed, RUNS), end = '')
+    print("\r%d/%d Completed!"%(completed, len(INPUT_CSV)-1), end = '')
     
     # Track how many runs for current J have completed
     # Every 10 runs export updated csv.
@@ -196,7 +198,7 @@ def cleanupRun(g) :
 
 
 # Find a free thread
-for j in range(1, len(INPUT_CSV[0])):
+for j in range(1, len(INPUT_CSV)):
     isDone = True;
     while isDone:
         for g in range(max_threads):
@@ -219,7 +221,7 @@ for j in range(1, len(INPUT_CSV[0])):
                 isDone = False
 
 # Wait for all threads to return before exiting
-while completed + 1 < len(INPUT_CSV[0]):
+while completed + 1 < len(INPUT_CSV):
     for g in range(max_threads):
         if isinstance(threads[g], subprocess.Popen):
             threads[g].poll();
@@ -233,4 +235,6 @@ while completed + 1 < len(INPUT_CSV[0]):
 csv_writer = csv.writer(open(OUTPUT_CSV_NAME, 'w'));
 for row in csv_outputs:
     csv_writer.writerow(row);
-os.remove(TEMP_OUTPUT_CSV_NAME%(g))
+if os.path.exists(TEMP_OUTPUT_CSV_NAME):
+    os.remove(TEMP_OUTPUT_CSV_NAME)
+print("")

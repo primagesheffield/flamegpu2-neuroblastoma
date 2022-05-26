@@ -44,10 +44,7 @@ def save(filePath, environment, seed = None, steps = None):
     #Perform export
     try:
         outFile = open(filePath,"w") 
-        if pretty==True:
-            json.dump(exportState, outFile, cls=NBEncoder, indent=4)
-        else:
-            json.dump(exportState, outFile, cls=NBEncoder)   
+        json.dump(exportState, outFile, cls=NBEncoder, indent=4)
         outFile.close()
     except IOError:
         raise IOError("Could not open file '%s' for JSON export."%(filePath))
