@@ -49,3 +49,5 @@ In an interactive session the batch script can be executed from the root using `
 To execute this as a batch job, a sample job submission scripts and matching input file are available which can be executed using `sbatch scripts/test_batch_on_prometheus.sh` or `sbatch scripts/test_batch_on_ares.sh`.
 
 *Note: You may wish to adjust the number of GPUs and CPU cores in the job script. Only 1 CPU core per GPU is strictly required, however more may provide slight improvements to performance.*
+
+*Note: The sample input file is not representative of realistic inputs. Model runtime will vary according to input parameters, the python script will output a partial log after every 10 runs complete incase of job timeout.*
