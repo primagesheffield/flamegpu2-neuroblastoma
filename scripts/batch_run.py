@@ -2,7 +2,6 @@ from stat import S_ISREG, ST_CTIME, ST_MODE, ST_MTIME
 import os, sys, time, re, math
 import shutil
 import numpy as np
-from matplotlib import cm
 from JSON import save
 from JSON import EnvMini
 import shlex, subprocess
@@ -21,7 +20,7 @@ elif int(sys.argv[2]) > 4 or int(sys.argv[2]) < 1:
     print("This script doesn't actually check hardware counts, modify script if required.");
     exit()
     
-FGPUNB_EXECUTABLE = "../build/bin/Release/orchestrator_FGPUNB"
+FGPUNB_EXECUTABLE = "build/bin/Release/orchestrator_FGPUNB"
 RUN_STRING = "%s -d %d -i \"%s\" --primage \"%s\""
 INPUT_CSV = None
 with open(sys.argv[1]) as csvfile:
@@ -68,7 +67,6 @@ csv_outputs = [[
 "in_sc_necro_signal_mean",
 "in_sc_necro_signal_sd",
 "in_sc_apop_signal_mean",
-"in_sc_apop_signal_sd",
 "in_sc_apop_signal_sd",
 "in_drug_effects_0", "in_drug_effects_1", "in_drug_effects_2", "in_drug_effects_3", "in_drug_effects_4", "in_drug_effects_5",
 "in_start_effects",
