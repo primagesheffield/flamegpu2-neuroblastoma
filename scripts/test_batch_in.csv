@@ -1,0 +1,6 @@
+seed,steps,TERT_rarngm,ATRX_inact,V_tumour,O2,cellularity_0,cellularity_1,cellularity_2,cellularity_3,cellularity_4,cellularity_5,orchestrator_time,MYCN_amp,ALT,ALK,gradiff,histology_init,nb_telomere_length_mean,nb_telomere_length_sd,sc_telomere_length_mean,sc_telomere_length_sd,extent_of_differentiation_mean,extent_of_differentiation_sd,nb_necro_signal_mean,nb_necro_signal_sd,nb_apop_signal_mean,nb_apop_signal_sd,sc_necro_signal_mean,sc_necro_signal_sd,sc_apop_signal_mean,sc_apop_signal_sd,drug_effects_0,drug_effects_1,drug_effects_2,drug_effects_3,drug_effects_4,drug_effects_5,start_effects,end_effects
+2134123,336,0,1,1.73475,0.29687,0.5,0,0,0.3,0,0,330,0,1,0,2,1,50,0.1,50,0.1,0.5,0.1,0.7,0.01,0.7,0.01,0.3,0.01,0.3,0.01,1,1,0,1,1,0,330,500
+6223423,336,0,1,1.73475,0.29687,0.5,0,0,0.3,0,0,330,0,1,0,2,1,50,0.1,50,0.1,0.5,0.1,0.7,0.01,0.7,0.01,0.3,0.01,0.3,0.01,1,1,0,1,1,0,330,500
+6123342,336,0,1,1.73475,0.29687,0.5,0,0,0.3,0,0,330,0,1,0,2,1,50,0.1,50,0.1,0.5,0.1,0.7,0.01,0.7,0.01,0.3,0.01,0.3,0.01,1,1,0,1,1,0,330,500
+2342352,336,0,1,1.73475,0.29687,0.5,0,0,0.3,0,0,330,0,1,0,2,1,50,0.1,50,0.1,0.5,0.1,0.7,0.01,0.7,0.01,0.3,0.01,0.3,0.01,1,1,0,1,1,0,330,500
+9882342,336,0,1,1.73475,0.29687,0.5,0,0,0.3,0,0,330,0,1,0,2,1,50,0.1,50,0.1,0.5,0.1,0.7,0.01,0.7,0.01,0.3,0.01,0.3,0.01,1,1,0,1,1,0,330,500
