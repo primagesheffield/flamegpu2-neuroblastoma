@@ -4,75 +4,50 @@
 
 The dependencies below are required for building the project, it's advised to that you use the newest version of any dependencies.
 
-* [CMake](https://cmake.org/) >= 3.12
+* [CMake](https://cmake.org/) >= 3.18
   * CMake 3.16 is known to have issues on certain platforms
-* [CUDA Toolkit](https://developer.nvidia.com/cuda-toolkit) >= 9.0
+* [CUDA Toolkit](https://developer.nvidia.com/cuda-toolkit) >= 11.0
 * [git](https://git-scm.com/): Required by CMake for downloading dependencies
-* python >= 3
-* *Linux:*
-  * [make](https://www.gnu.org/software/make/)
-  * gcc/g++ >= 6 (version requirements [here](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html#system-requirements))
-      * gcc/g++ >= 7 required for the test suite 
-* *Windows:*
-  * Visual Studio 2015 or higher (2019 preferred)
+* C++17 capable C++ compiler (host), compatible with the installed CUDA version
+  * [make](https://www.gnu.org/software/make/) and [GCC](https://gcc.gnu.org/) `>= 8.1` (Linux)
 
 
 ## Building
 
-FLAME GPU 2 uses [CMake](https://cmake.org/), as a cross-platform process, for configuring and generating build directives, e.g. `Makefile` or `.vcxproj`. This is used to build the project and any dependencies (e.g. flamegpu2).
+It is necessary to successfully build the model, before it can be executed.
 
-Below the most common commands are provided, for the full guide refer to the main [FLAMEGPU2 guide](https://github.com/FLAMEGPU/FLAMEGPU2_dev/blob/master/README.md).
+This branch of the repository contains build scripts setup for PLGrid's Prometheus & Ares clusters.
 
-### Linux
+These jobs can be submitted from the root of the repository using `sbatch scripts/build_on_prometheus.sh` or `sbatch scripts/build_on_ares.sh`.
 
-Under Linux, `cmake` can be used to generate makefiles specific to your system:
+If the job submission fails, it's likely the grant specified in the job submission script will need to be updated (these rotate every 6 months?).
+Similarly, Ares is currently in beta and lacks a testing partition for short build jobs. It may speed up jobs if this is updated when Ares leaves beta.
 
-```
-mkdir -p build && cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release -DVISUALISATION=ON
-make -j8
-```
+The build scripts will create `build_output.out` and `build_error.err`, containing the `stdout` and `stderr` from the job respectively.
 
-The option `-j8` enables parallel compilation using upto 8 threads, this is recommended to improve build times.
+On success, you should find the USFD orchestrator model exists at `build/bin/Release/orchestrator_FGPUNB`.
 
-`-DCUDA_ARCH=xx` should be included in the command to CMake, where `xx` is replaced with the appropriate CUDA architecture id/s, this will limit compilation to the required CUDA devices, speeding up compilation time.
-
-### Windows
-
-*Note: If installing CMake on Windows ensure CMake is added to the system path, allowing `cmake` to be used via `cmd`, this option is disabled within the installer by default.*
-
-When generating Visual studio project files, using `cmake` (or `cmake-gui`), the platform **must** be specified as `x64`.
-
-Using `cmake` this takes the form `-A x64`:
-
-```
-mkdir build && cd build
-cmake .. -A x64 -DVISUALISATION=ON
-cmake --build . --config Release
-```
-
-`-DCUDA_ARCH=xx` should be included in the command to CMake, where `xx` is replaced with the appropriate CUDA architecture id/s, this will limit compilation to the required CUDA devices, speeding up compilation time.
+*Note: Currently this branch is not pinned to a particular release of FLAMEGPU2, instead it follows origin/master, rebuilds may therefore update FLAMEGPU2.*
 
 ## Running
-There are two versions of the model implemented in this repository. Using the C++ and Python interfaces to FLAMEGPU2 respectively. The C++ one is likely to be easier to debug problems with.
 
-At current the `py_src` is not upto date, and should not be used (it is leftover from an early copy of the force resolution model).
+This branch of the repository contains test run scripts setup for PLGrid's Prometheus & Ares clusters. These simply pass an input file to the model, to ensure it executes to completion and outputs a correctly formatted output file (no validation of the contents of the output file is carried out).
+These jobs can be submitted from the root of the repository using `sbatch scripts/test_run_on_prometheus.sh` or `sbatch scripts/test_run_on_ares.sh`.
 
-The only currently useful runtime argument is `-s` for specifying the number of steps e.g. `-s 10`. Once 10 steps have been completed, the visualisation will remain open (assuming `.join()` is called at the end of `main.cu` or `main.py`). Passing `-s 0` or not providing `-s` will perform unlimited steps until the visualisation is closed.
 
-### C++ model
-The built executable can be found inside `build\bin\windows-x64\Release` or `build\bin\linux-x64\Release`.
+*Note: Prometheus has multiple partitions with GPUs `plgrid-gpu` and `plgrid-gpu-v100`. The prior has K80 GPUs, these are older, hence less demand in the job queue but will execute the model more slowly than the latter which has V100s.*
 
-If you wish to relocate this executable, on Windows you must keep the `.dll` files in the same directory as the executable (or 'install' them to somewhere on the system path), these are required for visualisation.
 
-### Python model
-Python does not build the model to a standalone executable, instead it builds flamegpu2 into a python package/wheel, and automatically installs it into a python virtual env. (It's possible to install the package into your main python install, however this has not been used as thoroughly so may have other problems).
+### Running Parameter Sweeps
 
-If you navigate to the `py_src` directory in a `cmd` or `bash` window, you should be able to call `venv.bat` to activate the virtual environment (on Windows, Linux would need an equivalent `venv.sh` writing). Following this, the model can be called with your regular python command e.g. `python main.py`, and supports the same runtime args as the C++ model (e.g. `python main.py -s 10`).
+This branch of the repository contains a python script which can be used to perform parameter sweeps reading inputs from `.csv` and writing them back out to `.csv`.
 
-It may be necessary to install additional packages to the virtual env, e.g. `pip install numpy` whilst the virtual env is active.
+The python script executes the model via the Orchestrator interface by creating temporary orchestrator input files (and parsing the output).
 
-In python, to access an flamegpu2 exception's detail `.value.type()` and `.value.what()` can be called on the raised exception object (if handled) to access the exceptions type name and message detail respectively.
+In an interactive session the batch script can be executed from the root using `python3 scripts/batch_run.py <input csv> <number of GPUs available>`, this will produce an output file with `_out` appended the input file's name.
 
-## Debugging
-The above guide builds Release builds, which execute significantly faster than Debug builds, these cannot be debugged outside of examining the exceptions generated. It may be necessary to instead specify `Debug` at configure/build time (change `Release` to `Debug` in the above build commands and repeat all subsequent commands), at which point the underlying FLAMEGPU2 library can be debugged using your preferred debugger.
+To execute this as a batch job, a sample job submission scripts and matching input file are available which can be executed using `sbatch scripts/test_batch_on_prometheus.sh` or `sbatch scripts/test_batch_on_ares.sh`.
+
+*Note: You may wish to adjust the number of GPUs and CPU cores in the job script. Only 1 CPU core per GPU is strictly required, however more may provide slight improvements to performance.*
+
+*Note: The sample input file is not representative of realistic inputs. Model runtime will vary according to input parameters, the python script will output a partial log after every 10 runs complete incase of job timeout.*
