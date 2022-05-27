@@ -197,6 +197,8 @@ int main(int argc, const char** argv) {
     flamegpu::CUDASimulation sim(model);
     sim.SimulationConfig().steps = input.steps;
     sim.SimulationConfig().random_seed = input.seed;
+    sim.CUDAConfig().device_id = static_cast<int>(cfg.device);
+    sim.applyConfig();
     sim.setEnvironmentProperty<int>("TERT_rarngm", input.TERT_rarngm);
     sim.setEnvironmentProperty<int>("ATRX_inact", input.ATRX_inact);
     sim.setEnvironmentProperty<float>("V_tumour", static_cast<float>(input.V_tumour * 1e+9));  // Convert from primage mm^3 to micron ^3
