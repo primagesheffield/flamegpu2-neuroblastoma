@@ -20,73 +20,47 @@ int main(int argc, const char ** argv) {
 #endif
     } else {
         /**
-         * Load LHC_hetNB.csv
-         */
-        std::vector<std::string> column_names;
-        std::map<std::string, std::vector<float>> columns;
-        const std::string csv_path = "../../../inputs/LHC_Cal4.csv";
-        std::ifstream csv_file(csv_path);
-        if (!csv_file.is_open()) {
-            fprintf(stderr, "Unable to open %s\n", csv_path.c_str());
-            return EXIT_FAILURE;
-        }
-        // Read file line by line
-        std::string line, word;
-        // Extract the first line in the file, to make headers
-        {
-            std::getline(csv_file, line);
-            std::stringstream ss(line);
-            while (std::getline(ss, word, ',')) {
-                columns.insert({ word, std::vector<float>{} });
-                column_names.push_back(word);
-            }
-        }
-        // Process the remaining lines
-        while (std::getline(csv_file, line)) {
-            std::stringstream ss(line);
-            int i = 0;
-            while (std::getline(ss, word, ',')) {
-                columns[column_names[i]].push_back(static_cast<float>(stod(word)));
-                ++i;
-            }
-        }
-        csv_file.close();
-        /**
          * Create a run plan
          */
-        const unsigned int CONFIG_COUNT = static_cast<unsigned int>(columns["Index"].size());
-        //const unsigned int CONFIG_COUNT = 1;
-        const unsigned int RUNS_PER_CONFIG = 10;
-        flamegpu::RunPlanVector runs(model, CONFIG_COUNT * RUNS_PER_CONFIG);
-	runs.setRandomPropertySeed(34523);  // Ensure that repeated runs use the same Random values to init ALK
-        runs.setPropertyUniformRandom<float>("cellularity", 0, 1);
-        runs.setPropertyUniformRandom<float>("O2", 0, 1);
-        runs.setPropertyUniformRandom<int>("ALK", 0, 2);
+        flamegpu::RunPlanVector runs_control(model, 100);
         {
-            runs.setSteps(336);
-            for (unsigned int j = 0; j < RUNS_PER_CONFIG; ++j) {
-                for (unsigned int i = 0; i < CONFIG_COUNT; ++i) {
-                    const unsigned int ij = i * RUNS_PER_CONFIG + j;
-                    runs[ij].setOutputSubdirectory(std::to_string(static_cast<int>(columns["Index"][i])));
-                    //runs[ij].setOutputSubdirectory(std::to_string(0));
-                    runs[ij].setRandomSimulationSeed((j+12) * 84673);  // Something something prime number
-                    runs[ij].setProperty<float>("P_apopChemo", columns["P_apop_Chemo"][i]);
-                    runs[ij].setProperty<float>("P_DNA_damage_pathways", columns["P_DNA_damage_pathways"][i]);
-	            runs[ij].setProperty<int>("histology_init", 0);
-	            runs[ij].setProperty<int>("gradiff", 1);
-	            runs[ij].setProperty<int>("MYCN_amp", 1);
-	            runs[ij].setProperty<int>("TERT_rarngm", 0);
-	            runs[ij].setProperty<int>("ATRX_inact", 0);
-	            runs[ij].setProperty<int>("ALT", 0);
-	            std::array<unsigned int, 336> chemo_start = { 0 };
-	            std::array<unsigned int, 336> chemo_end = { 336 };
-	            std::array<float, 6> chemo_effects = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
-                    //std::array<float, 6> chemo_effects = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
-	            runs[ij].setProperty<unsigned int, 336>("chemo_start", chemo_start);
-	            runs[ij].setProperty<unsigned int, 336>("chemo_end", chemo_end);
-	            runs[ij].setProperty<float, 6>("chemo_effects", chemo_effects);
-		}
-	    }
+            runs_control.setOutputSubdirectory("control");
+            runs_control.setSteps(336);
+            runs_control.setRandomSimulationSeed(12, 1);
+            runs_control.setProperty<int>("histology_init", 0);
+	    runs_control.setProperty<int>("gradiff", 1);
+	    runs_control.setPropertyUniformRandom<float>("cellularity", 0.0f, 1.0f);
+	    runs_control.setPropertyUniformRandom<float>("O2", 0.0f, 1.0f);
+	    runs_control.setProperty<int>("MYCN_amp", 1);
+	    runs_control.setProperty<int>("TERT_rarngm", 0);
+	    runs_control.setProperty<int>("ATRX_inact", 0);
+	    runs_control.setProperty<int>("ALT", 0);
+	    runs_control.setPropertyUniformRandom<int>("ALK", 0, 2);
+            std::array<unsigned int, 336> chemo_start = { 0 };
+            std::array<unsigned int, 336> chemo_end = { 336 };
+            std::array<float, 6> chemo_effects = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
+            runs_control.setProperty<unsigned int, 336>("chemo_start", chemo_start);
+            runs_control.setProperty<unsigned int, 336>("chemo_end", chemo_end);
+            runs_control.setProperty<float, 6>("chemo_effects", chemo_effects);
+        }
+        flamegpu::RunPlanVector runs = runs_control;
+        {  // 1
+            flamegpu::RunPlanVector runs_1 = runs_control;
+            runs_1.setOutputSubdirectory("group_1");
+	    runs_1.setPropertyUniformRandom<float>("cellularity", 0.0f, 0.33f);
+            runs += runs_1;
+        }
+        {  // 2
+            flamegpu::RunPlanVector runs_2 = runs_control;
+            runs_2.setOutputSubdirectory("group_2");
+            runs_2.setPropertyUniformRandom<float>("cellularity", 0.33f, 0.66f);
+            runs += runs_2;
+        }
+        {  // 3
+            flamegpu::RunPlanVector runs_3 = runs_control;
+            runs_3.setOutputSubdirectory("group_3");
+            runs_3.setPropertyUniformRandom<float>("cellularity", 0.66f, 1.0f);
+            runs += runs_3;
         }
         /**
          * Create a logging config
