@@ -7,13 +7,14 @@
 # @todo - pass this in from outside the script? 
 # @todo - check the specified subpackages exist via apt pre-install?  apt-rdepends cuda-9-0 | grep "^cuda-"?
 
-# Ideally choose from the list of meta-packages to minimise variance between cuda versions (although it does change too). Some of these packages may not be availble pre cuda 10.
+# Ideally choose from the list of meta-packages to minimise variance between cuda versions (although it does change too). Some of these packages may not be availble in older CUDA releases
 CUDA_PACKAGES_IN=(
     "cuda-compiler"
     "cuda-cudart-dev"
     "cuda-nvtx"
     "cuda-nvrtc-dev"
     "libcurand-dev" # 11-0+
+    "cuda-cccl" # 11.4+, provides cub and thrust. On 11.3 knwon as cuda-thrust-11-3
 )
 
 ## -------------------
@@ -90,12 +91,23 @@ do :
         package="cuda-compiler"
     elif [[ "${package}" == "cuda-compiler" ]] && version_lt "$CUDA_VERSION_MAJOR_MINOR" "9.1" ; then
         package="cuda-nvcc"
+    # CUB/Thrust  are packages in cuda-thrust in 11.3, but cuda-cccl in 11.4+
+    elif [[ "${package}" == "cuda-thrust" || "${package}" == "cuda-cccl" ]]; then
+        # CUDA cuda-thrust >= 11.4
+        if version_ge "$CUDA_VERSION_MAJOR_MINOR" "11.4" ; then
+            package="cuda-cccl"
+        # Use cuda-thrust > 11.2
+        elif version_ge "$CUDA_VERSION_MAJOR_MINOR" "11.3" ; then
+            package="cuda-thrust"
+        # Do not include this pacakge < 11.3
+        else
+            continue
+        fi
     fi
     # CUDA 11+ includes lib* / lib*-dev packages, which if they existed previously where cuda-cu*- / cuda-cu*-dev-
     if [[ ${package} == libcu* ]] && version_lt "$CUDA_VERSION_MAJOR_MINOR" "11.0" ; then
         package="${package/libcu/cuda-cu}"
     fi
-
     # Build the full package name and append to the string.
     CUDA_PACKAGES+=" ${package}-${CUDA_MAJOR}-${CUDA_MINOR}"
 done
@@ -104,14 +116,17 @@ echo "CUDA_PACKAGES ${CUDA_PACKAGES}"
 ## -----------------
 ## Prepare to install
 ## -----------------
-
+CPU_ARCH="x86_64"
 PIN_FILENAME="cuda-ubuntu${UBUNTU_VERSION}.pin"
-PIN_URL="https://developer.download.nvidia.com/compute/cuda/repos/ubuntu${UBUNTU_VERSION}/x86_64/${PIN_FILENAME}"
-APT_KEY_URL="http://developer.download.nvidia.com/compute/cuda/repos/ubuntu${UBUNTU_VERSION}/x86_64/7fa2af80.pub"
-REPO_URL="http://developer.download.nvidia.com/compute/cuda/repos/ubuntu${UBUNTU_VERSION}/x86_64/"
+PIN_URL="https://developer.download.nvidia.com/compute/cuda/repos/ubuntu${UBUNTU_VERSION}/${CPU_ARCH}/${PIN_FILENAME}"
+# apt keyring package now available https://developer.nvidia.com/blog/updating-the-cuda-linux-gpg-repository-key/
+KERYRING_PACKAGE_FILENAME="cuda-keyring_1.0-1_all.deb"
+KEYRING_PACKAGE_URL="https://developer.download.nvidia.com/compute/cuda/repos/ubuntu${UBUNTU_VERSION}/${CPU_ARCH}/${KERYRING_PACKAGE_FILENAME}"
+REPO_URL="https://developer.download.nvidia.com/compute/cuda/repos/ubuntu${UBUNTU_VERSION}/${CPU_ARCH}/"
 
 echo "PIN_FILENAME ${PIN_FILENAME}"
 echo "PIN_URL ${PIN_URL}"
+echo "KEYRING_PACKAGE_URL ${KEYRING_PACKAGE_URL}"
 echo "APT_KEY_URL ${APT_KEY_URL}"
 
 ## -----------------
@@ -144,7 +159,7 @@ fi
 echo "Adding CUDA Repository"
 wget ${PIN_URL}
 $USE_SUDO mv ${PIN_FILENAME} /etc/apt/preferences.d/cuda-repository-pin-600
-$USE_SUDO apt-key adv --fetch-keys ${APT_KEY_URL}
+wget ${KEYRING_PACKAGE_URL} && ${USE_SUDO} dpkg -i ${KERYRING_PACKAGE_FILENAME} && rm ${KERYRING_PACKAGE_FILENAME}
 $USE_SUDO add-apt-repository "deb ${REPO_URL} /"
 $USE_SUDO apt-get update
 
