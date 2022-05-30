@@ -24,7 +24,7 @@ int main(int argc, const char ** argv) {
          */
         std::vector<std::string> column_names;
         std::map<std::string, std::vector<float>> columns;
-        const std::string csv_path = "../../../inputs/LHC_Calibrate2.csv";
+        const std::string csv_path = "../../../inputs/LHC_Cal4.csv";
         std::ifstream csv_file(csv_path);
         if (!csv_file.is_open()) {
             fprintf(stderr, "Unable to open %s\n", csv_path.c_str());
@@ -55,6 +55,7 @@ int main(int argc, const char ** argv) {
          * Create a run plan
          */
         const unsigned int CONFIG_COUNT = static_cast<unsigned int>(columns["Index"].size());
+        //const unsigned int CONFIG_COUNT = 1;
         const unsigned int RUNS_PER_CONFIG = 10;
         flamegpu::RunPlanVector runs(model, CONFIG_COUNT * RUNS_PER_CONFIG);
 	runs.setRandomPropertySeed(34523);  // Ensure that repeated runs use the same Random values to init ALK
@@ -67,8 +68,9 @@ int main(int argc, const char ** argv) {
                 for (unsigned int i = 0; i < CONFIG_COUNT; ++i) {
                     const unsigned int ij = i * RUNS_PER_CONFIG + j;
                     runs[ij].setOutputSubdirectory(std::to_string(static_cast<int>(columns["Index"][i])));
+                    //runs[ij].setOutputSubdirectory(std::to_string(0));
                     runs[ij].setRandomSimulationSeed((j+12) * 84673);  // Something something prime number
-                    runs[ij].setProperty<float>("P_apopChemo", columns["P_apopChemo"][i]);
+                    runs[ij].setProperty<float>("P_apopChemo", columns["P_apop_Chemo"][i]);
                     runs[ij].setProperty<float>("P_DNA_damage_pathways", columns["P_DNA_damage_pathways"][i]);
 	            runs[ij].setProperty<int>("histology_init", 0);
 	            runs[ij].setProperty<int>("gradiff", 1);
@@ -79,6 +81,7 @@ int main(int argc, const char ** argv) {
 	            std::array<unsigned int, 336> chemo_start = { 0 };
 	            std::array<unsigned int, 336> chemo_end = { 336 };
 	            std::array<float, 6> chemo_effects = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
+                    //std::array<float, 6> chemo_effects = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
 	            runs[ij].setProperty<unsigned int, 336>("chemo_start", chemo_start);
 	            runs[ij].setProperty<unsigned int, 336>("chemo_end", chemo_end);
 	            runs[ij].setProperty<float, 6>("chemo_effects", chemo_effects);
