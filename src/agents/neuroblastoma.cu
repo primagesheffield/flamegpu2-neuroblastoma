@@ -390,9 +390,12 @@ __device__ __forceinline__ void Neuroblastoma_cell_cycle(flamegpu::DeviceAPI<fla
     const int s_CDC25C = FLAMEGPU->getVariable<int>("CDC25C");
     const int s_hypoxia = FLAMEGPU->getVariable<int>("hypoxia");
 
+    const float P_cycle_nb = FLAMEGPU->environment.getProperty<float>("P_cycle_nb");
+    const bool dummy_ncycle = FLAMEGPU->random.uniform<float>() < P_cycle_nb ? true : false;
+
     // In the cell cycle, 0[12] = G0, 1[6] = G1/S, 2[4] = S/G2, 3[2] = G2/M, 4[0] = division.
     // In the cell cycle, 0-11 = G0, 12-17 = G1/S, 18-21 = S/G2, 22-23 = G2/M, 24+ = division.
-    if (s_neighbours <= N_neighbours && s_ATP == 1 && s_apop == 0 && s_necro == 0) {
+    if (dummy_ncycle && s_neighbours <= N_neighbours && s_ATP == 1 && s_apop == 0 && s_necro == 0) {
         if (s_cycle < cycle_stages[0]) {
             if (s_cycle == 0) {
                 if (FLAMEGPU->random.uniform<float>() < s_cycdiff) {

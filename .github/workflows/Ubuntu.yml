@@ -8,6 +8,7 @@ on:
     paths:
       - "**"
       - "!.github/**"
+      - ".github/scripts/install_cuda_ubuntu.sh"
       - ".github/workflows/Ubuntu.yml"
   pull_request:
 
