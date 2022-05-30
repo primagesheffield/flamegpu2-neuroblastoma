@@ -212,7 +212,7 @@ void nb_sc_crosstalk_parameters(flamegpu::ModelDescription& model) {
     auto& env = model.Environment();
     // Scaling factor for the influence of neuroblasts on Schwann cell proliferation, juxtacrine.
     // 0.5 is assumed.
-    float scpro_jux = 0.0374f*0.1;    // Calibration LHC_Cal3b#163, modified.
+    float scpro_jux = 0.0374f*0.1f;    // Calibration LHC_Cal3b#163, modified.
     // Scaling factor for the influence of Schwann cells on neuroblast differentiation, juxtacrine.
     // 1 is assumed.
     float nbdiff_jux = 0.753f;    // Calibration LHC_Cal3b#163
