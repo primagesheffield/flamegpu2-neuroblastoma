@@ -2,6 +2,24 @@
 
 #include "header.h"
 
+__device__ float mean2_mean;
+
+FLAMEGPU_CUSTOM_TRANSFORM(mean2_transform, a) {
+
+    if (a != 0)
+
+        return static_cast<double>((a - mean2_mean) * (a - mean2_mean));
+
+    return 0;
+
+}
+
+FLAMEGPU_CUSTOM_REDUCTION(mean2_sum, a, b) {
+
+    return a + b;
+
+}
+
 FLAMEGPU_CUSTOM_REDUCTION(glm_min, a, b) {
     return glm::min(a, b);
 }
@@ -144,12 +162,148 @@ FLAMEGPU_HOST_FUNCTION(reset_grids) {
     FLAMEGPU->environment.getMacroProperty<unsigned int, 42>("histogram_scn").zero();
 }
 FLAMEGPU_HOST_FUNCTION(host_validation) {
+    auto GridCell = FLAMEGPU->agent("GridCell");
+    auto Neuroblastoma = FLAMEGPU->agent("Neuroblastoma");
+    auto Schwann = FLAMEGPU->agent("Schwann");
     const unsigned int validation_Nnbl = FLAMEGPU->environment.getMacroProperty<unsigned int>("validation_Nnbl");
     const unsigned int validation_Nscl = FLAMEGPU->environment.getMacroProperty<unsigned int>("validation_Nscl");
     FLAMEGPU->environment.setProperty<unsigned int>("validation_Nnbl", validation_Nnbl);
     FLAMEGPU->environment.setProperty<unsigned int>("validation_Nscl", validation_Nscl);
     FLAMEGPU->environment.getMacroProperty<unsigned int>("validation_Nnbl").zero();
     FLAMEGPU->environment.getMacroProperty<unsigned int>("validation_Nscl").zero();
+    // Cellularity
+    const unsigned int NB_living_count = validation_Nnbl;
+    const unsigned int NB_apop_count = Neuroblastoma.sum<int>("apop");
+    const unsigned int NB_necro_count = Neuroblastoma.sum<int>("necro");
+    const unsigned int SC_living_count = validation_Nscl;
+    const unsigned int SC_apop_count = Schwann.sum<int>("apop");
+    const unsigned int SC_necro_count = Schwann.sum<int>("necro");
+    const unsigned int TOTAL_CELL_COUNT = NB_living_count + NB_apop_count + NB_necro_count + SC_living_count + SC_apop_count + SC_necro_count;
+    // Calculate each fraction (e.g. number of living SCs/number of all cells) and multiply it by (1-matrix).
+    const float ecm = GridCell.sum<float>("matrix_value") / glm::compMul(FLAMEGPU->environment.getProperty<glm::uvec3>("grid_dims"));
+    std::array<float, 6> cellularity = {};
+    if (TOTAL_CELL_COUNT) {
+        cellularity[0] = NB_living_count * (1.0f - ecm) / TOTAL_CELL_COUNT;
+        cellularity[1] = NB_apop_count * (1.0f - ecm) / TOTAL_CELL_COUNT;
+        cellularity[2] = NB_necro_count * (1.0f - ecm) / TOTAL_CELL_COUNT;
+        cellularity[3] = SC_living_count * (1.0f - ecm) / TOTAL_CELL_COUNT;
+        cellularity[4] = SC_apop_count * (1.0f - ecm) / TOTAL_CELL_COUNT;
+        cellularity[5] = SC_necro_count * (1.0f - ecm) / TOTAL_CELL_COUNT;
+    }
+    FLAMEGPU->environment.setProperty<float, 6>("validation_cellularity", cellularity);
+    // Tumour volume
+    float tumour_volume;
+    {
+        const int total_cell_count = Neuroblastoma.count() + Schwann.count();
+        if (total_cell_count) {
+            const float rho_tumour = FLAMEGPU->environment.getProperty<float>("rho_tumour");
+            const float matrix_dummy = FLAMEGPU->environment.getProperty<float>("matrix_dummy");
+            tumour_volume = total_cell_count / rho_tumour / (1 - matrix_dummy);
+        } else {
+            tumour_volume = FLAMEGPU->environment.getProperty<float>("V_tumour");  // initial tumour volume
+        }
+        // Convert tumour volume to mm3
+        tumour_volume /= 1e+9;
+    }
+    FLAMEGPU->environment.setProperty<float>("validation_tumour_volume", tumour_volume);
+    // Histograms
+    std::array<unsigned int, 42> histogram_nbl = {};
+    std::array<unsigned int, 42> histogram_nba = {};
+    std::array<unsigned int, 42> histogram_nbn = {};
+    std::array<unsigned int, 42> histogram_scl = {};
+    std::array<unsigned int, 42> histogram_sca = {};
+    std::array<unsigned int, 42> histogram_scn = {};
+
+    const auto h_nbl = FLAMEGPU->environment.getMacroProperty<unsigned int, 42>("histogram_nbl");
+    const auto h_nba = FLAMEGPU->environment.getMacroProperty<unsigned int, 42>("histogram_nba");
+    const auto h_nbn = FLAMEGPU->environment.getMacroProperty<unsigned int, 42>("histogram_nbn");
+    const auto h_scl = FLAMEGPU->environment.getMacroProperty<unsigned int, 42>("histogram_scl");
+    const auto h_sca = FLAMEGPU->environment.getMacroProperty<unsigned int, 42>("histogram_sca");
+    const auto h_scn = FLAMEGPU->environment.getMacroProperty<unsigned int, 42>("histogram_scn");
+
+    for (int i = 0; i < 42; ++i) {
+        histogram_nbl[i] = h_nbl[i];
+        histogram_nba[i] = h_nba[i];
+        histogram_nbn[i] = h_nbn[i];
+        histogram_scl[i] = h_scl[i];
+        histogram_sca[i] = h_sca[i];
+        histogram_scn[i] = h_scn[i];
+    }
+
+    FLAMEGPU->environment.setProperty<unsigned int, 42>("histogram_nbl", histogram_nbl);
+    FLAMEGPU->environment.setProperty<unsigned int, 42>("histogram_nba", histogram_nba);
+    FLAMEGPU->environment.setProperty<unsigned int, 42>("histogram_nbn", histogram_nbn);
+    FLAMEGPU->environment.setProperty<unsigned int, 42>("histogram_scl", histogram_scl);
+    FLAMEGPU->environment.setProperty<unsigned int, 42>("histogram_sca", histogram_sca);
+    FLAMEGPU->environment.setProperty<unsigned int, 42>("histogram_scn", histogram_scn);
+
+    //Output intracellular details to initialise the next loop.
+    if (NB_living_count) {
+        //sim_out.ratio_VEGF_NB_SC = Schwann.count() ? Neuroblastoma.sum<int>("VEGF") / static_cast<float>(Schwann.count()) : 0;
+        // Calc mean (living cells only)
+        const float nb_telomere_length_mean = Neuroblastoma.sum<int>("telo_count") / static_cast<float>(NB_living_count);
+        const float nb_necro_signal_mean = Neuroblastoma.sum<int>("necro_signal") / static_cast<float>(NB_living_count);
+        const float nb_apop_signal_mean = Neuroblastoma.sum<int>("apop_signal") / static_cast<float>(NB_living_count);
+        const float extent_of_differentiation_mean = Neuroblastoma.sum<float>("degdiff") / static_cast<float>(NB_living_count);
+        FLAMEGPU->environment.setProperty<float>("nb_telomere_length_mean", nb_telomere_length_mean);
+        FLAMEGPU->environment.setProperty<float>("nb_necro_signal_mean", nb_necro_signal_mean);
+        FLAMEGPU->environment.setProperty<float>("nb_apop_signal_mean", nb_apop_signal_mean);
+        FLAMEGPU->environment.setProperty<float>("extent_of_differentiation_mean", extent_of_differentiation_mean);
+        // Calc the numerator of the sd equation (refered to as mean2 here)
+        // The custom transform/reduce, only accounts for variables with non zero values
+        // Dead cells are all zero, but some living cells too
+        gpuErrchk(cudaMemcpyToSymbol(mean2_mean, &nb_telomere_length_mean, sizeof(float)));
+        double nb_telomere_length_mean2 = Neuroblastoma.transformReduce<int, double>("telo_count", mean2_transform, mean2_sum, 0);
+        gpuErrchk(cudaMemcpyToSymbol(mean2_mean, &nb_necro_signal_mean, sizeof(float)));
+        double nb_necro_signal_mean2 = Neuroblastoma.transformReduce<int, double>("necro_signal", mean2_transform, mean2_sum, 0);
+        gpuErrchk(cudaMemcpyToSymbol(mean2_mean, &nb_apop_signal_mean, sizeof(float)));
+        double nb_apop_signal_mean2 = Neuroblastoma.transformReduce<int, double>("apop_signal", mean2_transform, mean2_sum, 0);
+        gpuErrchk(cudaMemcpyToSymbol(mean2_mean, &extent_of_differentiation_mean, sizeof(float)));
+        double extent_of_differentiation_mean2 = Neuroblastoma.transformReduce<float, double>("degdiff", mean2_transform, mean2_sum, 0);
+        // Therefore, we add living cells with zero value to the sum too
+        const auto nb_telomere_length_count0 = Neuroblastoma.count<int>("telo_count", 0);
+        nb_telomere_length_mean2 += (nb_telomere_length_count0 - (NB_apop_count + NB_necro_count)) * pow(nb_telomere_length_mean, 2);
+        const auto nb_necro_signal_count0 = Neuroblastoma.count<int>("necro_signal", 0);
+        nb_necro_signal_mean2 += (nb_necro_signal_count0 - (NB_apop_count + NB_necro_count)) * pow(nb_necro_signal_mean, 2);
+        const auto nb_apop_signal_count0 = Neuroblastoma.count<int>("apop_signal", 0);
+        nb_apop_signal_mean2 += (nb_apop_signal_count0 - (NB_apop_count + NB_necro_count)) * pow(nb_apop_signal_mean, 2);
+        const auto extent_of_differentiation_count0 = Neuroblastoma.count<float>("degdiff", 0);
+        extent_of_differentiation_mean2 += (extent_of_differentiation_count0 - (NB_apop_count + NB_necro_count)) * pow(extent_of_differentiation_mean, 2);
+        // Divide and sqrt for the sd
+        FLAMEGPU->environment.setProperty<float>("nb_telomere_length_sd", static_cast<float>(sqrt(nb_telomere_length_mean2 / NB_living_count)));
+        FLAMEGPU->environment.setProperty<float>("nb_necro_signal_sd", static_cast<float>(sqrt(nb_necro_signal_mean2 / NB_living_count)));
+        FLAMEGPU->environment.setProperty<float>("nb_apop_signal_sd", static_cast<float>(sqrt(nb_apop_signal_mean2 / NB_living_count)));
+        FLAMEGPU->environment.setProperty<float>("extent_of_differentiation_sd", static_cast<float>(sqrt(extent_of_differentiation_mean2 / NB_living_count)));
+    }
+    if (SC_living_count) {
+        // Calc mean (living cells only)
+        const float sc_telomere_length_mean = Schwann.sum<int>("telo_count") / static_cast<float>(SC_living_count);
+        const float sc_necro_signal_mean = Schwann.sum<int>("necro_signal") / static_cast<float>(SC_living_count);
+        const float sc_apop_signal_mean = Schwann.sum<int>("apop_signal") / static_cast<float>(SC_living_count);
+        FLAMEGPU->environment.setProperty<float>("sc_telomere_length_mean", sc_telomere_length_mean);
+        FLAMEGPU->environment.setProperty<float>("sc_necro_signal_mean", sc_necro_signal_mean);
+        FLAMEGPU->environment.setProperty<float>("sc_apop_signal_mean", sc_apop_signal_mean);
+        // Calc the numerator of the sd equation (refered to as mean2 here)
+        // The custom transform/reduce, only accounts for variables with non zero values
+        // Dead cells are all zero, but some living cells too
+        gpuErrchk(cudaMemcpyToSymbol(mean2_mean, &sim_out.sc_telomere_length_mean, sizeof(float)));
+        double sc_telomere_length_mean2 = Schwann.transformReduce<int, double>("telo_count", mean2_transform, mean2_sum, 0);
+        gpuErrchk(cudaMemcpyToSymbol(mean2_mean, &sim_out.sc_necro_signal_mean, sizeof(float)));
+        double sc_necro_signal_mean2 = Schwann.transformReduce<int, double>("necro_signal", mean2_transform, mean2_sum, 0);
+        gpuErrchk(cudaMemcpyToSymbol(mean2_mean, &sim_out.sc_apop_signal_mean, sizeof(float)));
+        double sc_apop_signal_mean2 = Schwann.transformReduce<int, double>("apop_signal", mean2_transform, mean2_sum, 0);
+        // Therefore, we add living cells with zero value to the sum too
+        const auto sc_telomere_length_count0 = Schwann.count<int>("telo_count", 0);
+        sc_telomere_length_mean2 += (sc_telomere_length_count0 - (SC_apop_count + SC_necro_count)) * pow(sim_out.sc_telomere_length_mean, 2);
+        const auto sc_necro_signal_count0 = Schwann.count<int>("necro_signal", 0);
+        sc_necro_signal_mean2 += (sc_necro_signal_count0 - (SC_apop_count + SC_necro_count)) * pow(sim_out.sc_necro_signal_mean, 2);
+        const auto sc_apop_signal_count0 = Schwann.count<int>("apop_signal", 0);
+        sc_apop_signal_mean2 += (sc_telomere_length_count0 - (SC_apop_count + SC_necro_count)) * pow(sim_out.sc_apop_signal_mean, 2);
+        // Divide and sqrt for the sd
+        FLAMEGPU->environment.setProperty<float>("sc_telomere_length_sd", static_cast<float>(sqrt(sc_telomere_length_mean2 / SC_living_count)));
+        FLAMEGPU->environment.setProperty<float>("sc_necro_signal_sd", static_cast<float>(sqrt(sc_necro_signal_mean2 / SC_living_count)));
+        FLAMEGPU->environment.setProperty<float>("sc_apop_signal_sd", static_cast<float>(sqrt(sc_apop_signal_mean2 / SC_living_count)));
+    }
 }
 
 FLAMEGPU_HOST_FUNCTION(toggle_chemo) {

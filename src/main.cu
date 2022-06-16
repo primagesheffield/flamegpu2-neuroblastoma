@@ -1,6 +1,7 @@
 #include "header.h"
 
 const bool ENSEMBLE = true;
+
 int main(int argc, const char ** argv) {
     flamegpu::ModelDescription model("PRIMAGE: Neuroblastoma");
     defineModel(model);
@@ -22,10 +23,43 @@ int main(int argc, const char ** argv) {
         /**
          * Create a run plan
          */
-        flamegpu::RunPlanVector runs(model, 3);
+        flamegpu::RunPlanVector runs(model, 10);
         {
             runs.setSteps(336);
             runs.setRandomSimulationSeed(12, 1);
+	    runs.setRandomPropertySeed(34523);
+	    runs.setProperty<int>("orchestrator_time", 1);
+	    runs.setProperty<int>("histology_init", 0);
+	    runs.setProperty<int>("gradiff", 1);
+	    runs.setProperty<float>("V_tumour", powf(2000.0f, 3));
+	    std::array<float, 6> cellularity = {0.5f, 0.0f, 0.0f, 0.2f, 0.0f, 0.0f};
+	    runs.setProperty<float,6>("cellularity", cellularity);
+	    runs.setPropertyUniformRandom<float>("O2", 0.0f, 1.0f);
+	    runs.setProperty<int>("MYCN_amp", 1);
+	    runs.setProperty<int>("TERT_rarngm", 0);
+	    runs.setProperty<int>("ATRX_inact", 0);
+	    runs.setProperty<int>("ALT", 0);
+	    runs.setPropertyUniformRandom<int>("ALK", 0, 2);
+            std::array<unsigned int, 200> chemo_start = { 0 };
+            std::array<unsigned int, 200> chemo_end = { 336 };
+            std::array<float, 1200> chemo_effects = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
+            runs.setProperty<unsigned int, 200>("chemo_start", chemo_start);
+            runs.setProperty<unsigned int, 200>("chemo_end", chemo_end);
+            runs.setProperty<float, 1200>("chemo_effects", chemo_effects);
+	    runs.setProperty<float>("extent_of_differentiation_mean", 0.5);
+	    runs.setProperty<float>("extent_of_differentiation_sd", 0.1);
+	    runs.setProperty<float>("nb_telomere_length_mean", 30);
+            runs.setProperty<float>("nb_telomere_length_sd", 3);
+	    runs.setProperty<float>("sc_telomere_length_mean", 30);
+	    runs.setProperty<float>("sc_telomere_length_mean", 3);
+            runs.setProperty<float>("nb_apop_signal_mean", 2);
+            runs.setProperty<float>("nb_apop_signal_sd", 1);
+            runs.setProperty<float>("sc_apop_signal_mean", 2);
+            runs.setProperty<float>("sc_apop_signal_sd", 1);
+            runs.setProperty<float>("nb_necro_signal_mean", 100);
+            runs.setProperty<float>("nb_necro_signal_sd", 10);
+            runs.setProperty<float>("sc_necro_signal_mean", 100);
+            runs.setProperty<float>("sc_necro_signal_sd", 10);
         }
         /**
          * Create a logging config
@@ -35,6 +69,31 @@ int main(int argc, const char ** argv) {
             step_log_cfg.setFrequency(1);
             step_log_cfg.logEnvironment("validation_Nscl");
             step_log_cfg.logEnvironment("validation_Nnbl");
+            step_log_cfg.logEnvironment("validation_cellularity");
+            step_log_cfg.logEnvironment("validation_tumour_volume");
+            step_log_cfg.logEnvironment("grid_dims");
+            step_log_cfg.logEnvironment("histogram_nbl");
+            step_log_cfg.logEnvironment("histogram_nba");
+            step_log_cfg.logEnvironment("histogram_nbn");
+            step_log_cfg.logEnvironment("histogram_scl");
+            step_log_cfg.logEnvironment("histogram_sca");
+            step_log_cfg.logEnvironment("histogram_scn");
+            step_log_cfg.logEnvironment("extent_of_differentiation_mean");
+            step_log_cfg.logEnvironment("nb_telomere_length_mean");
+            step_log_cfg.logEnvironment("nb_apop_signal_mean");
+            step_log_cfg.logEnvironment("nb_necro_signal_mean");
+            step_log_cfg.logEnvironment("extent_of_differentiation_sd");
+            step_log_cfg.logEnvironment("nb_telomere_length_sd");
+            step_log_cfg.logEnvironment("nb_apop_signal_sd");
+            step_log_cfg.logEnvironment("nb_necro_signal_sd");
+            step_log_cfg.logEnvironment("sc_telomere_length_mean");
+            step_log_cfg.logEnvironment("sc_apop_signal_mean");
+            step_log_cfg.logEnvironment("sc_necro_signal_mean");
+            step_log_cfg.logEnvironment("sc_telomere_length_sd");
+            step_log_cfg.logEnvironment("sc_apop_signal_sd");
+            step_log_cfg.logEnvironment("sc_necro_signal_sd");
+            step_log_cfg.agent("GridCell").logSum<int>("has_cells");
+            step_log_cfg.agent("GridCell").logSum<int>("has_living_cells");
         }
         /**
          * Create Model Runner
