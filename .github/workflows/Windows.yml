@@ -68,6 +68,8 @@ jobs:
         -DCMAKE_WARN_DEPRECATED="OFF"
         -DWARNINGS_AS_ERRORS="ON"
         -DCUDA_ARCH="${{ env.CUDA_ARCH }}"
+        -DUSE_NVCC_THREADS="OFF"
+        -DSEATBELTS="OFF"
 
     - name: Build
       working-directory: ${{ env.BUILD_DIR }}
