@@ -2,7 +2,7 @@
 #define ORCHESTRATOR_SRC_JSON_H_
 
 #include <string>
-
+#include "chemo_len.h"
 #include "structures.h"
 
 OrchestratorInput readOrchestratorInput(const std::string& inputFile);

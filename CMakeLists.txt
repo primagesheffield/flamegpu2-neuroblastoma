@@ -24,6 +24,7 @@ SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin/${CMAKE_BUILD
 # Prepare list of source files
 # Can't do this automatically, as CMake wouldn't know when to regen (as CMakeLists.txt would be unchanged)
 SET(COMMON_SRC
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/chemo_len.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/header.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/environment.cu
     ${CMAKE_CURRENT_SOURCE_DIR}/src/agents/neuroblastoma.cu
@@ -58,7 +59,7 @@ SET(ORCHESTRATOR_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/orchestrator_src/main.h
     ${CMAKE_CURRENT_SOURCE_DIR}/orchestrator_src/main.cu
     ${CMAKE_CURRENT_SOURCE_DIR}/orchestrator_src/json.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/orchestrator_src/json_in.cu
+    ${CMAKE_CURRENT_SOURCE_DIR}/orchestrator_src/json_in.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/orchestrator_src/json_out.cpp
 )
 add_flamegpu_executable(${PROJECT_NAME} "${ORCHESTRATOR_SRC}" "${FLAMEGPU_ROOT}" "${PROJECT_BINARY_DIR}" TRUE)  
