@@ -244,6 +244,8 @@ int main(int argc, const char** argv) {
     sim_out.delta_ecm = sim_out.ecm - (1 - cellularity_sum);
     // Write orchestrator output to disk
     writeOrchestratorOutput(sim_out, cfg.primageOutputFile);
+    // Output simulation time
+    printf("Simulation completed in %f seconds!\n", sim.getElapsedTimeSimulation());
     return 0;
 }
 RunConfig parseArgs(int argc, const char** argv) {
