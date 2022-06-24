@@ -6,21 +6,6 @@ FLAMEGPU_INIT_FUNCTION(ModelInit) {
     initNeuroblastoma(*FLAMEGPU);
     initSchwann(*FLAMEGPU);
     initGrid(*FLAMEGPU);
-    // Init cellularity/volume
-    const unsigned int validation_Nnbl = FLAMEGPU->environment.getProperty<unsigned int>("validation_Nnbl");
-    const unsigned int validation_Nscl = FLAMEGPU->environment.getProperty<unsigned int>("validation_Nscl");
-    const unsigned int TOTAL_CELL_COUNT = validation_Nnbl + validation_Nscl;
-    const float ecm = 1.0f - FLAMEGPU->environment.getProperty<float>("cellularity");
-    std::array<float, 6> cellularity = {};
-    if (TOTAL_CELL_COUNT) {
-        cellularity[0] = validation_Nnbl * (1.0f - ecm) / TOTAL_CELL_COUNT;
-        cellularity[3] = validation_Nscl * (1.0f - ecm) / TOTAL_CELL_COUNT;
-    }
-    FLAMEGPU->environment.setProperty<float, 6>("validation_cellularity", cellularity);
-    float tumour_volume = FLAMEGPU->environment.getProperty<float>("V_tumour");  // initial tumour volume
-    // Convert tumour volume to mm3
-    tumour_volume /= 1e+9;
-    FLAMEGPU->environment.setProperty<float>("validation_tumour_volume", tumour_volume);
 }
 
 void defineModel(flamegpu::ModelDescription& model) {

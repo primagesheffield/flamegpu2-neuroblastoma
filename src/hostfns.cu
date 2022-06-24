@@ -286,19 +286,16 @@ FLAMEGPU_HOST_FUNCTION(host_validation) {
         // Calc the numerator of the sd equation (refered to as mean2 here)
         // The custom transform/reduce, only accounts for variables with non zero values
         // Dead cells are all zero, but some living cells too
-        gpuErrchk(cudaMemcpyToSymbol(mean2_mean, &sim_out.sc_telomere_length_mean, sizeof(float)));
         double sc_telomere_length_mean2 = Schwann.transformReduce<int, double>("telo_count", mean2_transform, mean2_sum, 0);
-        gpuErrchk(cudaMemcpyToSymbol(mean2_mean, &sim_out.sc_necro_signal_mean, sizeof(float)));
         double sc_necro_signal_mean2 = Schwann.transformReduce<int, double>("necro_signal", mean2_transform, mean2_sum, 0);
-        gpuErrchk(cudaMemcpyToSymbol(mean2_mean, &sim_out.sc_apop_signal_mean, sizeof(float)));
         double sc_apop_signal_mean2 = Schwann.transformReduce<int, double>("apop_signal", mean2_transform, mean2_sum, 0);
         // Therefore, we add living cells with zero value to the sum too
         const auto sc_telomere_length_count0 = Schwann.count<int>("telo_count", 0);
-        sc_telomere_length_mean2 += (sc_telomere_length_count0 - (SC_apop_count + SC_necro_count)) * pow(sim_out.sc_telomere_length_mean, 2);
+        sc_telomere_length_mean2 += (sc_telomere_length_count0 - (SC_apop_count + SC_necro_count)) * pow(sc_telomere_length_mean, 2);
         const auto sc_necro_signal_count0 = Schwann.count<int>("necro_signal", 0);
-        sc_necro_signal_mean2 += (sc_necro_signal_count0 - (SC_apop_count + SC_necro_count)) * pow(sim_out.sc_necro_signal_mean, 2);
+        sc_necro_signal_mean2 += (sc_necro_signal_count0 - (SC_apop_count + SC_necro_count)) * pow(sc_necro_signal_mean, 2);
         const auto sc_apop_signal_count0 = Schwann.count<int>("apop_signal", 0);
-        sc_apop_signal_mean2 += (sc_telomere_length_count0 - (SC_apop_count + SC_necro_count)) * pow(sim_out.sc_apop_signal_mean, 2);
+        sc_apop_signal_mean2 += (sc_telomere_length_count0 - (SC_apop_count + SC_necro_count)) * pow(sc_apop_signal_mean, 2);
         // Divide and sqrt for the sd
         FLAMEGPU->environment.setProperty<float>("sc_telomere_length_sd", static_cast<float>(sqrt(sc_telomere_length_mean2 / SC_living_count)));
         FLAMEGPU->environment.setProperty<float>("sc_necro_signal_sd", static_cast<float>(sqrt(sc_necro_signal_mean2 / SC_living_count)));

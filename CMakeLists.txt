@@ -50,20 +50,3 @@ set_property(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"  PROPERTY VS_STARTUP_PROJEC
 set_target_properties("${PROJECT_NAME}" PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
                                                    VS_DEBUGGER_COMMAND_ARGUMENTS "-s 100")
 
-# Create a secondary target for the orchestrator interface
-project(orchestrator_FGPUNB CUDA CXX)
-SET(ORCHESTRATOR_SRC
-    ${COMMON_SRC}
-    ${CMAKE_CURRENT_SOURCE_DIR}/orchestrator_src/structures.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/orchestrator_src/main.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/orchestrator_src/main.cu
-    ${CMAKE_CURRENT_SOURCE_DIR}/orchestrator_src/json.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/orchestrator_src/json_in.cu
-    ${CMAKE_CURRENT_SOURCE_DIR}/orchestrator_src/json_out.cpp
-)
-add_flamegpu_executable(${PROJECT_NAME} "${ORCHESTRATOR_SRC}" "${FLAMEGPU_ROOT}" "${PROJECT_BINARY_DIR}" TRUE)  
-target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/orchestrator_src")
-
-# Reset the project so the host solution has the same name
-project(fgpu2_neuroblastoma CUDA CXX)

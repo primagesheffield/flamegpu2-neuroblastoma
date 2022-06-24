@@ -28,7 +28,7 @@ int main(int argc, const char ** argv) {
             runs.setSteps(336);
             runs.setRandomSimulationSeed(12, 1);
 	    runs.setRandomPropertySeed(34523);
-	    runs.setProperty<int>("orchestrator_time", 1);
+	    runs.setProperty<int>("orchestrator_time", 0);
 	    runs.setProperty<int>("histology_init", 0);
 	    runs.setProperty<int>("gradiff", 1);
 	    runs.setProperty<float>("V_tumour", powf(2000.0f, 3));
@@ -46,20 +46,20 @@ int main(int argc, const char ** argv) {
             runs.setProperty<unsigned int, 200>("chemo_start", chemo_start);
             runs.setProperty<unsigned int, 200>("chemo_end", chemo_end);
             runs.setProperty<float, 1200>("chemo_effects", chemo_effects);
-	    runs.setProperty<float>("extent_of_differentiation_mean", 0.5);
-	    runs.setProperty<float>("extent_of_differentiation_sd", 0.1);
-	    runs.setProperty<float>("nb_telomere_length_mean", 30);
-            runs.setProperty<float>("nb_telomere_length_sd", 3);
-	    runs.setProperty<float>("sc_telomere_length_mean", 30);
-	    runs.setProperty<float>("sc_telomere_length_mean", 3);
-            runs.setProperty<float>("nb_apop_signal_mean", 2);
-            runs.setProperty<float>("nb_apop_signal_sd", 1);
-            runs.setProperty<float>("sc_apop_signal_mean", 2);
-            runs.setProperty<float>("sc_apop_signal_sd", 1);
-            runs.setProperty<float>("nb_necro_signal_mean", 100);
-            runs.setProperty<float>("nb_necro_signal_sd", 10);
-            runs.setProperty<float>("sc_necro_signal_mean", 100);
-            runs.setProperty<float>("sc_necro_signal_sd", 10);
+	    //runs.setProperty<float>("extent_of_differentiation_mean", 0.25f);
+	    //runs.setProperty<float>("extent_of_differentiation_sd", 0.0f);
+	    //runs.setProperty<float>("nb_telomere_length_mean", 60.0f);
+            //runs.setProperty<float>("nb_telomere_length_sd", 0.0f);
+	    //runs.setProperty<float>("sc_telomere_length_mean", 60.0f);
+	    //runs.setProperty<float>("sc_telomere_length_mean", 0.0f);
+            //runs.setProperty<float>("nb_apop_signal_mean", 0.0f);
+            //runs.setProperty<float>("nb_apop_signal_sd", 0.0f);
+            //runs.setProperty<float>("sc_apop_signal_mean", 0.0f);
+            //runs.setProperty<float>("sc_apop_signal_sd", 0.0f);
+            //runs.setProperty<float>("nb_necro_signal_mean", 0.0f);
+            //runs.setProperty<float>("nb_necro_signal_sd", 0.0f);
+            //runs.setProperty<float>("sc_necro_signal_mean", 0.0f);
+            //runs.setProperty<float>("sc_necro_signal_sd", 0.0f);
         }
         /**
          * Create a logging config
