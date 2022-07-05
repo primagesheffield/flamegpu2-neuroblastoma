@@ -9,7 +9,7 @@ struct Version {
      * This function returns the model's semantic version [major, minor, patch].
      * This manually updated constant allows JSON exports to show the model version.
      */
-    int number[3] = {13, 9, 0};
+    int number[3] = {13, 9, 1};
     /**
      * Previous versions of the model used this flag to detect mismatches between input file version and model version
      * This is not currently implemented
