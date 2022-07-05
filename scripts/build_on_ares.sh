@@ -10,7 +10,7 @@
 ## Max task execution time (format is HH:MM:SS)
 #SBATCH --time=00:30:00
 ## Name of grant to which resource usage will be charged (primage1 or primage1gpu)
-#SBATCH -A plgprimage3-cpu
+#SBATCH -A plgprimage4-cpu
 ## Name of partition (plgrid-testing or plgrid-gpu)
 #SBATCH -p plgrid
 ## Specify that we want GPUs (if using plgrid-gpu)
