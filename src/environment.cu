@@ -418,7 +418,7 @@ FLAMEGPU_INIT_FUNCTION(InitDerivedEnvironment) {
     const int histology_init = FLAMEGPU->environment.getProperty<int>("histology_init");
     int histology;
     const int gradiff = FLAMEGPU->environment.getProperty<int>("gradiff");
-    float theta_sc;
+    float theta_sc = 0;
     // const float O2 = (2/72.0f) + (FLAMEGPU->random.uniform<float>() * (30 / 72.0f));  // rng in range [2/72, 32/72]
     if (histology_init == 1) {
         if (FLAMEGPU->random.uniform<float>() < 0.5f) {
@@ -467,7 +467,12 @@ FLAMEGPU_INIT_FUNCTION(InitDerivedEnvironment) {
     }
     FLAMEGPU->environment.setProperty<int>("histology", histology);
     FLAMEGPU->environment.setProperty<int>("gradiff", gradiff);
-    // FLAMEGPU->environment.setProperty<float>("cellularity", cellularity);
+    if (FLAMEGPU->environment.getProperty<int>("orchestrator_time") == 0) {
+        // Must update cellularity if orchestrator_time == 0
+        const float cellularity_total = FLAMEGPU->environment.getProperty<float>("cellularity", 0);
+        FLAMEGPU->environment.setProperty<float>("cellularity", 0, cellularity_total * (1.0f - theta_sc));
+        FLAMEGPU->environment.setProperty<float>("cellularity", 3, cellularity_total * theta_sc);
+    }
     FLAMEGPU->environment.setProperty<float>("theta_sc", theta_sc);
     // FLAMEGPU->environment.setProperty<float>("O2", O2);
     /**
