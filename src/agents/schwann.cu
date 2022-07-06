@@ -335,8 +335,6 @@ FLAMEGPU_AGENT_FUNCTION(sc_cell_lifecycle, flamegpu::MessageNone, flamegpu::Mess
         FLAMEGPU->agent_out.setVariable<int>("necro_signal", FLAMEGPU->getVariable<int>("necro_signal"));
         FLAMEGPU->agent_out.setVariable<int>("necro_critical", FLAMEGPU->getVariable<int>("necro_critical"));
         FLAMEGPU->agent_out.setVariable<int>("telo_count", FLAMEGPU->getVariable<int>("telo_count"));
-        FLAMEGPU->agent_out.setVariable<float>("degdiff", FLAMEGPU->getVariable<float>("degdiff"));
-        FLAMEGPU->agent_out.setVariable<float>("cycdiff", FLAMEGPU->getVariable<float>("cycdiff"));
         // Attribute Layer 1.
         FLAMEGPU->agent_out.setVariable<int>("hypoxia", FLAMEGPU->getVariable<int>("hypoxia"));
         FLAMEGPU->agent_out.setVariable<int>("nutrient", FLAMEGPU->getVariable<int>("nutrient"));
@@ -408,8 +406,6 @@ flamegpu::AgentDescription &defineSchwann(flamegpu::ModelDescription& model) {
         sc.newVariable<int>("necro_signal");
         // The number of necrotic signals required to trigger necrosis in the agent.
         sc.newVariable<int>("necro_critical");
-        sc.newVariable<float>("degdiff");
-        sc.newVariable<float>("cycdiff");
     }
     // Internal
     {
