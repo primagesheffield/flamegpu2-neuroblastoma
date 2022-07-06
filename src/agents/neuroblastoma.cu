@@ -6,20 +6,21 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
     const int s_necro = FLAMEGPU->getVariable<int>("necro");
     const unsigned int step_size = FLAMEGPU->environment.getProperty<unsigned int>("step_size");
     if (s_apop == 0 && s_necro == 0) {
-        // Update attribute layer 1, part 1.
-        // Detect the presence of stressors.
-        // The probability for necrosis due to hypoxia is given in a paper (Warren and Partridge, 2016).
-        // Drug delivery is assumed to be instantaneous.
-        // Note that the effects of p53 and p73 on DNA_damage are considered before p53 and p73 are updated.
         const float O2 = FLAMEGPU->environment.getProperty<float>("O2");
         const float Cs_O2 = FLAMEGPU->environment.getProperty<float>("Cs_O2");
         const float C50_necro = FLAMEGPU->environment.getProperty<float>("C50_necro");
         const float P_apopChemo = FLAMEGPU->environment.getProperty<float>("P_apopChemo");
         int s_DNA_damage = FLAMEGPU->getVariable<int>("DNA_damage");
+        // Detect the presence of stressors.
+        // The probability is derived from the hypoxic equilibrium, so it is time-independent.
         const int s_hypoxia = FLAMEGPU->random.uniform<float>() < (1 - O2 * Cs_O2 / (O2 * Cs_O2 + C50_necro)) ? 1 : 0;
         const int s_nutrient = FLAMEGPU->random.uniform<float>() < (1 - O2 * Cs_O2 / (O2 * Cs_O2 + C50_necro)) ? 0 : 1;
-        const int CHEMO_ACTIVE = FLAMEGPU->environment.getProperty<int>("CHEMO_ACTIVE");
-
+        const int CHEMO_ACTIVE = FLAMEGPU->environment.getProperty<int>("CHEMO_ACTIVE");  // Drug delivery is assumed to be instantaneous.
+        // Repair any damaged DNA and induce new damages to DNA.
+        // 1. p53 and p73 repair damaged DNA.
+        // 2. Shortened telomeres make the chromosomes unstable.
+        // 3. Hypoxia damages DNA.
+        // 4. Chemotherapy damages DNA.
         if (s_DNA_damage == 1) {
             if (FLAMEGPU->getVariable<int>("p53") == 1 || FLAMEGPU->getVariable<int>("p73") == 1)
                 s_DNA_damage = 0;
@@ -50,7 +51,10 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
         FLAMEGPU->setVariable<int>("hypoxia", s_hypoxia);
         FLAMEGPU->setVariable<int>("nutrient", s_nutrient);
 
-        // Update necrotic signals, starting with the signals from necrotic cells.
+        // Update necrotic signals.
+        // 1. Signals from necrotic cells.
+        // 2. Glycolysis produces lactic acid even if it is successful.
+        // 3. Lack of nutrients other than oxygen.
         const glm::ivec3 gid = toGrid(FLAMEGPU, FLAMEGPU->getVariable<glm::vec3>("xyz"));
         const glm::uvec3 grid_origin = FLAMEGPU->environment.getProperty<glm::uvec3>("grid_origin");
         const glm::uvec3 grid_dims = FLAMEGPU->environment.getProperty<glm::uvec3>("grid_dims");
@@ -101,10 +105,9 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
         }
         FLAMEGPU->setVariable<int>("necro_signal", s_necro_signal);
 
-        // Update attribute layer 3,part 1.
-        // Let the intracellular signalling molecules respond to changes.
-        // Note that the effects of p53 and p73 on HIF are considered before p53 and p73 are updated.
-        // Chemotherapy inhibits CHK1, JAB1, HIF, MYCN, and p53. It is assumed that drug delivery is instantaneous.
+        // Update most of the intracellular species.
+        // Note that the effects of p53and p73 on HIF are considered before p53and p73 are updated.
+        // Chemotherapy inhibits CHK1, JAB1, HIF, MYCN, and p53.It is assumed that drug delivery is instantaneous.
         const int CHEMO_OFFSET = CHEMO_ACTIVE ? FLAMEGPU->environment.getProperty<int>("CHEMO_OFFSET") : 0;
         const float s_MYCN_fn = FLAMEGPU->getVariable<float>("MYCN_fn");
         const float s_MAPK_RAS_fn = FLAMEGPU->getVariable<float>("MAPK_RAS_fn");
@@ -197,8 +200,7 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
         FLAMEGPU->setVariable<int>("BAK_BAX", s_BAK_BAX);
         FLAMEGPU->setVariable<int>("CAS", s_CAS);
 
-        // Update attribute layer 1, part 2.
-        // Detect the presence of stressors.
+        // Try to repair any unreplicated DNA and consider the effects of unreplicated DNA on the intracellular species.
         int s_DNA_unreplicated  = FLAMEGPU->getVariable<int>("DNA_unreplicated");
         if (s_DNA_unreplicated == 1) {
             if (s_p53 == 1 || s_p73 == 1) {
@@ -206,8 +208,7 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
                 FLAMEGPU->setVariable<int>("DNA_unreplicated", 0);
             }
         }
-        // Update attribute layer 3, part 2.
-        // Let the intracellular signalling molecules respond to changes.
+
         const float s_CDS1_fn = FLAMEGPU->getVariable<float>("CDS1_fn");
         const float s_CDC25C_fn = FLAMEGPU->getVariable<float>("CDC25C_fn");
         const int s_CDS1 = (FLAMEGPU->random.uniform<float>() < s_CDS1_fn && s_DNA_unreplicated == 1) ? 1 : 0;
@@ -215,7 +216,7 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
         FLAMEGPU->setVariable<int>("CDS1", s_CDS1);
         FLAMEGPU->setVariable<int>("CDC25C", s_CDC25C);
 
-        // The influence of Schwann cells on neuroblast differentiation.
+        // Differentiation due to stimulation from Schwann cells.
         const auto Nnbl = FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nnbl_grid");
         const auto Nscl = FLAMEGPU->environment.getMacroProperty<unsigned int, GMD, GMD, GMD>("Nscl_grid");
         unsigned int dummy_Nnbl = Nnbl[gid.x][gid.y][gid.z];
@@ -264,9 +265,9 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
         FLAMEGPU->setVariable<float>("cycdiff", 1.0f - s_degdiff);
 
         // Update apoptotic signals.
-        // Source 1: CAS.
-        // Source 2: Missing DNA damage response pathways.
-        // Source 3: Schwann cells.
+        // 1. CAS triggers apoptosis.
+        // 2. CAS - independent pathways linking damaged DNA to apoptosis.
+        // 3. Schwann cells induce apoptosis.
         const float nbapop_jux = FLAMEGPU->environment.getProperty<float>("nbapop_jux");
         const float nbapop_para = FLAMEGPU->environment.getProperty<float>("nbapop_para");
         const float P_apoprp = FLAMEGPU->environment.getProperty<float>("P_apoprp");
@@ -292,7 +293,7 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
         }
         FLAMEGPU->setVariable<int>("apop_signal", s_apop_signal);
 
-        // Update apoptotic status and necrotic status.
+        // Check if a cell is living, apoptotic, or necrotic.
         const int apop_critical = FLAMEGPU->environment.getProperty<int>("apop_critical");
         const int s_necro_critical = FLAMEGPU->getVariable<int>("necro_critical");
         if (s_apop_signal >= apop_critical) {
@@ -365,12 +366,11 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
 __device__ __forceinline__ void Neuroblastoma_cell_cycle(flamegpu::DeviceAPI<flamegpu::MessageNone, flamegpu::MessageNone>* FLAMEGPU) {
     // Progress through the neuroblastoma cell cycle.
     // Cell cycle : 0 = G0, 1 = G1 / S, 2 = S / G2, 3 = G2 / M, 4 = division.
-    // Regulatory mechanisms:
-    //      1. Contact inhibition.
-    //      2. ATP availability.
-    //      3. Apoptotic / Necrotic status.
-    //      4. Extent of differentiation.
-    //      5. Gene products.
+    // Regardless of the cell cycle stage, the neuroblast is subjected to several regulatory mechanisms.
+    // 1. Basal cycling rate.
+    // 2. Contact inhibition.
+    // 3. ATP availability.
+    // 4. Not being apoptotic/necrotic.
     const glm::uvec4 cycle_stages = FLAMEGPU->environment.getProperty<glm::uvec4>("cycle_stages");
     const int N_neighbours = FLAMEGPU->environment.getProperty<int>("N_neighbours");
     const unsigned int step_size = FLAMEGPU->environment.getProperty<unsigned int>("step_size");
@@ -586,19 +586,18 @@ FLAMEGPU_AGENT_FUNCTION(nb_validation, flamegpu::MessageNone, flamegpu::MessageN
 
 flamegpu::AgentDescription& defineNeuroblastoma(flamegpu::ModelDescription& model) {
     auto& nb = model.newAgent("Neuroblastoma");
-    // Spatial coordinates (integration with imaging biomarkers).
-    {
-        nb.newVariable<float, 3>("xyz");
-    }
-    // Data Layer 1 (integration with molecular biomarkers).
+    // The agent's mutation profile.
+    // Each mutation is represented by a Boolean variable except ALK, which can take three discrete values.
     {
         nb.newVariable<int>("MYCN_amp");
         nb.newVariable<int>("TERT_rarngm");
         nb.newVariable<int>("ATRX_inact");
         nb.newVariable<int>("ALT");
-        nb.newVariable<int>("ALK");
+        nb.newVariable<int>("ALK");  // For ALK, 0 means wild type, 1 means ALK amplification or activation, and 2 means other RAS mutations.
     }
-    // Data Layer 2 (integration with molecular biomarkers).
+    // Functional activities of various intracellular species.
+    // All variables are continuous(0 to 1).
+    // Note that MYCN_fnand MAPK_RAS_fn depend on the mutation profile.
     {
         nb.newVariable<float>("MYCN_fn00");
         nb.newVariable<float>("MYCN_fn10");
@@ -613,9 +612,6 @@ flamegpu::AgentDescription& defineNeuroblastoma(flamegpu::ModelDescription& mode
         nb.newVariable<float>("p53_fn");
         nb.newVariable<float>("p73_fn");
         nb.newVariable<float>("HIF_fn");
-    }
-    // Data Layer 3 (integration with molecular biomarkers).
-    {
         nb.newVariable<float>("CHK1_fn");
         nb.newVariable<float>("p21_fn");
         nb.newVariable<float>("p27_fn");
@@ -630,52 +626,66 @@ flamegpu::AgentDescription& defineNeuroblastoma(flamegpu::ModelDescription& mode
         nb.newVariable<float>("CAS_fn");
         nb.newVariable<float>("VEGF_fn");
     }
-    // Initial Conditions
+    // The agent's spatial coordinates, which are continuous variables.
+    // By default, it's randomly assigned as the imaging biomarkers are not resolved at this scale.
+    // If the initial domain is a sphere rather than a cube, this algorithm ensures that the agents are uniformly distributed throughout
+    // the tumour.https://karthikkaranth.me/blog/generating-random-points-in-a-sphere/#using-normally-distributed-random-numbers
     {
-        // Fx, Fy, and Fz are forces in independent directions (kg s-2 micron).
-        nb.newVariable<float, 3>("Fxyz");
-        // overlap is the cell's overlap with its neighbouring cells.
-        nb.newVariable<float>("overlap");
-        // neighbours is the number of cells within the cell's search distance.
-        nb.newVariable<int>("neighbours");
-        // mobile indicates whether the neuroblast is mobile.
-        nb.newVariable<int>("mobile");
-        // ATP indicates whether the neuroblast has sufficient energy.
-        nb.newVariable<int>("ATP");
-        // cycle is a flag (continuous, 0 to 4) indicating the cell's position in the cell cycle.
-        nb.newVariable<unsigned int>("cycle");
-        // apop indicates if the cell is apoptotic. It is a Boolean variable.
-        nb.newVariable<int>("apop");
-        // apop_signal is the total number of apoptotic signals. Maximum is 3 (Elmore, 2007).
-        nb.newVariable<int>("apop_signal");
-        // necro indicates if the cell is necrotic. It is a Boolean variable.
-        nb.newVariable<int>("necro");
-        // necro_signal is the total number of necrotic signals. Maximum is 168 (Warren et al., 2016).
-        nb.newVariable<int>("necro_signal");
-        // necro_critical is the number of necrotic signals required to trigger necrosis in a neuroblast. It is between 3 and 168, inclusive (Warren et al., 2016).
-        nb.newVariable<int>("necro_critical");
-        // telo_count is the total number of telomere units. The maximum is 60 (Hayflick et al., 1961).
-        nb.newVariable<int>("telo_count");
-        // the degree of differentiation (0 means an undifferentiated neuroblast, 1 means a poorly differentiated one, and 2 means a fully differentiated one).
-        nb.newVariable<float>("degdiff");
-        // the probability of the neuroblast entering the cell cycle (G0 to G1), determined by degdiff and time-independent, i.e. at equilibrium.
-        nb.newVariable<float>("cycdiff");
+        nb.newVariable<float, 3>("xyz");
     }
-    // Attribute Layer 1.
-    // MYCN's effects on p53 depend on the former's amplification status(Tang et al., 2006).
-    // Note that the effects of p53 and p73 on HIF are considered before p53 and p73 are updated.
+    // Mechanically related attributes.
     {
+        // Fx, Fy, and Fz: Forces in independent directions(kg s - 2 micron).
+        nb.newVariable<float, 3>("Fxyz");
+        // The agent's overlap with its neighbouring agents.
+        nb.newVariable<float>("overlap");
+        // The number of agents within the agent's search distance.
+        nb.newVariable<int>("neighbours");
+        // This Boolean variable indicates whether the agent is mobile.
+        nb.newVariable<int>("mobile");
+    }
+    // Stressors affecting the agent.
+    {
+        // This Boolean variable indicates whether the agent is hypoxic.
         nb.newVariable<int>("hypoxia");
+        // This Boolean variable indicates whether the agent has sufficient nutrients (other than O2).
         nb.newVariable<int>("nutrient");
+        // This Boolean variable indicates whether the agent has sufficient energy.
+        nb.newVariable<int>("ATP");
+        // The total number of telomere units in the agent, a discrete variable ranging from zero to 60.
+        nb.newVariable<int>("telo_count");
+        // This Boolean variable indicates whether the agent has damaged DNA.
         nb.newVariable<int>("DNA_damage");
+        // This Boolean variable indicates whether the agent has unreplicated DNA.
         nb.newVariable<int>("DNA_unreplicated");
     }
-    // Attribute Layer 2.
+    // Attributes about the agent's cycling progress.
+    {
+        // This flag (continuous, 0 to 4) indicates the agent's position in the cell cycle.
+        nb.newVariable<unsigned int>("cycle");
+        // Degree of differentiation (continuous between 0 and 1).
+        nb.newVariable<float>("degdiff");
+        // Probability that the agent enters the cell cycle (G0 to G1).
+        nb.newVariable<float>("cycdiff");
+    }
+    // Attributes about the agent's progress towards apoptosis and necrosis.
+    {
+        // This Boolean variable indicates if the agent is apoptotic.
+        nb.newVariable<int>("apop");
+        // The total number of apoptotic signals in the agent.
+        nb.newVariable<int>("apop_signal");
+        // This Boolean variable indicates if the agent is necrotic.
+        nb.newVariable<int>("necro");
+        // The total number of necrotic signals in the agent.
+        nb.newVariable<int>("necro_signal");
+        // The number of necrotic signals required to trigger necrosis in the agent.
+        nb.newVariable<int>("necro_critical");
+    }
+    // Attributes indicating the status of each intracellular species.
+    // These Boolean variables are informed by the mutation profile and functional activities of the species.
     {
         nb.newVariable<int>("telo");
-    }
-    // Attribute Layer 3.
-    {
+        // nb.newVariable<int>("ALT");  // Already declared above
         nb.newVariable<int>("MYCN");
         nb.newVariable<int>("MAPK_RAS");
         nb.newVariable<int>("JAB1");

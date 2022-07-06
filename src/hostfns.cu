@@ -88,8 +88,8 @@ FLAMEGPU_HOST_FUNCTION(vasculature) {
     // Case 1:
     // Set up the initial vasculature in terms of the amount of oxygen it supplies in one time step.
     // The assumption is that it can supply the amount consumed by the initial population of living neuroblasts and Schwann cells in one time step.
-    // Case 2 :
-    // When there are more living VEGF - producing neuroblasts than living Schwann cells, an angiogenic signal is produced.
+    // Case 2:
+    // When there are more living VEGF-producing neuroblasts than living Schwann cells, an angiogenic signal is produced.
     // When there are enough angiogenic signals, calculate the amount of oxygen consumed by the current population of living cells.
     // Take this as the new oxygen supply rate if it exceeds the old rate.
     const unsigned int t = FLAMEGPU->getStepCounter();  // This should be step_count + 1, however step count is incremented early by calculate_convergence

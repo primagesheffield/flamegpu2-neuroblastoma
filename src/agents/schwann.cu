@@ -6,11 +6,6 @@ __device__ __forceinline__ void Schwann_sense(flamegpu::DeviceAPI<flamegpu::Mess
     const int s_necro = FLAMEGPU->getVariable<int>("necro");
     const unsigned int step_size = FLAMEGPU->environment.getProperty<unsigned int>("step_size");
     if (s_apop == 0 && s_necro == 0) {
-        // Detect the presence of stressors.
-        // The probability for necrosis due to hypoxia is given in a paper(Warren and Partridge, 2016).
-        // 1. Hypoxia and lack of nutrients.
-        // 2. Shortened telomeres.
-        // 3. Chemotherapy, assuming drug delivery is instantaneous.
         const float O2 = FLAMEGPU->environment.getProperty<float>("O2");
         const float Cs_O2 = FLAMEGPU->environment.getProperty<float>("Cs_O2");
         const float C50_necro = FLAMEGPU->environment.getProperty<float>("C50_necro");
@@ -18,6 +13,8 @@ __device__ __forceinline__ void Schwann_sense(flamegpu::DeviceAPI<flamegpu::Mess
         const float P_apopChemo = FLAMEGPU->environment.getProperty<float>("P_apopChemo");
         int s_DNA_damage = FLAMEGPU->getVariable<int>("DNA_damage");
         const int s_telo_count = FLAMEGPU->getVariable<int>("telo_count");
+        // Detect the presence of stressors in the microenvironment.
+        // The probability for necrosis due to hypoxia is given in a paper (Warren and Partridge, 2016).
         const int s_hypoxia = FLAMEGPU->random.uniform<float>() < (1 - O2 * Cs_O2 / (O2 * Cs_O2 + C50_necro)) ? 1 : 0;
         const int s_nutrient = FLAMEGPU->random.uniform<float>() < (1 - O2 * Cs_O2 / (O2 * Cs_O2 + C50_necro)) ? 0 : 1;
         const int CHEMO_ACTIVE = FLAMEGPU->environment.getProperty<int>("CHEMO_ACTIVE");
@@ -29,6 +26,11 @@ __device__ __forceinline__ void Schwann_sense(flamegpu::DeviceAPI<flamegpu::Mess
         const float chemo4 = FLAMEGPU->environment.getProperty<float>("chemo_effects", CHEMO_OFFSET + 4);
         const float chemo5 = FLAMEGPU->environment.getProperty<float>("chemo_effects", CHEMO_OFFSET + 5);
         const int chemo_status = (CHEMO_ACTIVE && FLAMEGPU->random.uniform<float>() < (chemo0 + chemo1 + chemo2 + chemo3 + chemo4 + chemo5) / 6) ? 1 : 0;
+        // Repair any damaged DNA and induce new damages to DNA.
+        // 1. Shortened telomeres make the chromosomes unstable.
+        // 2. Hypoxia damages DNA.
+        // 3. Chemotherapy damages DNA.
+        // 4. In the absence of chemotherapy, let the cell repair its DNA.
         if (s_DNA_damage == 0) {
             const float P_DNA_damageHypo = FLAMEGPU->environment.getProperty<float>("P_DNA_damageHypo");
             const int telo_critical = FLAMEGPU->environment.getProperty<int>("telo_critical");
@@ -49,6 +51,7 @@ __device__ __forceinline__ void Schwann_sense(flamegpu::DeviceAPI<flamegpu::Mess
             s_DNA_damage = 0;
         }
 
+        // If chemotherapy is inactive, let the cell repair its unreplicated DNA.
         const int s_DNA_unreplicated = FLAMEGPU->getVariable<int>("DNA_unreplicated");
         if (s_DNA_unreplicated == 1) {
             const float P_unrepDNArp = FLAMEGPU->environment.getProperty<float>("P_unrepDNArp");
@@ -60,7 +63,10 @@ __device__ __forceinline__ void Schwann_sense(flamegpu::DeviceAPI<flamegpu::Mess
         FLAMEGPU->setVariable<int>("hypoxia", s_hypoxia);
         FLAMEGPU->setVariable<int>("nutrient", s_nutrient);
 
-        // Update necrotic signals, starting with the signals from necrotic cells.
+        // Update necrotic signals.
+        // 1. Signals from necrotic cells.
+        // 2. Glycolysis produces lactic acid even if it is successful.
+        // 3. Lack of nutrients other than oxygen.
         const glm::ivec3 gid = toGrid(FLAMEGPU, FLAMEGPU->getVariable<glm::vec3>("xyz"));
         const glm::uvec3 grid_origin = FLAMEGPU->environment.getProperty<glm::uvec3>("grid_origin");
         const glm::uvec3 grid_dims = FLAMEGPU->environment.getProperty<glm::uvec3>("grid_dims");
@@ -114,7 +120,9 @@ __device__ __forceinline__ void Schwann_sense(flamegpu::DeviceAPI<flamegpu::Mess
         FLAMEGPU->setVariable<int>("necro_signal", s_necro_signal);
 
         // Update apoptotic signals.
-        // CAS is activated by DNA damage or hypoxia.
+        // 1. CAS is activated by hypoxia. Since CAS is not considered for Schwann cells, the inputs are linked to the apoptotic signals directly.
+        // 2. CAS is activated by DNA damages, but chemo disrupts the pathways linking these damages to CAS. Since CAS is not considered for Schwann cells, the inputs are linked to the apoptotic signals directly.
+        // 3. Missing DNA damage response pathways.
         const float P_apoprp = FLAMEGPU->environment.getProperty<float>("P_apoprp");
         int s_apop_signal = FLAMEGPU->getVariable<int>("apop_signal");
         const unsigned int s_cycle = FLAMEGPU->getVariable<unsigned int>("cycle");
@@ -137,7 +145,7 @@ __device__ __forceinline__ void Schwann_sense(flamegpu::DeviceAPI<flamegpu::Mess
         }
         FLAMEGPU->setVariable<int>("apop_signal", s_apop_signal);
 
-        // Update apoptotic status and necrotic status.
+        // Check if a cell is living, apoptotic, or necrotic.
         const int apop_critical = FLAMEGPU->environment.getProperty<int>("apop_critical");
         const int s_necro_critical = FLAMEGPU->getVariable<int>("necro_critical");
         if (s_apop_signal >= apop_critical) {
@@ -168,16 +176,9 @@ __device__ __forceinline__ void Schwann_sense(flamegpu::DeviceAPI<flamegpu::Mess
 __device__ __forceinline__ void Schwann_cell_cycle(flamegpu::DeviceAPI<flamegpu::MessageNone, flamegpu::MessageNone>* FLAMEGPU) {
     // Progress through the Schwann cell's cell cycle.
     // In the cell cycle, 0 = G0, 1 = G1 / S, 2 = S / G2, 3 = G2 / M, 4 = division.
-    // Regulatory mechanisms :
-    //      1. Contact inhibition.
-    //      2. ATP availability.
-    //      3. Apoptotic / Necrotic status.
-    //      4. Extent of differentiation.
-    //      5. Stimulation from neuroblasts.
-    //      6. DNA damage and unreplicated DNA.
-    //      7. Hypoxia.
-    // DNA damage and hypoxia must both be off during G1 and S because each can switch on p21 and p27 to arrest cycling.
-    // Either DNA damage or unreplicated DNA can switch off CDC25C to arrest G2 / M transition.
+    // The Schwann cell's ability to cycle depends on stimulation from the neuroblastic population.
+    // Therefore, count the neuroblasts and Schwann cells in the 3D von Neumann neighbourhood.
+    // Then, decide whether the stimulation is sufficient. If not, the Schwann cell has to rely on its basal cycling rate.
 
     // Decide our voxel
     const glm::ivec3 gid = toGrid(FLAMEGPU, FLAMEGPU->getVariable<glm::vec3>("xyz"));
@@ -224,13 +225,16 @@ __device__ __forceinline__ void Schwann_cell_cycle(flamegpu::DeviceAPI<flamegpu:
     // The influence of neuroblasts on Schwann cell proliferation.
     bool dummy_scpro;
     if (FLAMEGPU->random.uniform<float>() < step_size*scpro_jux*dummy_Nnbl / static_cast<float>(dummy_Nnbl + dummy_Nscl)) {
+        // Juxtacrine signallings.
         dummy_scpro = true;
     } else if (FLAMEGPU->random.uniform<float>() < step_size*scpro_para*Nnbl_count / static_cast<float>(Nnbl_count + Nscl_count)) {
+        // Paracrine signallings.
         dummy_scpro = true;
     } else {
         dummy_scpro = false;
     }
     const float P_cycle_sc = FLAMEGPU->environment.getProperty<float>("P_cycle_sc");
+    // Basal cycling rate provides a last chance.
     const bool dummy_scycle = (dummy_scpro == 1 || FLAMEGPU->random.uniform<float>() < P_cycle_sc) ? true : false;
 
     // In the cell cycle, 0[12] = G0, 1[6] = G1/S, 2[4] = S/G2, 3[2] = G2/M, 4[0] = division.
@@ -243,21 +247,30 @@ __device__ __forceinline__ void Schwann_cell_cycle(flamegpu::DeviceAPI<flamegpu:
     const int s_DNA_damage = FLAMEGPU->getVariable<int>("DNA_damage");
     const int s_DNA_unreplicated = FLAMEGPU->getVariable<int>("DNA_unreplicated");
     const int s_hypoxia = FLAMEGPU->getVariable<int>("hypoxia");
+    // Regardless of the cell cycle stage, the Schwann cell is subjected to several regulatory mechanisms.
+    // 1. Basal cycling rate and stimulation from Schwann cells.
+    // 2. Contact inhibition.
+    // 3. ATP availability.
+    // 4. Not being apoptotic/necrotic.
     if (dummy_scycle && s_neighbours <= N_neighbours && s_ATP == 1 && s_apop == 0 && s_necro == 0) {
         if (s_cycle < cycle_stages[0]) {
             if (s_cycle == 0) {
                 if (s_DNA_damage == 0 && s_hypoxia == 0) {
+                    // DNA damage and hypoxia must both be off during G1 and S because each can switch on p21 and p27 to arrest cycling.
                     s_cycle += step_size;
                 }
             } else if (s_DNA_damage == 0 && s_hypoxia == 0) {
+                // DNA damage and hypoxia must both be off during G1 and S because each can switch on p21 and p27 to arrest cycling.
                 s_cycle += step_size;
             }
         } else if (s_cycle < cycle_stages[1]) {
             if (s_DNA_damage == 0 && s_hypoxia == 0) {
+                // DNA damage and hypoxia must both be off during G1 and S because each can switch on p21 and p27 to arrest cycling.
                 s_cycle += step_size;
                 if (s_DNA_unreplicated == 0) {
                     const float P_unrepDNA = FLAMEGPU->environment.getProperty<float>("P_unrepDNA");
                     const float P_unrepDNAHypo = FLAMEGPU->environment.getProperty<float>("P_unrepDNAHypo");
+                    // The cell's DNA replicates in the S phase.
                     if (FLAMEGPU->random.uniform<float>() < P_unrepDNA * step_size) {
                         FLAMEGPU->setVariable<int>("DNA_unreplicated", 1);
                     } else if (FLAMEGPU->random.uniform<float>() < P_unrepDNAHypo * step_size && s_hypoxia == 1) {
@@ -268,6 +281,7 @@ __device__ __forceinline__ void Schwann_cell_cycle(flamegpu::DeviceAPI<flamegpu:
         } else if (s_cycle < cycle_stages[2]) {
             s_cycle += step_size;
             if (s_cycle >= cycle_stages[2] && (s_DNA_damage == 1 || s_DNA_unreplicated == 1)) {
+                // Either DNA damage or unreplicated DNA can switch off CDC25C to arrest G2/M transition.
                 s_cycle -= step_size;
             }
         } else if (s_cycle < cycle_stages[3]) {
@@ -347,34 +361,55 @@ FLAMEGPU_AGENT_FUNCTION(sc_validation, flamegpu::MessageNone, flamegpu::MessageN
 
 flamegpu::AgentDescription &defineSchwann(flamegpu::ModelDescription& model) {
     auto& sc = model.newAgent("Schwann");
-    // Data Layer 0 (integration with imaging biomarkers)
+    // The agent's spatial coordinates, which are continuous variables.
+    // By default, it's randomly assigned as the imaging biomarkers are not resolved at this scale.
+    // If the initial domain is a sphere rather than a cube, this algorithm ensures that the agents are uniformly distributed throughout
+    // the tumour. https://karthikkaranth.me/blog/generating-random-points-in-a-sphere/#using-normally-distributed-random-numbers
     {
         sc.newVariable<float, 3>("xyz");
     }
-    // Initial Conditions.
+    // Mechanically related attributes.
     {
+        // Fx, Fy, and Fz: Forces in independent directions (kg s-2 micron).
         sc.newVariable<float, 3>("Fxyz");
+        // The agent's overlap with its neighbouring agents.
         sc.newVariable<float>("overlap");
-        // neighbours is the number of cells within the cell's search distance.
+        // The number of agents within the agent's search distance.
         sc.newVariable<int>("neighbours");
+        // This Boolean variable indicates whether the agent is mobile.
         sc.newVariable<int>("mobile");
+    }
+    // Stressors affecting the agent.
+    {
+        // This Boolean variable indicates whether the agent is hypoxic.
+        sc.newVariable<int>("hypoxia");
+        // This Boolean variable indicates whether the agent has sufficient nutrients (other than O2).
+        sc.newVariable<int>("nutrient");
+        // This Boolean variable indicates whether the agent has sufficient energy.
         sc.newVariable<int>("ATP");
-        sc.newVariable<unsigned int>("cycle");
-        sc.newVariable<int>("apop");
-        sc.newVariable<int>("apop_signal");
-        sc.newVariable<int>("necro");
-        sc.newVariable<int>("necro_signal");
-        sc.newVariable<int>("necro_critical");
+        // This Boolean variable indicates whether the agent has sufficient energy.
         sc.newVariable<int>("telo_count");
+        // This Boolean variable indicates whether the agent has damaged DNA.
+        sc.newVariable<int>("DNA_damage");
+        // This Boolean variable indicates whether the agent has unreplicated DNA.
+        sc.newVariable<int>("DNA_unreplicated");
+    }
+    // Attributes about the agent's progress towards cycling, apoptosis, and necrosis.
+    {
+        // This flag (continuous, 0 to 4) indicates the agent's position in the cell cycle.
+        sc.newVariable<unsigned int>("cycle");
+        // This Boolean variable indicates if the agent is apoptotic.
+        sc.newVariable<int>("apop");
+        // The total number of apoptotic signals in the agent.
+        sc.newVariable<int>("apop_signal");
+        // This Boolean variable indicates if the agent is necrotic.
+        sc.newVariable<int>("necro");
+        // The total number of necrotic signals in the agent.
+        sc.newVariable<int>("necro_signal");
+        // The number of necrotic signals required to trigger necrosis in the agent.
+        sc.newVariable<int>("necro_critical");
         sc.newVariable<float>("degdiff");
         sc.newVariable<float>("cycdiff");
-    }
-    // Attribute Layer 1
-    {
-        sc.newVariable<int>("hypoxia");
-        sc.newVariable<int>("nutrient");
-        sc.newVariable<int>("DNA_damage");
-        sc.newVariable<int>("DNA_unreplicated");
     }
     // Internal
     {
