@@ -1,19 +1,31 @@
 #include "header.h"
+
 /**
- * integration with imaging biomarkers
+ * Version 13.9+ is the PRIMAGE-facing version of the neuroblastoma model.
+ * It supports precise action of chemotherapeutics on intracellular protein species.
+ * This file contains all the parameters and initial conditions of the model,
+ * either defined directly or derived.
  */
+
 void data_layer_0(flamegpu::ModelDescription& model) {
     auto& env = model.Environment();
+    /**
+     * Integration with imaging biomarkers, part 1
+     */
     // Initial volume of tumour (cubic micron).
     env.newProperty<float>("V_tumour", powf(2000.0f, 3));  // 2e6);
     // Factor by which the tumour can expand in all three directions.
     // According to Aherne and Buck (1971), the volume doubling time is around 60 days.
-    // Note that this is illustrative and unrealistic.
-    // The orchestrator must provide more details about the boundary geometry, potentially different parameters for different directions.
     env.newProperty<float>("boundary_max", 1.26f);
-    // Half of a voxel's side length in microns.
-    // This must be at least as big as R_cell.
-    env.newProperty<float>("R_voxel", 15);
+    // Displacement magnitude in the boundary
+    env.newProperty<float, 3>("displace", { 2, 2, 2 });
+    /**
+     * Integration with imaging biomarkers, part 2
+     */
+    // Initial cellularity in the tumour (continuous, 0.05 to 0.95).
+    // (living, apoptotic, necrotic neuroblasts and Schwann cells)
+    // This is always set via input file
+    env.newProperty<float, 6>("cellularity", {});
     // Histology type (0 is neuroblastoma, 1 is ganglioneuroblastoma, 2 is nodular ganglioneuroblastoma, 3 is intermixed ganglioneuroblastoma, 4 is ganglioneuroma, 5 is maturing ganglioneuroma, and 6 is mature ganglioneuroma).
     // If it is a ganglioneuroblastoma or a ganglioneuroma, assign the subtype stochastically.
     env.newProperty<int>("histology_init", 0);
@@ -21,39 +33,28 @@ void data_layer_0(flamegpu::ModelDescription& model) {
     env.newProperty<int>("histology", 0);
     // DERIVED: Grade of differentiation for neuroblastoma (0 is undifferentiated, 1 is pooly differentiated, and 2 is differentiating).
     env.newProperty<int>("gradiff", 0);
-    // Initial cell density of tumour (cells per cubic micron).
-    // 1.91e-3 cells per cubic micron (Louis and Shohet, 2015).
-    // In a tumour with limited stroma, and whose cells are small, this number is 1e9 cells/cm3 or 1e-3 cells/cubic micron (Del Monte, 2009).
-    // However, because cells have different sizes and shapes, the number can be as low as 3.7e7 cells/cm3 in a tumour without extracellular structures (Del Monte, 2009).
-    env.newProperty<float>("rho_tumour", static_cast<float>(9.39e-05));
-    // Cell radius.
-    // The radii of most animal cells range from 5 to 15 microns (Del Monte, 2009).
-    env.newProperty<float>("R_cell", 11/2.0f);
-    // DERIVED: Initial oxygen level (continuous, 0 to 1).
-    // Oxygen concentration in the kidney = 72 mmHg (Carreau et al., 2011), chosen as concentration scale.
-    // Oxygen concentration in hypoxic tumours = 2 to 32 mmHg (McKeown, 2014).
-    env.newProperty<float>("O2", 0);
-    // Number of cycles of chemotherapy.
-    env.newProperty<unsigned int>("chemo_number", 2);
-    // Time point at which the chemotherapeutic agents become effective.
-    std::array<unsigned int, CHEMO_LEN> chemo_start = {0, 240};
-    env.newProperty<unsigned int, CHEMO_LEN>("chemo_start", chemo_start);
-    // Time point at which the chemotherapeutic agents stop being effective.
-    std::array<unsigned int, CHEMO_LEN> chemo_end = {96, 336};
-    env.newProperty<unsigned int, CHEMO_LEN>("chemo_end", chemo_end);
-    // Probability that the following species is inhibited by the chemotherapeutic agents.
-    // CHK1, JAB1, HIF, MYCN, TEP1, and p53.
-    std::array<float, 6 * CHEMO_LEN> chemo_effects = {0.602666f, 0.602666f, 0.602666f, 0.602666f, 0.602666f, 0.602666f};
-    env.newProperty<float, 6 * CHEMO_LEN>("chemo_effects", chemo_effects);
-    // Default values of variables in toggle_chemo.
-    env.newProperty<int>("CHEMO_ACTIVE", 0);
-    env.newProperty<int>("CHEMO_OFFSET", -1);
     // DERIVED: Fraction of Schwann cells in the cell population (continuous, 0 to 1).
     env.newProperty<float>("theta_sc", 0.5);
-    // Sensitivity of the boundary displacement field to invasion into the boundary
-    // Note that this is illustrative and unrealistic.
-    // The orchestrator must provide the parameters of a displacement function.
-    env.newProperty<float, 3>("displace", {2, 2, 2});
+    /**
+     * Integration with imaging biomarkers, part 3
+     */
+     // DERIVED: Initial oxygen level (continuous, 0 to 1).
+     // scaled by the level in the kidney, 72 mmHg (Carreau et al., 2011).
+    env.newProperty<float>("O2", 0);
+    // Time points at which chemo cycles begin.
+    std::array<unsigned int, CHEMO_LEN> chemo_start = { 0, 240 };
+    env.newProperty<unsigned int, CHEMO_LEN>("chemo_start", chemo_start);
+    // Time points at which chemo cycles end.
+    std::array<unsigned int, CHEMO_LEN> chemo_end = { 96, 336 };
+    env.newProperty<unsigned int, CHEMO_LEN>("chemo_end", chemo_end);
+    // Probabilities that CHK1, JAB1, HIF, MYCN, TEP1, and p53 are inhibited by chemotherapy.
+    std::array<float, 6 * CHEMO_LEN> chemo_effects = { 0.602666f, 0.602666f, 0.602666f, 0.602666f, 0.602666f, 0.602666f };
+    env.newProperty<float, 6 * CHEMO_LEN>("chemo_effects", chemo_effects);
+    // Flag variables read by cells to detect chemo (see toggle_chemo())
+    env.newProperty<int>("CHEMO_ACTIVE", 0);
+    env.newProperty<int>("CHEMO_OFFSET", -1);
+    // Number of cycles of chemotherapy.
+    env.newProperty<unsigned int>("chemo_number", 2);
 }
 /**
  * integration with genetic/molecular biomarkers of neuroblasts
@@ -77,21 +78,23 @@ void data_layer_1(flamegpu::ModelDescription& model) {
  */
 void data_layer_2(flamegpu::ModelDescription& model) {
     auto& env = model.Environment();
-    // Function of MYCN (continuous, 0 to 1), default (-1) means unknown.
+    // MYCN_fnxx: Functional activity of MYCN (continuous, 0 to 1), default (-1) means unknown.
+    // This value depends on MYCN_amp and ALK.
     const float MYCN_fn11 = 0.942648156f;  // Calibration LHC#564
     const float MYCN_fn00 = 0.8f * 0.71f * MYCN_fn11;
     const float MYCN_fn10 = 0.71f * MYCN_fn11;
     const float MYCN_fn01 = 0.8f * MYCN_fn11;
-    // Function of MAPK/RAS signalling (continuous, 0 to 1), default (-1) means unknown.
+    // MAPK_RAS_fnxx: Functional activity of MAPK/RAS signalling (continuous, 0 to 1), default (-1) means unknown.
+    // This value depends on MYCN_amp and ALK.
     const float MAPK_RAS_fn11 = 0.377627766f;  // Calibration LHC#564
     const float MAPK_RAS_fn10 = 0.77f * MAPK_RAS_fn11;
     const float MAPK_RAS_fn01 = 0.003161348f;  // Calibration LHC#564
     const float MAPK_RAS_fn00 = 0.77f * MAPK_RAS_fn01;
-    // Function of p53 signalling (continuous, 0 to 1), default (-1) means unknown.
+    // Functional activity of p53 signalling (continuous, 0 to 1), default (-1) means unknown.
     const float p53_fn = 0.198089528f;  // Calibration LHC#564
-    // Function of p73 signalling (continuous, 0 to 1), default (-1) means unknown.
+    // Functional activity of p73 signalling (continuous, 0 to 1), default (-1) means unknown.
     const float p73_fn = 0.141041534f;  // Calibration LHC#564
-    // Function of HIF signalling (continuous, 0 to 1), default (-1) means unknown.
+    // Functional activity of HIF signalling (continuous, 0 to 1), default (-1) means unknown.
     const float HIF_fn = 0.591769646f;  // Calibration LHC#564
 
     env.newProperty<float>("MYCN_fn11", MYCN_fn11);
@@ -109,6 +112,7 @@ void data_layer_2(flamegpu::ModelDescription& model) {
 /**
  * integration with genetic/molecular biomarkers of neuroblasts
  * Activity levels of various species/pathways (continuous, 0 to 1), default (-1) means unknown.
+ * Assumed to be one and not selected for calibration.
  */
 void data_layer_3(flamegpu::ModelDescription& model) {
     auto& env = model.Environment();
@@ -127,11 +131,23 @@ void data_layer_3(flamegpu::ModelDescription& model) {
     env.newProperty<float>("VEGF_fn", 1.0f);
 }
 /**
- * neuroblasts and Schwann cells
+ * Physical parameters (neuroblasts and Schwann cells).
+ */
+void physical_parameters(flamegpu::ModelDescription& model) {
+    auto& env = model.Environment();
+    // Initial cell density of the cellular region in the tumour (cells per cubic micron).
+    env.newProperty<float>("rho_tumour", static_cast<float>(9.39e-05));
+    // Cell radius in microns at the beginning of the cell cycle.
+    env.newProperty<float>("R_cell", 11 / 2.0f);
+    // Half of a voxel's side length in microns.
+    env.newProperty<float>("R_voxel", 15);
+}
+/**
+ * Cell cycle parameters (neuroblasts and Schwann cells).
  */
 void cell_cycle_parameters(flamegpu::ModelDescription& model) {
     auto& env = model.Environment();
-    // Durations of G1, S, G2, and M (hours)
+    // Durations of G1, S, G2, and M in hours (Harper and Brooks, 2005).
     // Note, if these durations change, the static maths in calc_R() need updating too.
     std::array<unsigned int, 4> cycle_stages = { 12, 6, 4, 2 };
     // Perform a scan over the values, to calculate where the boundaries lie
@@ -139,98 +155,77 @@ void cell_cycle_parameters(flamegpu::ModelDescription& model) {
         cycle_stages[i] += cycle_stages[i - 1];
     }
     env.newProperty<unsigned int, 4>("cycle_stages", cycle_stages);
-    // Efficiency of glycolysis compared to oxidative phosphorylation (du Plessis et al., 2015).
-    env.newProperty<float>("glycoEff", 1 / 15.0f);
-    // Parameter controlling overall cycling rate of neuroblasts.
+    // Efficiency of glycolysis compared to oxidative phosphorylation.
+    env.newProperty<float>("glycoEff", 1 / 15.0f);  // du Plessis et al. (2015).
+    // Basal probability of cycling for neuroblasts.
     env.newProperty<float>("P_cycle_nb", 0.0457f);  // Calibration #LHC_Cal6, index 9.
-    // Basal probability of cycling for Schwann cells (Ambros and Ambros et al., 2001).
-    // https:// pubmed.ncbi.nlm.nih.gov/11464875/
-    env.newProperty<float>("P_cycle_sc", 0.0325f);  // Calibration LHC_Cal6, index 9.
+    // Basal probability of cycling for Schwann cells.
+    env.newProperty<float>("P_cycle_sc", 0.0325f);  // Calibration #LHC_Cal6, index 9.
 }
 /**
- * neuroblasts and Schwann cells
+ * Stress-Related parameters (neuroblasts and Schwann cells).
+ */
+void stress_related_parameters(flamegpu::ModelDescription& model) {
+    auto& env = model.Environment();
+    // Concentration (M) or partial pressure of oxygen (mmHg) at which 50 % of the tumour cell population die through necrosis.
+    // However, this is used to calculate the probability that a living cell is hypoxic. This is time-independent, i.e at equilibrium.
+    env.newProperty<float>("C50_necro", static_cast<float>(1.2 / 2.2779e-4 / 32));
+    // Maximum number of telomere units in a cell.
+    env.newProperty<int>("telo_maximum", 60);
+    // Maximum number of telomere units in a senescent cell.
+    env.newProperty<int>("telo_critical", 20);
+    // Probability of gaining one unit of telomere in an hour, when telomerase or ALT is active.
+    env.newProperty<float>("P_telorp", 0.08895382f);  // Calibration LHC#564
+    // Probability of gaining DNA damage in an hour due to chemotherapy.
+    env.newProperty<float>("P_apopChemo", 0.644f);  // Calibrated LHC_Cal4, index 754.
+    // Probability of gaining DNA damage in an hour due to hypoxia.
+    env.newProperty<float>("P_DNA_damageHypo", 0.772947675f);  // Calibration LHC#564
+    // Probability of repairing DNA damage in an hour.
+    env.newProperty<float>("P_DNA_damagerp", 0.771497002f);  // Calibration LHC#564
+    // Probability of gaining unreplicated DNA in an hour.
+    env.newProperty<float>("P_unrepDNA", 0.0f);
+    // Probability of gaining unreplicated DNA in an hour due to hypoxia.
+    env.newProperty<float>("P_unrepDNAHypo", 0.434578817f);  // Calibration LHC#564
+    // Probability of repairing unreplicated DNA in an hour.
+    env.newProperty<float>("P_unrepDNArp", 0.890953082f);  // Calibration LHC#564
+}
+/**
+ * Cell death parameters (neuroblasts and Schwann cells).
  */
 void cell_death_parameters(flamegpu::ModelDescription& model) {
     auto& env = model.Environment();
-    // Concentration(M) or partial pressure of oxygen(mmHg) at which 50 % of the tumour cell population die through necrosis(Warren and Partridge, 2016), given in mmHg, converted to g per dm3, then to moles per dm3(M).
-    // Henry's law constant for oxygen gas at human body temperature is used for conversion (Grimes et al., 2014).
-    // Molar mass of O2 is 32 g.
-    // This is time - independent, i.e at equilibrium.
-    env.newProperty<float>("C50_necro", static_cast<float>(1.2 / 2.2779e-4 / 32));
-    // Number of apoptotic signals needed to kill the cell (Elmore, 2007).
-    env.newProperty<int>("apop_critical", 3);
-    // Maximum number of telomere units in a cell.
-    // Maximum is 60 (Hayflick et al., 1961).
-    env.newProperty<int>("telo_maximum", 60);
-    // Maximum number of telomere units in a senescent cell.
-    // A normal human foetal cell population will divide between 40 and 60 times before entering a senescence phase due to shortening telomeres(Hayflick et al., 1961).
-    env.newProperty<int>("telo_critical", 20);
-    // Probability of gaining DNA damage in an hour due to hypoxia.
-    // Assumed to be 1 %.
-    env.newProperty<float>("P_DNA_damageHypo", 0.772947675f);  // Calibration LHC#564
-    // Probability of repairing DNA damage in an hour.
-    // Assumed to be 1 % .
-    env.newProperty<float>("P_DNA_damagerp", 0.771497002f);  // Calibration LHC#564
-    // Probability of gaining unreplicated DNA in an hour.
-    // Assumed to be 0.1 %.
-    env.newProperty<float>("P_unrepDNA", 0.0f);
-    // Probability of gaining unreplicated DNA in an hour due to hypoxia.
-    // Assumed to be 1 %.
-    env.newProperty<float>("P_unrepDNAHypo", 0.434578817f);  // Calibration LHC#564
-    // Probability of repairing unreplicated DNA in an hour.
-    // Assumed to be 1 % .
-    env.newProperty<float>("P_unrepDNArp", 0.890953082f);  // Calibration LHC#564
-    // Probability of the immune system triggering a necrotic signal in a living cell per necrotic cell present per hour.
-    // Assumed to be 1 % .
-    env.newProperty<float>("P_necroIS", 0.57675841f);  // Calibration LHC#564
-    // Probability of secondary necrosis in an hour (Dunster, Byrne, King 2014).
-    env.newProperty<float>("P_2ndnecro", 0.2f);
-    // Probability of gaining one unit of telomere in an hour, when telomerase or ALT is active..
-    // Assumed to be 1 % .
-    env.newProperty<float>("P_telorp", 0.08895382f);  // Calibration LHC#564
-    // Probability of gaining an apoptotic signal due to chemotherapy in an hour.
-    // Assumed to be 10 % .
-    env.newProperty<float>("P_apopChemo", 0.644f);  // Calibrated LHC_Cal4, index 754.
-    // Probability of DNA damages triggering CAS-independent apoptotic pathways in an hour.
-    // Assumed to be 10 % .
+    // Probability of DNA damages triggering CAS-independent pathways to induce an apoptotic signal in an hour.
     env.newProperty<float>("P_DNA_damage_pathways", 0.256f);  // Calibrated LHC_Cal4, index 754.
+    // Number of apoptotic signals needed to kill the cell.
+    env.newProperty<int>("apop_critical", 3);
     // Probability of losing an apoptotic signal in an unstressed cell in an hour.
-    // Assumed to be 1 % .
     env.newProperty<float>("P_apoprp", 0.957831979f);  // Calibration LHC#564
-    // Probability of losing a necrotic signal in an unstressed cell in an hour.
-    // Assumed to be 1 % .
+    // Probability of secondary necrosis in an hour.
+    env.newProperty<float>("P_2ndnecro", 0.2f);
+    // Probability of the immune system triggering a necrotic signal in a living cell per necrotic cell present per hour.
+    env.newProperty<float>("P_necroIS", 0.57675841f);  // Calibration LHC#564
+    // Probability of losing a necrotic signal in an unstressed cell in an hour..
     env.newProperty<float>("P_necrorp", 0.98970852f);  // Calibration LHC#564
 }
-void schwann_cell_parameters(flamegpu::ModelDescription& model) {
-    auto& env = model.Environment();
-    // Production rate of matrix by one Schwann cell (cubic microns per hour).
-    // Protein production rate in one Schwann cell = 0.3 ng per 96 hours = 3.125e-12 g hour-1 (Conlon et al., 2003).
-    // Proportion of protein synthesis related to collagen = 12 % (DeClerck et al., 1987).
-    env.newProperty<float>("P_matrix", static_cast<float>(3.125e-12 * 0.12 * 1.89e12));
-}
+/**
+ * NB-SC crosstalk parameters.
+ */
 void nb_sc_crosstalk_parameters(flamegpu::ModelDescription& model) {
     auto& env = model.Environment();
     // Scaling factor for the influence of neuroblasts on Schwann cell proliferation, juxtacrine.
-    // 0.5 is assumed.
     float scpro_jux = 0.0374f*0.1f;    // Calibration LHC_Cal3b#163, modified.
     // Scaling factor for the influence of Schwann cells on neuroblast differentiation, juxtacrine.
-    // 1 is assumed.
     float nbdiff_jux = 0.000521f;    // Calibration LHC_Cal6, index 9.
     // Amount of neuroblast differentiation achieved in an hour, triggered by Schwann cells.
-    // 0.01 is assumed.
     float nbdiff_amount = 0.01f;    // Assumed
     // Scaling factor for the influence of Schwann cells on neuroblast apoptosis, juxtacrine.
-    // 0.1 is assumed.
     float nbapop_jux = 0.0304f;    // Calibration LHC_Cal3b#163
     // Scaling factor for the influence of neuroblasts on Schwann cell proliferation, paracrine.
-    // 0.05 is assumed.
-    float scpro_para = scpro_jux / 10;
+    float scpro_para = scpro_jux / 10;      // Assumed
     // Scaling factor for the influence of Schwann cells on neuroblast differentiation, paracrine.
-    // 0.1 is assumed.
-    float nbdiff_para = nbdiff_jux / 10;
+    float nbdiff_para = nbdiff_jux / 10;    // Assumed
     // Scaling factor for the influence of Schwann cells on neuroblast apoptosis, paracrine.
-    // 0.01 is assumed.
-    float nbapop_para = nbapop_jux / 10;
+    float nbapop_para = nbapop_jux / 10;    // Assumed
 
     env.newProperty<float>("scpro_jux", scpro_jux);
     env.newProperty<float>("nbdiff_jux", nbdiff_jux);
@@ -240,112 +235,93 @@ void nb_sc_crosstalk_parameters(flamegpu::ModelDescription& model) {
     env.newProperty<float>("nbdiff_para", nbdiff_para);
     env.newProperty<float>("nbapop_para", nbapop_para);
 }
-void immune_system_parameters(flamegpu::ModelDescription& model) {
-    auto& env = model.Environment();
-    // Probability of an apoptotic or necrotic cell being engulfed by an immune cell in an hour.
-    // in vivo: 0.35 (Jagiella et al., 2016).
-    // in vitro without stromal cells such as macrophages: 0.01 (Jagiella et al., 2016).
-    env.newProperty<float>("P_lysis", 0.35f);
-}
+/**
+ * Mechanical model parameters.
+ */
 void mechanical_model_parameters(flamegpu::ModelDescription& model) {
     auto& env = model.Environment();
-    // Minimum overlap below which two cells cannot interact, given in m (Pathmanathan et al., 2009), converted to microns.
-    // However, it was decided that it should be reset to zero so that when two cells are just touching, they stop interacting immediately, i.e. no bouncing off.
+    // Minimum overlap below which two cells cannot interact (microns).
+    // Set to zero so that when two cells are just touching, they stop interacting immediately, i.e. no bouncing off.
     env.newProperty<float>("min_overlap", static_cast<float>(-4e-6 * 1e6 * 0));
-    // Linear force law parameter in N m-1 (Pathmanathan et al., 2009).
-    env.newProperty<float>("k1", static_cast<float>(2.2e-3));
+    // Linear force law parameter in N m-1.
+    env.newProperty<float>("k1", static_cast<float>(2.2e-3));  // Pathmanathan et al. (2009).
     // A cell's search distance in the search for neighbours (microns).
-    // Calibrated.
-    env.newProperty<float>("R_neighbours", 3.15f*env.getProperty<float>("R_cell"));  // @todo: Confirm msg radius > this
+    env.newProperty<float>("R_neighbours", 3.15f*env.getProperty<float>("R_cell"));  // Calibrated by trial and error, Message radius must be > this
     // Number of other cells allowed within a cell's search distance before contact inhibition activates.
-    // Assumed.
-    env.newProperty<int>("N_neighbours", 2);
+    env.newProperty<int>("N_neighbours", 2);  // Assumed
     // Factor by which a cell magnifies the force acting on it upon contact inhibition.
-    // Assumed.
-    env.newProperty<float>("k_locom", 2.0f);
-    // Viscosity given in N s m-1 (Pathmanathan et al., 2009).
-    // Could be changed it to avoid big jumps.
-    env.newProperty<float>("mu", 0.4f);
-    // A reasonable time step for the mechanical model, given in hours (Pathmanathan et al., 2009), converted to seconds.
-    env.newProperty<float>("dt", 36);
+    env.newProperty<float>("k_locom", 2.0f);  // Assumed
+    // Viscosity in N s m-1.
+    env.newProperty<float>("mu", 0.4f);  // Pathmanathan et al. (2009).
+    // Time step for the mechanical model in seconds.
+    env.newProperty<float>("dt", 36);  // Pathmanathan et al. (2009).
 }
-void extracellular_environment_parameters(flamegpu::ModelDescription& model) {
+/**
+ * Microenvironment parameters.
+ */
+void microenvironment_parameters(flamegpu::ModelDescription& model) {
     auto& env = model.Environment();
-    // Production rate of oxygen given in pmol per min per 80000 cells, converted to moles per cell per hour (Grimes et al., 2014).
-    // Negative because it is actually consumption.
-    env.newProperty<float>("P_O20", static_cast<float>(-250e-12 * 60.0 / 80000.0));
-    // Concentration scale or maximum partial pressure of oxygen, given in mmHg (Carreau et al., 2011), converted to g per dm3, then to moles per dm3 (M).
-    // Henry's law constant for oxygen gas at human body temperature is used for conversion (Grimes et al., 2014).
-    // Molar mass of O2 is 32 g.
-    // It is the normal value in the kidney.
-    env.newProperty<float>("Cs_O2", static_cast<float>(72.0 / 2.2779e-4 / 32.0));
-    // If this is on, the initial oxygen level is taken as the equilibrium.
-    // Furthermore, it is assumed that the vasculature always returns it to the equilibrium at the end of a time step.
+    //  Production rate of oxygen given in moles per cell per hour.
+    env.newProperty<float>("P_O20", static_cast<float>(-250e-12 * 60.0 / 80000.0));  // Negative because it is actually consumption (Grimes et al., 2014).
+    // Concentration scale or maximum partial pressure of oxygen in moles per dm3 (M).
+    env.newProperty<float>("Cs_O2", static_cast<float>(72.0 / 2.2779e-4 / 32.0));  // Oxygen level in the kidney (Carreau et al., 2011).
+    // If this is on, the initial oxygen level is taken as the equilibrium and the vasculature will return the O2 level to this equilibrium at the end of every time step.
     env.newProperty<int>("staticO2", 0);
     // Number of angiogenic signals needed to update the vasculature.
-    // In an experiment (Utzinger et al., 2015), it took 100 hours for two microvessel fragments to inosculate to the vascular network.
-    // https:// pubmed.ncbi.nlm.nih.gov/25795217/ Large-scale time series microscopy of neovessel growth during angiogenesis.
-    env.newProperty<int>("ang_critical", 100);
+    env.newProperty<int>("ang_critical", 100);  // In an experiment (Utzinger et al., 2015), it took 100 hours for two microvessel fragments to inosculate to the vascular network.
+    // Production rate of matrix by one living Schwann cell (cubic microns per hour).
+    // Protein production rate (Conlon et al., 2003), proportion of collagen in the output (DeClerck et al., 1987), and the volume of hydrated collagen I (Levick, 1987).
+    env.newProperty<float>("P_matrix", static_cast<float>(3.125e-12 * 0.12 * 1.89e12));
+    // Probability of an apoptotic or necrotic cell being engulfed by an immune cell in an hour.
+    env.newProperty<float>("P_lysis", 0.35f);  // Jagiella et al. (2016).
 }
+/**
+ *  Initial conditions (neuroblasts).
+ */
 void nb_initial_conditions(flamegpu::ModelDescription& model) {
     auto& env = model.Environment();
-    // A flag (continuous, 0 to 4) indicating the cell's position in the cell cycle.
-    // default (-1) means random initialisation.
+    // A flag (continuous, 0 to 4) indicating the cell's position in the cell cycle, default (-1) means random initialisation.
     env.newProperty<int>("cycle", -1);
-    // A flag (Boolean variable) indicating if the cell is apoptotic.
-    // default (-1) means it is not apoptotic (0).
+    // A flag (Boolean variable) indicating if the cell is apoptotic, default (-1) means it is not apoptotic (0).
     env.newProperty<int>("apop", -1);
-    // Number of apoptotic signals (categorical, 0, 1, 2, and 3).
-    // Maximum is 3 (Elmore, 2007).
-    // default (-1) means setting it to 0
+    // Number of apoptotic signals (categorical, 0, 1, 2, and 3), default (-1) means setting it to zero.
     env.newProperty<int>("apop_signal", -1);
-    // A flag (Boolean variable) indicating if the cell is necrotic.
-    // default (-1) means it is not necrotic (0).
+    // A flag (Boolean variable) indicating if the cell is necrotic, default (-1) means it is not necrotic (zero).
     env.newProperty<int>("necro", -1);
-    // Number of necrotic signals (categorical, integers from 0 to 168)
-    // Maximum is 84 (Warren et al., 2016).
-    // default (-1) means random initialisation.
-    env.newProperty<int>("necro_signal", -1);
-    // DERIVED: Number of telomere units (categorical, integers from 0 to 60)
-    // Maximum is 60 (Hayflick et al., 1961).
-    // default (-1) means random initialisation between 25 and 35, inclusive.
+    // Number of necrotic signals (categorical, integers from 0 to 168), default (-1) means setting it to zero.
+    env.newProperty<int>("necro_signal", -1);  // Maximum is 168 (Warren et al., 2016).
+    // DERIVED: Number of telomere units (categorical, integers from 0 to 60).
     env.newProperty<int>("telo_count", -1);
 }
+/**
+ *  Initial conditions (Schwann cells).
+ */
 void sc_initial_conditions(flamegpu::ModelDescription& model) {
     auto& env = model.Environment();
-    // A flag (continuous, 0 to 4) indicating the cell's position in the cell cycle.
-    // default (-1) means random initialisation.
+    // A flag (continuous, 0 to 4) indicating the cell's position in the cell cycle, default (-1) means random initialisation.
     env.newProperty<int>("cycle_sc", -1);
-    // A flag (Boolean variable) indicating if the cell is apoptotic.
-    // default (-1) means it is not apoptotic (0).
+    // A flag (Boolean variable) indicating if the cell is apoptotic, default (-1) means it is not apoptotic (zero).
     env.newProperty<int>("apop_sc", -1);
-    // Number of apoptotic signals (categorical, 0, 1, 2, and 3).
-    // Maximum is 3 (Elmore, 2007).
-    // default (-1) means random initialisation.
+    // Number of apoptotic signals (categorical, 0, 1, 2, and 3), default (-1) means setting it to zero.
     env.newProperty<int>("apop_signal_sc", -1);
-    // A flag (Boolean variable) indicating if the cell is necrotic.
-    // default (-1) means it is not necrotic (0).
+    // A flag (Boolean variable) indicating if the cell is necrotic, default (-1) means it is not necrotic (zero).
     env.newProperty<int>("necro_sc", -1);
-    // Number of necrotic signals (categorical, integers from 0 to 168)
-    // Maximum is 84 (Warren et al., 2016).
-    // default (-1) means random initialisation.
-    env.newProperty<int>("necro_signal_sc", -1);
-    // Number of telomere units (categorical, integers from 0 to 60)
-    // Maximum is 60 (Hayflick et al., 1961).
-    // default (-1) means random initialisation between 25 and 35, inclusive.
-    env.newProperty<int>("telo_count_sc", -1);
+    // Number of necrotic signals (categorical, integers from 0 to 168), default (-1) means setting it to zero.
+    env.newProperty<int>("necro_signal_sc", -1);  // Maximum is 168 (Warren et al., 2016).
+    // Number of telomere units (categorical, integers from 0 to 60).
+    env.newProperty<int>("telo_count_sc", -1);  // -1 means random initialisation between 35 and 45, inclusive.
 }
 void internal_derived(flamegpu::ModelDescription& model) {
     auto& env = model.Environment();
     env.newProperty<unsigned int>("step_size", 1);
-    // DERIVED: Initial tumour radius (microns)
+    // DERIVED: Half of the initial tumour length in one dimension in microns (derived).
     env.newProperty<float>("R_tumour", 0);
-    // DERIVED: Tumour boundary's (microns)
+    // DERIVED: Tumour boundary in microns (derived).
     env.newProperty<float, 3>("bc_minus", { 0, 0, 0 });
     env.newProperty<float, 3>("bc_plus", { 0, 0, 0 });
-    // DERIVED: Grid element or voxel volume (cubic microns).
+    // DERIVED: Voxel volume in cubic microns (derived).
     env.newProperty<float>("V_grid", 0);
-    // DERIVED: Grid element or voxel side area (square microns).
+    // DERIVED: Voxel side area in microns squared (derived).
     env.newProperty<float>("A_grid", 0);
     // Add this before accessing O2grid
     // It's the location of the virtual/active grid origin within the full grid
@@ -393,8 +369,6 @@ void internal_derived(flamegpu::ModelDescription& model) {
 }
 void data_layer_primage(flamegpu::ModelDescription& model) {
     auto& env = model.Environment();
-    // (living, apoptotic, necrotic neuroblasts and Schwann cells)
-    env.newProperty<float, 6>("cellularity", {});
     env.newProperty<int>("orchestrator_time", 0);
     env.newProperty<float>("nb_telomere_length_mean", 0);
     env.newProperty<float>("nb_telomere_length_sd", 0);
@@ -570,13 +544,13 @@ void defineEnvironment(flamegpu::ModelDescription& model) {
     data_layer_1(model);
     data_layer_2(model);
     data_layer_3(model);
+    physical_parameters(model);
     cell_cycle_parameters(model);
+    stress_related_parameters(model);
     cell_death_parameters(model);
-    schwann_cell_parameters(model);
     nb_sc_crosstalk_parameters(model);
-    immune_system_parameters(model);
     mechanical_model_parameters(model);
-    extracellular_environment_parameters(model);
+    microenvironment_parameters(model);
     nb_initial_conditions(model);
     sc_initial_conditions(model);
     data_layer_primage(model);
