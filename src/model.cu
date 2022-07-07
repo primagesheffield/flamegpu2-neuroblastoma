@@ -8,6 +8,26 @@ FLAMEGPU_INIT_FUNCTION(ModelInit) {
     initGrid(*FLAMEGPU);
 }
 
+FLAMEGPU_HOST_FUNCTION(hetNB_logging_fn) {
+    // Transfer macroprop to prop (can't log macro props)
+    auto macro_NB_living_count = FLAMEGPU->environment.getMacroProperty<unsigned int, 24>("NB_living_count");
+    std::array<int, 24> NB_living_count;
+    for (int i = 0; i < 24; ++i) {
+        NB_living_count[i] = macro_NB_living_count[i];
+    }
+    FLAMEGPU->environment.setProperty<int, 24>("NB_living_count", NB_living_count);
+    // Reset macroprop
+    macro_NB_living_count.zero();
+    // Calc degdiff over Nnbl_count
+    if(FLAMEGPU->environment.getProperty<unsigned int>("Nnbl_count")!=0){
+    FLAMEGPU->environment.setProperty<float>("NB_living_degdiff_average",
+        FLAMEGPU->agent("Neuroblastoma").sum<float>("degdiff") / FLAMEGPU->environment.getProperty<unsigned int>("Nnbl_count"));
+    }
+    else{
+    FLAMEGPU->environment.setProperty<float>("NB_living_degdiff_average", 0);
+    }
+}
+
 void defineModel(flamegpu::ModelDescription& model) {
     // Define environment and agents (THE ORDER HERE IS FIXED, AS THEY ADD INIT FUNCTIONS, ENV MUST COME FIRST)
     defineEnvironment(model);
@@ -47,6 +67,7 @@ void defineModel(flamegpu::ModelDescription& model) {
         l_validation.addAgentFunction(nb.getFunction("nb_validation"));
         l_validation.addAgentFunction(sc.getFunction("sc_validation"));
         model.newLayer().addHostFunction(host_validation);
+	model.newLayer().addHostFunction(hetNB_logging_fn);
     }
 }
 #ifdef VISUALISATION
