@@ -489,6 +489,7 @@ FLAMEGPU_AGENT_FUNCTION(nb_cell_lifecycle, flamegpu::MessageNone, flamegpu::Mess
         const glm::vec3 newLoc = drift(FLAMEGPU);
         // Spatial coordinates (integration with imaging biomarkers).
         FLAMEGPU->agent_out.setVariable<glm::vec3>("xyz", newLoc);
+	FLAMEGPU->agent_out.setVariable<int>("cloneID", FLAMEGPU->getVariable<int>("cloneID"));
         // Data Layer 1 (integration with molecular biomarkers).
         FLAMEGPU->agent_out.setVariable<int>("MYCN_amp", FLAMEGPU->getVariable<int>("MYCN_amp"));
         FLAMEGPU->agent_out.setVariable<int>("TERT_rarngm", FLAMEGPU->getVariable<int>("TERT_rarngm"));
@@ -569,8 +570,12 @@ FLAMEGPU_AGENT_FUNCTION(nb_cell_lifecycle, flamegpu::MessageNone, flamegpu::Mess
         FLAMEGPU->agent_out.setVariable<glm::vec3>("old_xyz", newLoc);
         FLAMEGPU->agent_out.setVariable<float>("move_dist", 0);  // This could be left to default init?
     }
+    if(FLAMEGPU->getVariable<int>("apop")==0 && FLAMEGPU->getVariable<int>("necro")==0){
+    	FLAMEGPU->environment.getMacroProperty<unsigned int, 24>("NB_living_count")[FLAMEGPU->getVariable<int>("cloneID")-1]++;
+    }
     return flamegpu::ALIVE;
 }
+
 FLAMEGPU_AGENT_FUNCTION(output_oxygen_cell, flamegpu::MessageNone, flamegpu::MessageNone) {
     const glm::ivec3 gid = toGrid(FLAMEGPU, FLAMEGPU->getVariable<glm::vec3>("xyz"));
     increment_grid_nb(FLAMEGPU, gid);
