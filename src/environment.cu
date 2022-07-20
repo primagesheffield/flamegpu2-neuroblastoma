@@ -142,10 +142,10 @@ void cell_cycle_parameters(flamegpu::ModelDescription& model) {
     // Efficiency of glycolysis compared to oxidative phosphorylation (du Plessis et al., 2015).
     env.newProperty<float>("glycoEff", 1 / 15.0f);
     // Parameter controlling overall cycling rate of neuroblasts.
-    env.newProperty<float>("P_cycle_nb", 0.0413f);  // Calibration LHC_Cal3b#163.
+    env.newProperty<float>("P_cycle_nb", 0.0457f);  // Calibration #LHC_Cal6, index 9.
     // Basal probability of cycling for Schwann cells (Ambros and Ambros et al., 2001).
     // https:// pubmed.ncbi.nlm.nih.gov/11464875/
-    env.newProperty<float>("P_cycle_sc", 0.172f*0.1f);  // Calibration LHC_Cal3b#163, modified.
+    env.newProperty<float>("P_cycle_sc", 0.0325f);  // Calibration LHC_Cal6, index 9.
 }
 /**
  * neuroblasts and Schwann cells
@@ -190,10 +190,10 @@ void cell_death_parameters(flamegpu::ModelDescription& model) {
     env.newProperty<float>("P_telorp", 0.08895382f);  // Calibration LHC#564
     // Probability of gaining an apoptotic signal due to chemotherapy in an hour.
     // Assumed to be 10 % .
-    env.newProperty<float>("P_apopChemo", 0.7964f);  // Index 393 in LHC_Cal4.csv
+    env.newProperty<float>("P_apopChemo", 0.644f);  // Calibrated LHC_Cal4, index 754.
     // Probability of DNA damages triggering CAS-independent apoptotic pathways in an hour.
     // Assumed to be 10 % .
-    env.newProperty<float>("P_DNA_damage_pathways", 0.1237f);  // Index 393 in LHC_Cal4.csv
+    env.newProperty<float>("P_DNA_damage_pathways", 0.256f);  // Calibrated LHC_Cal4, index 754.
     // Probability of losing an apoptotic signal in an unstressed cell in an hour.
     // Assumed to be 1 % .
     env.newProperty<float>("P_apoprp", 0.957831979f);  // Calibration LHC#564
@@ -215,10 +215,10 @@ void nb_sc_crosstalk_parameters(flamegpu::ModelDescription& model) {
     float scpro_jux = 0.0374f*0.1f;    // Calibration LHC_Cal3b#163, modified.
     // Scaling factor for the influence of Schwann cells on neuroblast differentiation, juxtacrine.
     // 1 is assumed.
-    float nbdiff_jux = 0.753f;    // Calibration LHC_Cal3b#163
+    float nbdiff_jux = 0.000521f;    // Calibration LHC_Cal6, index 9.
     // Amount of neuroblast differentiation achieved in an hour, triggered by Schwann cells.
     // 0.01 is assumed.
-    float nbdiff_amount = 0.372f;    // Calibration LHC_Cal3b#163
+    float nbdiff_amount = 0.01f;    // Assumed
     // Scaling factor for the influence of Schwann cells on neuroblast apoptosis, juxtacrine.
     // 0.1 is assumed.
     float nbapop_jux = 0.0304f;    // Calibration LHC_Cal3b#163
@@ -421,7 +421,7 @@ FLAMEGPU_INIT_FUNCTION(InitDerivedEnvironment) {
     const int histology_init = FLAMEGPU->environment.getProperty<int>("histology_init");
     int histology;
     const int gradiff = FLAMEGPU->environment.getProperty<int>("gradiff");
-    float theta_sc;
+    float theta_sc = 0;
     // const float O2 = (2/72.0f) + (FLAMEGPU->random.uniform<float>() * (30 / 72.0f));  // rng in range [2/72, 32/72]
     if (histology_init == 1) {
         if (FLAMEGPU->random.uniform<float>() < 0.5f) {
@@ -471,6 +471,12 @@ FLAMEGPU_INIT_FUNCTION(InitDerivedEnvironment) {
     FLAMEGPU->environment.setProperty<int>("histology", histology);
     FLAMEGPU->environment.setProperty<int>("gradiff", gradiff);
     // FLAMEGPU->environment.setProperty<float>("cellularity", cellularity);
+    if (FLAMEGPU->environment.getProperty<int>("orchestrator_time") == 0) {
+        // Must update cellularity if orchestrator_time == 0
+        const float cellularity_total = FLAMEGPU->environment.getProperty<float>("cellularity", 0);
+        FLAMEGPU->environment.setProperty<float>("cellularity", 0, cellularity_total * (1.0f - theta_sc));
+        FLAMEGPU->environment.setProperty<float>("cellularity", 3, cellularity_total * theta_sc);
+    }
     FLAMEGPU->environment.setProperty<float>("theta_sc", theta_sc);
     // FLAMEGPU->environment.setProperty<float>("O2", O2);
     /**
