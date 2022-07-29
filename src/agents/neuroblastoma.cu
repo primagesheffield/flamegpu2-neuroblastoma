@@ -817,7 +817,13 @@ void initNeuroblastoma(flamegpu::HostAPI &FLAMEGPU) {
             agt.setVariable<int>("TERT_rarngm", s_TERT_rarngm);
             const int s_ATRX_inact = s_cloneID >= 19 && s_cloneID <= 24 ? 1 : 0;
             agt.setVariable<int>("ATRX_inact", s_ATRX_inact);
-            agt.setVariable<int>("ALK", (s_cloneID >= 2 && s_cloneID % 3 == 2) ? 1 : ((s_cloneID >= 3 && s_cloneID % 3 == 0) ? 2 : 0));
+            if (s_cloneID == 2 || s_cloneID == 5 || s_cloneID == 8 || s_cloneID == 11 || s_cloneID == 14 || s_cloneID == 17 || s_cloneID == 20 || s_cloneID == 23){
+                agt.setVariable<int>("ALK", 1);
+            } else if (s_cloneID == 3 || s_cloneID == 6 || s_cloneID == 9 || s_cloneID == 12 || s_cloneID == 15 || s_cloneID == 18 || s_cloneID == 21 || s_cloneID == 24) {
+                agt.setVariable<int>("ALK", 2);
+            } else {
+		agt.setVariable<int>("ALK", 0);
+	    }
             const int s_ALT = ALT < 0 ? FLAMEGPU.random.uniform<int>(0, 1) : ALT;
             agt.setVariable<int>("ALT", s_ALT);  // Random int in range [0, 1]
             // Data Layer 2 (integration with genetic/molecular biomarkers).
