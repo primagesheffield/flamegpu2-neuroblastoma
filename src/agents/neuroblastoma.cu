@@ -851,7 +851,7 @@ void initNeuroblastoma(flamegpu::HostAPI &FLAMEGPU) {
             }
             if (p53_fn < 0) {
                 agt.setVariable<float>("p53_fn", FLAMEGPU.random.uniform<float>());
-            } else if ((s_cloneID / 3) % 2 == 1) {
+            } else if (s_cloneID == 1 || s_cloneID == 2 || s_cloneID == 3 || s_cloneID == 7 || s_cloneID == 8 || s_cloneID == 9 || s_cloneID == 13 || s_cloneID == 14 || s_cloneID == 15 || s_cloneID == 19 || s_cloneID == 20 || s_cloneID == 21) {
                 agt.setVariable<float>("p53_fn", p53_fn);
             } else {
                 agt.setVariable<float>("p53_fn", 0);
