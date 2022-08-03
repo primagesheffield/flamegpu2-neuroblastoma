@@ -906,7 +906,7 @@ void initNeuroblastoma(flamegpu::HostAPI &FLAMEGPU) {
             } else if (orchestrator_time == 0) {
                 agt.setVariable<int>("necro_signal", necro_signal < 0 ? 0 : necro_signal);
                 agt.setVariable<int>("apop_signal", apop_signal < 0 ? 0 : apop_signal);
-                int s_telo_count = 3;
+		int s_telo_count = 3;
                 if ((s_ALT == 1 || s_ATRX_inact == 1) && (s_MYCN_amp == 1 || s_TERT_rarngm == 1)) {
                     s_telo_count = FLAMEGPU.random.uniform<int>(1, 2);  // Random int in range [1, 2]
                 } else if (s_ALT == 1 || s_ATRX_inact == 1) {
@@ -925,8 +925,8 @@ void initNeuroblastoma(flamegpu::HostAPI &FLAMEGPU) {
                 } else {
 		    const int telo_count = FLAMEGPU.environment.getProperty<int>("telo_count");
                     agt.setVariable<int>("telo_count", telo_count);
-                }
-            agt.setVariable<float>("degdiff", 0);
+		}
+	        agt.setVariable<float>("degdiff", 0);
             } else {
                 agt.setVariable<int>("necro_signal", std::max(0, static_cast<int>((FLAMEGPU.random.normal<float>() * nb_apop_signal_sd) + nb_apop_signal_mean)));
                 agt.setVariable<int>("apop_signal", std::max(0, static_cast<int>((FLAMEGPU.random.normal<float>() * nb_necro_signal_sd) + nb_necro_signal_mean)));

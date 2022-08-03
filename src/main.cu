@@ -24,7 +24,7 @@ int main(int argc, const char ** argv) {
 	*/
         std::vector<std::string> column_names;
         std::map<std::string, std::vector<float>> columns;
-        const std::string csv_path = "../../../inputs/LHC_v13.9_hetNB.csv";
+        const std::string csv_path = "../../../inputs/LHC_v13.9_MAbg.csv";
         std::ifstream csv_file(csv_path);
         if (!csv_file.is_open()) {
             fprintf(stderr, "Unable to open %s\n", csv_path.c_str());
@@ -66,13 +66,17 @@ int main(int argc, const char ** argv) {
                     const unsigned int ij = i * RUNS_PER_CONFIG + j;
                     runs[ij].setOutputSubdirectory(std::to_string(static_cast<int>(columns["Index"][i])));
                     runs[ij].setRandomSimulationSeed((j+12) * 84673);  // Something something prime number
-                    runs[ij].setProperty<float>("O2", columns["O2"][i]);
-                    runs[ij].setProperty<float>("theta_sc", columns["theta_sc"][i]);
-                    for (int c = 0; c < 23; ++c) {
-                        std::stringstream ss;
-                        ss << "fraction " << (c+1);
-                        runs[ij].setProperty<float>("clones_dummy", c, columns[ss.str()][i]);
-                    }
+                    runs[ij].setProperty<float>("O2", 0.23611);
+                    runs[ij].setProperty<float>("theta_sc", 0.275);
+		    for (int c = 0; c < 23; c++) {
+			runs[ij].setProperty<float>("clones_dummy", c, (c+1)*0.041666666);
+		    }
+		    runs[ij].setProperty<float>("MYCN_fn11", columns["MYCN_fn11"][i]);
+                    runs[ij].setProperty<float>("MAPK_RAS_fn11", columns["MAPK_RAS_fn11"][i]);
+                    runs[ij].setProperty<float>("MAPK_RAS_fn01", columns["MAPK_RAS_fn01"][i]);
+                    runs[ij].setProperty<float>("p53_fn", columns["p53_fn"][i]);
+                    runs[ij].setProperty<float>("p73_fn", columns["p73_fn"][i]);
+                    runs[ij].setProperty<float>("HIF_fn", columns["HIF_fn"][i]);
                 }
             }
         }
