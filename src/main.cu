@@ -24,7 +24,7 @@ int main(int argc, const char ** argv) {
 	*/
         std::vector<std::string> column_names;
         std::map<std::string, std::vector<float>> columns;
-        const std::string csv_path = "../../../inputs/LHC_v13.9_hetNB.csv";
+        const std::string csv_path = "../../../inputs/LHC_v13.9_MAsize.csv";
         std::ifstream csv_file(csv_path);
         if (!csv_file.is_open()) {
             fprintf(stderr, "Unable to open %s\n", csv_path.c_str());
@@ -55,7 +55,7 @@ int main(int argc, const char ** argv) {
          * Create a run plan
         */
         const unsigned int CONFIG_COUNT = static_cast<unsigned int>(columns["Index"].size());
-        const unsigned int RUNS_PER_CONFIG = 10;
+        const unsigned int RUNS_PER_CONFIG = 100;
         flamegpu::RunPlanVector runs(model, CONFIG_COUNT * RUNS_PER_CONFIG);
 	runs.setRandomPropertySeed(34523);  // Ensure that repeated runs use the same Random values to init gradiff.
 	runs.setPropertyUniformRandom<int>("gradiff", 0, 2);
