@@ -24,7 +24,7 @@ int main(int argc, const char ** argv) {
 	*/
         std::vector<std::string> column_names;
         std::map<std::string, std::vector<float>> columns;
-        const std::string csv_path = "../../../inputs/LHC_v13.9_MAsize.csv";
+        const std::string csv_path = "../../../inputs/LHC_v13.9_MAwithoutSC.csv";
         std::ifstream csv_file(csv_path);
         if (!csv_file.is_open()) {
             fprintf(stderr, "Unable to open %s\n", csv_path.c_str());
@@ -73,6 +73,10 @@ int main(int argc, const char ** argv) {
                         ss << "fraction " << (c+1);
                         runs[ij].setProperty<float>("clones_dummy", c, columns[ss.str()][i]);
                     }
+	            runs[ij].setProperty<float>("scpro_jux", 0);
+                    runs[ij].setProperty<float>("nbdiff_jux", 0);
+                    runs[ij].setProperty<float>("nbdiff_amount", 0);
+                    runs[ij].setProperty<float>("nbapop_jux", 0);
                 }
             }
         }
