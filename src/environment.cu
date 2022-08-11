@@ -40,7 +40,7 @@ void data_layer_0(flamegpu::ModelDescription& model) {
     // DERIVED: Grade of differentiation for neuroblastoma (0 is undifferentiated, 1 is pooly differentiated, and 2 is differentiating).
     env.newProperty<int>("gradiff", 0);
     // DERIVED: Fraction of Schwann cells in the cell population (continuous, 0 to 1).
-    env.newProperty<float>("theta_sc", 0.5);
+    env.newProperty<float>("theta_sc", 0.11);
     env.newProperty<float>("degdiff", 0);
     /**
      * Integration with imaging biomarkers, part 3
@@ -62,6 +62,29 @@ void data_layer_0(flamegpu::ModelDescription& model) {
     env.newProperty<int>("CHEMO_OFFSET", -1);
     // Number of cycles of chemotherapy.
     env.newProperty<unsigned int>("chemo_number", 2);
+    // Delivery of targerted therapies.
+    env.newProperty<float>("delivery_tt", 0);
+    // Doses of targeted therapies.
+    env.newProperty<float>("MYCN_tt", 0);
+    env.newProperty<float>("MAPK_RAS_tt", 0);
+    env.newProperty<float>("JAB1_tt", 0);
+    env.newProperty<float>("CHK1_tt", 0);
+    env.newProperty<float>("ID2_tt", 0);
+    env.newProperty<float>("IAP2_tt", 0);
+    env.newProperty<float>("HIF_tt", 0);
+    env.newProperty<float>("BNIP3_tt", 0);
+    env.newProperty<float>("VEGF_tt", 0);
+    env.newProperty<float>("p53_tt", 0);
+    env.newProperty<float>("p73_tt", 0);
+    env.newProperty<float>("p21_tt", 0);
+    env.newProperty<float>("p27_tt", 0);
+    env.newProperty<float>("Bcl2_Bclxl_tt", 0);
+    env.newProperty<float>("BAK_BAX_tt", 0);
+    env.newProperty<float>("CAS_tt", 0);
+    env.newProperty<float>("CDS1_tt", 0);
+    env.newProperty<float>("CDC25C_tt", 0);
+    env.newProperty<float>("ALT_tt", 0);
+    env.newProperty<float>("telo_tt", 0);
 }
 /**
  * integration with genetic/molecular biomarkers of neuroblasts
