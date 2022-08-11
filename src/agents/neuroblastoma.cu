@@ -109,6 +109,7 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
         // Note that the effects of p53and p73 on HIF are considered before p53and p73 are updated.
         // Chemotherapy inhibits CHK1, JAB1, HIF, MYCN, and p53.It is assumed that drug delivery is instantaneous.
         const int CHEMO_OFFSET = CHEMO_ACTIVE ? FLAMEGPU->environment.getProperty<int>("CHEMO_OFFSET") : 0;
+	const float s_delivery_tt = FLAMEGPU->getVariable<float>("delivery_tt");
         const float s_MYCN_fn = FLAMEGPU->getVariable<float>("MYCN_fn");
         const float s_MAPK_RAS_fn = FLAMEGPU->getVariable<float>("MAPK_RAS_fn");
         const float s_JAB1_fn = FLAMEGPU->getVariable<float>("JAB1_fn");
@@ -128,38 +129,83 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
         int s_MYCN = FLAMEGPU->random.uniform<float>() < s_MYCN_fn ? 1 : 0;
         if (s_MYCN == 1) {
             const float chemo3 = FLAMEGPU->environment.getProperty<float>("chemo_effects", CHEMO_OFFSET + 3);
+	    const float s_MYCN_tt = FLAMEGPU->getVariable<float>("MYCN_tt");
             if (CHEMO_ACTIVE && FLAMEGPU->random.uniform<float>() < chemo3) {
                 s_MYCN = 0;
+            } else if(FLAMEGPU->random.uniform<float>() < s_MYCN_tt && FLAMEGPU->random.uniform<float>() < s_delivery_tt) {
+		s_MYCN = 0;
+	    }
+	}
+
+        int s_MAPK_RAS = FLAMEGPU->random.uniform<float>() < s_MAPK_RAS_fn ? 1 : 0;
+        if (s_MAPK_RAS == 1) {
+            float s_MAPK_RAS_tt = FLAMEGPU->getVariable<float>("MAPK_RAS_tt");
+            if(FLAMEGPU->random.uniform<float>() < s_MAPK_RAS_tt && FLAMEGPU->random.uniform<float>() < s_delivery_tt){
+                s_MAPK_RAS = 0;
             }
         }
-        const int s_MAPK_RAS = FLAMEGPU->random.uniform<float>() < s_MAPK_RAS_fn ? 1 : 0;
+
         int s_JAB1 = FLAMEGPU->random.uniform<float>() < s_JAB1_fn ? 1 : 0;
         if (s_JAB1 == 1) {
             const float chemo1 = FLAMEGPU->environment.getProperty<float>("chemo_effects", CHEMO_OFFSET + 1);
+            const float s_JAB1_tt = FLAMEGPU->getVariable<float>("JAB1_tt");
             if (CHEMO_ACTIVE && FLAMEGPU->random.uniform<float>() < chemo1) {
+                s_JAB1 = 0;
+            } else if(FLAMEGPU->random.uniform<float>() < s_JAB1_tt && FLAMEGPU->random.uniform<float>() < s_delivery_tt) {
                 s_JAB1 = 0;
             }
         }
-        int s_CHK1 = (FLAMEGPU->random.uniform<float>() < s_CHK1_fn && s_DNA_damage == 1) || (FLAMEGPU->random.uniform<float>() < s_CHK1_fn && s_DNA_damage == 1 && s_MYCN == 1) ? 1 : 0;
+
+       int s_CHK1 = (FLAMEGPU->random.uniform<float>() < s_CHK1_fn && s_DNA_damage == 1) || (FLAMEGPU->random.uniform<float>() < s_CHK1_fn && s_DNA_damage == 1 && s_MYCN == 1) ? 1 : 0;
         if (s_CHK1 == 1) {
             const float chemo0 = FLAMEGPU->environment.getProperty<float>("chemo_effects", CHEMO_OFFSET + 0);
+            const float s_CHK1_tt = FLAMEGPU->getVariable<float>("CHK1_tt");
             if (CHEMO_ACTIVE && FLAMEGPU->random.uniform<float>() < chemo0) {
+                s_CHK1 = 0;
+            } else if(FLAMEGPU->random.uniform<float>() < s_CHK1_tt && FLAMEGPU->random.uniform<float>() < s_delivery_tt) {
                 s_CHK1 = 0;
             }
         }
-        const int s_ID2 = FLAMEGPU->random.uniform<float>() < s_ID2_fn && s_MYCN == 1 ? 1 : 0;
-        const int s_IAP2 = FLAMEGPU->random.uniform<float>() < s_IAP2_fn && s_hypoxia == 1 ? 1 : 0;
+        int s_ID2 = FLAMEGPU->random.uniform<float>() < s_ID2_fn && s_MYCN == 1 ? 1 : 0;
+        if (s_ID2 == 1) {
+            const float s_ID2_tt = FLAMEGPU->getVariable<float>("ID2_tt");
+            if(FLAMEGPU->random.uniform<float>() < s_ID2_tt && FLAMEGPU->random.uniform<float>() < s_delivery_tt){
+                s_ID2 = 0;
+            }
+        }
+        int s_IAP2 = FLAMEGPU->random.uniform<float>() < s_IAP2_fn && s_hypoxia == 1 ? 1 : 0;
+        if (s_IAP2 == 1) {
+            const float s_IAP2_tt = FLAMEGPU->getVariable<float>("IAP2_tt");
+            if(FLAMEGPU->random.uniform<float>() < s_IAP2_tt && FLAMEGPU->random.uniform<float>() < s_delivery_tt){
+                s_IAP2 = 0;
+            }
+        }
         int s_p53 = FLAMEGPU->getVariable<int>("p53");
         int s_p73 = FLAMEGPU->getVariable<int>("p73");
         int s_HIF = ((FLAMEGPU->random.uniform<float>() < s_HIF_fn && s_hypoxia == 1) || (FLAMEGPU->random.uniform<float>() < s_HIF_fn && s_hypoxia == 1 && s_JAB1 == 1)) && !(s_p53 == 1 || s_p73 == 1) ? 1 : 0;
         if (s_HIF == 1) {
             const float chemo2 = FLAMEGPU->environment.getProperty<float>("chemo_effects", CHEMO_OFFSET + 2);
+	    const float s_HIF_tt = FLAMEGPU->getVariable<float>("HIF_tt");
             if (CHEMO_ACTIVE && FLAMEGPU->random.uniform<float>() < chemo2) {
+                s_HIF = 0;
+            } else if(FLAMEGPU->random.uniform<float>() < s_HIF_tt && FLAMEGPU->random.uniform<float>() < s_delivery_tt) {
                 s_HIF = 0;
             }
         }
-        const int s_BNIP3 = FLAMEGPU->random.uniform<float>() < s_BNIP3_fn && s_HIF == 1 ? 1 : 0;
-        const int s_VEGF = FLAMEGPU->random.uniform<float>() < s_VEGF_fn && s_HIF == 1 ? 1 : 0;
+        int s_BNIP3 = FLAMEGPU->random.uniform<float>() < s_BNIP3_fn && s_HIF == 1 ? 1 : 0;
+        if (s_BNIP3 == 1) {
+            const float s_BNIP3_tt = FLAMEGPU->getVariable<float>("BNIP3_tt");
+            if(FLAMEGPU->random.uniform<float>() < s_BNIP3_tt && FLAMEGPU->random.uniform<float>() < s_delivery_tt){
+                s_BNIP3 = 0;
+            }
+        }
+        int s_VEGF = FLAMEGPU->random.uniform<float>() < s_VEGF_fn && s_HIF == 1 ? 1 : 0;
+        if (s_VEGF == 1) {
+            const float s_VEGF_tt = FLAMEGPU->getVariable<float>("VEGF_tt");
+            if(FLAMEGPU->random.uniform<float>() < s_VEGF_tt && FLAMEGPU->random.uniform<float>() < s_delivery_tt){
+                s_VEGF = 0;
+            }
+        }
         const int s_MYCN_amp = FLAMEGPU->getVariable<int>("MYCN_amp");
         s_p53 = ((FLAMEGPU->random.uniform<float>() < s_p53_fn && s_DNA_damage == 1) ||
                 (FLAMEGPU->random.uniform<float>() < s_p53_fn && s_DNA_damage == 1 && s_MYCN == 1) ||
@@ -169,20 +215,58 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
                 ? 1 : 0;
         if (s_p53 == 1) {
             const float chemo5 = FLAMEGPU->environment.getProperty<float>("chemo_effects", CHEMO_OFFSET + 5);
+            const float s_p53_tt = FLAMEGPU->getVariable<float>("p53_tt");
             if (CHEMO_ACTIVE && FLAMEGPU->random.uniform<float>() < chemo5) {
+                s_p53 = 0;
+            } else if(FLAMEGPU->random.uniform<float>() < s_p53_tt && FLAMEGPU->random.uniform<float>() < s_delivery_tt) {
                 s_p53 = 0;
             }
         }
         s_p73 = (FLAMEGPU->random.uniform<float>() < s_p73_fn && s_CHK1 == 1) ||
                 (FLAMEGPU->random.uniform<float>() < s_p73_fn && s_HIF == 1)
                 ? 1 : 0;
-        const int s_p21 = ((FLAMEGPU->random.uniform<float>() < s_p21_fn && s_HIF == 1) || (FLAMEGPU->random.uniform<float>() < s_p21_fn && s_p53 == 1)) && !(s_MAPK_RAS == 1 || s_MYCN == 1) ? 1 : 0;
-        const int s_p27 = ((FLAMEGPU->random.uniform<float>() < s_p27_fn && s_HIF == 1) || (FLAMEGPU->random.uniform<float>() < s_p27_fn && s_p53 == 1)) && !(s_MAPK_RAS == 1 || s_MYCN == 1) ? 1 : 0;
-        const int s_Bcl2_Bclxl = (FLAMEGPU->random.uniform<float>() < s_Bcl2_Bclxl_fn && !(s_BNIP3 == 1 || s_p53 == 1 || s_p73 == 1)) ? 1 : 0;
-        const int s_BAK_BAX = ((FLAMEGPU->random.uniform<float>() < s_BAK_BAX_fn && s_hypoxia == 1) || (FLAMEGPU->random.uniform<float>() < s_BAK_BAX_fn && s_p53 == 1) || (FLAMEGPU->random.uniform<float>() < s_BAK_BAX_fn && s_p73 == 1)) && !(s_Bcl2_Bclxl == 1 || s_IAP2 == 1) ? 1 : 0;
+        if (s_p73 == 1) {
+            const float s_p73_tt = FLAMEGPU->getVariable<float>("p73_tt");
+            if(FLAMEGPU->random.uniform<float>() < s_p73_tt && FLAMEGPU->random.uniform<float>() < s_delivery_tt){
+                s_p73 = 0;
+            }
+        }
+        int s_p21 = ((FLAMEGPU->random.uniform<float>() < s_p21_fn && s_HIF == 1) || (FLAMEGPU->random.uniform<float>() < s_p21_fn && s_p53 == 1)) && !(s_MAPK_RAS == 1 || s_MYCN == 1) ? 1 : 0;
+        if (s_p21 == 1) {
+            const float s_p21_tt = FLAMEGPU->getVariable<float>("p21_tt");
+            if(FLAMEGPU->random.uniform<float>() < s_p21_tt && FLAMEGPU->random.uniform<float>() < s_delivery_tt){
+                s_p21 = 0;
+            }
+        }
+        int s_p27 = ((FLAMEGPU->random.uniform<float>() < s_p27_fn && s_HIF == 1) || (FLAMEGPU->random.uniform<float>() < s_p27_fn && s_p53 == 1)) && !(s_MAPK_RAS == 1 || s_MYCN == 1) ? 1 : 0;
+        if (s_p27 == 1) {
+            const float s_p27_tt = FLAMEGPU->getVariable<float>("p27_tt");
+            if(FLAMEGPU->random.uniform<float>() < s_p27_tt && FLAMEGPU->random.uniform<float>() < s_delivery_tt){
+                s_p27 = 0;
+            }
+        }
+        int s_Bcl2_Bclxl = (FLAMEGPU->random.uniform<float>() < s_Bcl2_Bclxl_fn && !(s_BNIP3 == 1 || s_p53 == 1 || s_p73 == 1)) ? 1 : 0;
+        if (s_Bcl2_Bclxl == 1) {
+            const float s_Bcl2_Bclxl_tt = FLAMEGPU->getVariable<float>("Bcl2_Bclxl_tt");
+            if(FLAMEGPU->random.uniform<float>() < s_Bcl2_Bclxl_tt && FLAMEGPU->random.uniform<float>() < s_delivery_tt){
+                s_Bcl2_Bclxl = 0;
+            }
+        }
+        int s_BAK_BAX = ((FLAMEGPU->random.uniform<float>() < s_BAK_BAX_fn && s_hypoxia == 1) || (FLAMEGPU->random.uniform<float>() < s_BAK_BAX_fn && s_p53 == 1) || (FLAMEGPU->random.uniform<float>() < s_BAK_BAX_fn && s_p73 == 1)) && !(s_Bcl2_Bclxl == 1 || s_IAP2 == 1) ? 1 : 0;
+        if (s_BAK_BAX == 1) {
+            const float s_BAK_BAX_tt = FLAMEGPU->getVariable<float>("BAK_BAX_tt");
+            if(FLAMEGPU->random.uniform<float>() < s_BAK_BAX_tt && FLAMEGPU->random.uniform<float>() < s_delivery_tt){
+                s_BAK_BAX = 0;
+            }
+        }
         const int s_ATP = FLAMEGPU->getVariable<int>("ATP");
-        const int s_CAS = ((FLAMEGPU->random.uniform<float>() < s_CAS_fn && s_BAK_BAX == 1) || (FLAMEGPU->random.uniform<float>() < s_CAS_fn && s_hypoxia == 1)) && s_ATP == 1 ? 1 : 0;
-
+        int s_CAS = ((FLAMEGPU->random.uniform<float>() < s_CAS_fn && s_BAK_BAX == 1) || (FLAMEGPU->random.uniform<float>() < s_CAS_fn && s_hypoxia == 1)) && s_ATP == 1 ? 1 : 0;
+        if (s_CAS == 1) {
+            const float s_CAS_tt = FLAMEGPU->getVariable<float>("CAS_tt");
+            if(FLAMEGPU->random.uniform<float>() < s_CAS_tt && FLAMEGPU->random.uniform<float>() < s_delivery_tt){
+                s_CAS = 0;
+            }
+        }
         FLAMEGPU->setVariable<int>("MYCN", s_MYCN);
         FLAMEGPU->setVariable<int>("MAPK_RAS", s_MAPK_RAS);
         FLAMEGPU->setVariable<int>("JAB1", s_JAB1);
@@ -208,11 +292,22 @@ __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu
                 FLAMEGPU->setVariable<int>("DNA_unreplicated", 0);
             }
         }
-
         const float s_CDS1_fn = FLAMEGPU->getVariable<float>("CDS1_fn");
         const float s_CDC25C_fn = FLAMEGPU->getVariable<float>("CDC25C_fn");
-        const int s_CDS1 = (FLAMEGPU->random.uniform<float>() < s_CDS1_fn && s_DNA_unreplicated == 1) ? 1 : 0;
-        const int s_CDC25C = FLAMEGPU->random.uniform<float>() < s_CDC25C_fn && !(s_CDS1 == 1 || s_CHK1 == 1) ? 1 : 0;
+        int s_CDS1 = (FLAMEGPU->random.uniform<float>() < s_CDS1_fn && s_DNA_unreplicated == 1) ? 1 : 0;
+        if (s_CDS1 == 1) {
+            const float s_CDS1_tt = FLAMEGPU->getVariable<float>("CDS1_tt");
+            if(FLAMEGPU->random.uniform<float>() < s_CDS1_tt && FLAMEGPU->random.uniform<float>() < s_delivery_tt){
+                s_CDS1 = 0;
+            }
+        }
+        int s_CDC25C = FLAMEGPU->random.uniform<float>() < s_CDC25C_fn && !(s_CDS1 == 1 || s_CHK1 == 1) ? 1 : 0;
+        if (s_CDC25C == 1) {
+            const float s_CDC25C_tt = FLAMEGPU->getVariable<float>("CDC25C_tt");
+            if(FLAMEGPU->random.uniform<float>() < s_CDC25C_tt && FLAMEGPU->random.uniform<float>() < s_delivery_tt){
+                s_CDC25C = 0;
+            }
+        }
         FLAMEGPU->setVariable<int>("CDS1", s_CDS1);
         FLAMEGPU->setVariable<int>("CDC25C", s_CDC25C);
 
@@ -447,8 +542,21 @@ __device__ __forceinline__ bool Neuroblastoma_divide(flamegpu::DeviceAPI<flamegp
     //      (b)If it has at least one telomere unit, shorten its telomere.
     const unsigned int s_cycle = FLAMEGPU->getVariable<unsigned int>("cycle");
     int s_telo_count = FLAMEGPU->getVariable<int>("telo_count");
-    const int s_telo = FLAMEGPU->getVariable<int>("telo");
-    const int s_ALT = FLAMEGPU->getVariable<int>("ALT");
+    int s_telo = FLAMEGPU->getVariable<int>("telo");
+    const float s_delivery_tt = FLAMEGPU->getVariable<float>("delivery_tt");
+    if (s_telo == 1) {
+        const float s_telo_tt = FLAMEGPU->getVariable<float>("telo_tt");
+        if(FLAMEGPU->random.uniform<float>() < s_telo_tt && FLAMEGPU->random.uniform<float>() < s_delivery_tt){
+            s_telo = 0;
+        }
+    }
+    int s_ALT = FLAMEGPU->getVariable<int>("ALT");
+    if (s_ALT == 1) {
+        const float s_ALT_tt = FLAMEGPU->getVariable<float>("ALT_tt");
+        if(FLAMEGPU->random.uniform<float>() < s_ALT_tt && FLAMEGPU->random.uniform<float>() < s_delivery_tt){
+            s_ALT = 0;
+        }
+    }
     const int telo_maximum = FLAMEGPU->environment.getProperty<unsigned int>("telo_maximum");
     const float P_telorp = FLAMEGPU->environment.getProperty<float>("P_telorp");
     const unsigned int step_size = FLAMEGPU->environment.getProperty<unsigned int>("step_size");
