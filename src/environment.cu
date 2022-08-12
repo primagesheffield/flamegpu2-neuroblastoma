@@ -80,22 +80,22 @@ void data_layer_2(flamegpu::ModelDescription& model) {
     auto& env = model.Environment();
     // MYCN_fnxx: Functional activity of MYCN (continuous, 0 to 1), default (-1) means unknown.
     // This value depends on MYCN_amp and ALK.
-    const float MYCN_fn11 = 0.942648156f;  // Calibration LHC#564
+    const float MYCN_fn11 = 0.331408f;
     const float MYCN_fn00 = 0.8f * 0.71f * MYCN_fn11;
     const float MYCN_fn10 = 0.71f * MYCN_fn11;
     const float MYCN_fn01 = 0.8f * MYCN_fn11;
     // MAPK_RAS_fnxx: Functional activity of MAPK/RAS signalling (continuous, 0 to 1), default (-1) means unknown.
     // This value depends on MYCN_amp and ALK.
-    const float MAPK_RAS_fn11 = 0.377627766f;  // Calibration LHC#564
+    const float MAPK_RAS_fn11 = 0.985655f;
     const float MAPK_RAS_fn10 = 0.77f * MAPK_RAS_fn11;
-    const float MAPK_RAS_fn01 = 0.003161348f;  // Calibration LHC#564
+    const float MAPK_RAS_fn01 = 0.869528f;
     const float MAPK_RAS_fn00 = 0.77f * MAPK_RAS_fn01;
     // Functional activity of p53 signalling (continuous, 0 to 1), default (-1) means unknown.
-    const float p53_fn = 0.198089528f;  // Calibration LHC#564
+    const float p53_fn = 0.277201f;
     // Functional activity of p73 signalling (continuous, 0 to 1), default (-1) means unknown.
-    const float p73_fn = 0.141041534f;  // Calibration LHC#564
+    const float p73_fn = 0.974863f;
     // Functional activity of HIF signalling (continuous, 0 to 1), default (-1) means unknown.
-    const float HIF_fn = 0.591769646f;  // Calibration LHC#564
+    const float HIF_fn = 0.606737f;
 
     env.newProperty<float>("MYCN_fn11", MYCN_fn11);
     env.newProperty<float>("MYCN_fn00", MYCN_fn00);
