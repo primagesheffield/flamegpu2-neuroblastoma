@@ -4,6 +4,7 @@
 #include "header.h"
 #include "main.h"
 #include "json.h"
+#include "flamegpu/util/detail/SteadyClockTimer.h"
 
 __device__ float mean2_mean;
 FLAMEGPU_CUSTOM_TRANSFORM(mean2_transform, a) {
@@ -183,6 +184,8 @@ FLAMEGPU_EXIT_FUNCTION(ConstructPrimageOutput) {
     }
 }
 int main(int argc, const char** argv) {
+    flamegpu::util::detail::SteadyClockTimer time;
+    time.start();
     // Parse commandline
     RunConfig cfg = parseArgs(argc, argv);
     // Parse input file
@@ -246,6 +249,17 @@ int main(int argc, const char** argv) {
     writeOrchestratorOutput(sim_out, cfg.primageOutputFile);
     // Output simulation time
     printf("Simulation completed in %f seconds!\n", sim.getElapsedTimeSimulation());
+
+    // Grab time and log to CSV
+    time.stop();
+    std::ofstream myfile("orchestrator_timings.csv");
+    if (myfile.is_open()) {
+        myfile << cfg.inFile << "," << input.V_tumour << "," << sim_out.tumour_volume << "," << time.getElapsedMilliseconds() << "\n";
+        myfile.close();
+    } else {
+        fprintf(stderr, "Unable to write to orchestrator_timings.csv");
+    }
+
     return 0;
 }
 RunConfig parseArgs(int argc, const char** argv) {
