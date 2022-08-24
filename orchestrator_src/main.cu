@@ -252,7 +252,7 @@ int main(int argc, const char** argv) {
 
     // Grab time and log to CSV
     time.stop();
-    std::ofstream myfile("orchestrator_timings.csv");
+    std::ofstream myfile("orchestrator_timings.csv", std::ofstream::out | std::ofstream::app);
     if (myfile.is_open()) {
         myfile << cfg.inFile << "," << input.V_tumour << "," << sim_out.tumour_volume << "," << time.getElapsedMilliseconds() << "\n";
         myfile.close();
