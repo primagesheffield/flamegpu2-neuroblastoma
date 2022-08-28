@@ -97,10 +97,10 @@ int main(int argc, const char ** argv) {
                         runs[ij].setProperty<float>("delivery_tt", 58.0f/72.0f);
 		    }
 		    for (int c = 0; c < 23; c++) {
-			if (c < 6){
+			if (c < 1){
 				runs[ij].setProperty<float>("clones_dummy", c, 0.0f);
-			} else if (c < 11) {
-                                runs[ij].setProperty<float>("clones_dummy", c, (c-5)*0.166666667f);
+			} else if (c < 6) {
+                                runs[ij].setProperty<float>("clones_dummy", c, (c)*0.166666667f);
 			} else {
                                 runs[ij].setProperty<float>("clones_dummy", c, 1.0f);
 			}
@@ -126,7 +126,7 @@ int main(int argc, const char ** argv) {
         flamegpu::CUDAEnsemble cuda_ensemble(model, argc, argv);
         cuda_ensemble.Config().concurrent_runs = 1;
         cuda_ensemble.Config().devices = { 0 };
-        cuda_ensemble.Config().out_directory = "TT_MA";
+        cuda_ensemble.Config().out_directory = "TT_WT_1to1000_results";
         cuda_ensemble.Config().out_format = "json";
         cuda_ensemble.setStepLog(step_log_cfg);
         cuda_ensemble.simulate(runs);
