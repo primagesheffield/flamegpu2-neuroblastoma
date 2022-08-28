@@ -98,9 +98,9 @@ int main(int argc, const char ** argv) {
 		    }
 		    for (int c = 0; c < 23; c++) {
 			if (c < 1){
-				runs[ij].setProperty<float>("clones_dummy", c, 0.0f);
+				runs[ij].setProperty<float>("clones_dummy", c, 0.166666667f);
 			} else if (c < 6) {
-                                runs[ij].setProperty<float>("clones_dummy", c, (c)*0.166666667f);
+                                runs[ij].setProperty<float>("clones_dummy", c, (c+1)*0.166666667f);
 			} else {
                                 runs[ij].setProperty<float>("clones_dummy", c, 1.0f);
 			}
