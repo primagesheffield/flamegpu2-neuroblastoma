@@ -196,7 +196,7 @@ void cell_death_parameters(flamegpu::ModelDescription& model) {
     env.newProperty<float>("P_DNA_damage_pathways", 0.256f);  // Calibrated LHC_Cal4, index 754.
     // Probability of losing an apoptotic signal in an unstressed cell in an hour.
     // Assumed to be 1 % .
-    env.newProperty<float>("P_apoprp", 0.957831979f);  // Calibration LHC#564
+    env.newProperty<float>("P_apoprp", 0.05f);  // Calibration LHC#564
     // Probability of losing a necrotic signal in an unstressed cell in an hour.
     // Assumed to be 1 % .
     env.newProperty<float>("P_necrorp", 0.98970852f);  // Calibration LHC#564
