@@ -199,7 +199,7 @@ void cell_death_parameters(flamegpu::ModelDescription& model) {
     // Number of apoptotic signals needed to kill the cell.
     env.newProperty<int>("apop_critical", 3);
     // Probability of losing an apoptotic signal in an unstressed cell in an hour.
-    env.newProperty<float>("P_apoprp", 0.957831979f);  // Calibration LHC#564
+    env.newProperty<float>("P_apoprp", 0.01f);
     // Probability of secondary necrosis in an hour.
     env.newProperty<float>("P_2ndnecro", 0.2f);
     // Probability of the immune system triggering a necrotic signal in a living cell per necrotic cell present per hour.
