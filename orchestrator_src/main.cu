@@ -184,22 +184,27 @@ FLAMEGPU_EXIT_FUNCTION(ConstructPrimageOutput) {
     }
 }
 int main(int argc, const char** argv) {
+    NVTX_PUSH("FileImport");
     flamegpu::util::detail::SteadyClockTimer time;
     time.start();
     // Parse commandline
     RunConfig cfg = parseArgs(argc, argv);
     // Parse input file
-    OrchestratorInput input = readOrchestratorInput(cfg.inFile);
+    OrchestratorInput input = readOrchestratorInput(cfg.inFile);    
+    NVTX_POP();
+    NVTX_PUSH("ModelDefine");
     // Setup model
     flamegpu::ModelDescription model("PRIMAGE: Neuroblastoma");
     defineModel(model);
     // Add function to construct orchestrator output
     model.addStepFunction(TrackInitVolume);
-    model.addExitFunction(ConstructPrimageOutput);
+    model.addExitFunction(ConstructPrimageOutput);    
+    NVTX_POP();
     // Construct fgpu2 inputs
     flamegpu::CUDASimulation sim(model);
     sim.SimulationConfig().steps = input.steps;
     sim.SimulationConfig().random_seed = input.seed;
+    sim.SimulationConfig().timing = true;
     sim.CUDAConfig().device_id = static_cast<int>(cfg.device);
     sim.applyConfig();
     sim.setEnvironmentProperty<int>("TERT_rarngm", input.TERT_rarngm);
@@ -239,6 +244,7 @@ int main(int argc, const char** argv) {
 
     // Run FGPU2
     sim.simulate();
+    NVTX_PUSH("FileExport");
     // Update delta outputs
     sim_out.delta_O2 = sim_out.O2 - input.O2;
     float cellularity_sum = 0;
@@ -259,6 +265,7 @@ int main(int argc, const char** argv) {
     } else {
         fprintf(stderr, "Unable to write to orchestrator_timings.csv");
     }
+    NVTX_POP();
 
     return 0;
 }

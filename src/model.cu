@@ -3,9 +3,18 @@
 FLAMEGPU_INIT_FUNCTION(ModelInit) {
     // With pete's change, these could be split into separate init functions that run in order
     // defineEnvironment procs init env
-    initNeuroblastoma(*FLAMEGPU);
-    initSchwann(*FLAMEGPU);
-    initGrid(*FLAMEGPU);
+    {
+        NVTX_RANGE("initNeuroblastoma");
+        initNeuroblastoma(*FLAMEGPU);
+    }
+    {
+        NVTX_RANGE("initSchwann");
+        initSchwann(*FLAMEGPU);
+    }
+    {
+        NVTX_RANGE("initGrid");
+        initGrid(*FLAMEGPU);
+    }
 }
 
 void defineModel(flamegpu::ModelDescription& model) {
