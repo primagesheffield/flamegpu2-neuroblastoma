@@ -3,8 +3,21 @@
 FLAMEGPU_INIT_FUNCTION(ModelInit) {
     // With pete's change, these could be split into separate init functions that run in order
     // defineEnvironment procs init env
-    initNeuroblastoma(*FLAMEGPU);
-    initSchwann(*FLAMEGPU);
+
+    const float rho_tumour = FLAMEGPU->environment.getProperty<float>("rho_tumour");
+    const float V_tumour = FLAMEGPU->environment.getProperty<float>("V_tumour");
+    const std::array<float, 6> cellularity = FLAMEGPU->environment.getProperty<float, 6>("cellularity");
+    const float total_cellularity_nb = cellularity[0] + cellularity[1] + cellularity[2];
+    const float total_cellularity_sc = cellularity[3] + cellularity[4] + cellularity[5];
+    const unsigned int NB_COUNT = (unsigned int)ceil(rho_tumour * V_tumour * total_cellularity_nb);
+    const unsigned int SC_COUNT = (unsigned int)ceil(rho_tumour * V_tumour * total_cellularity_sc);
+    // Fill a set, with SC_COUNT random numbers in the range [0, NB_COUNT + SC_COUNT)
+    std::set<unsigned int> sc_indices;
+    while(sc_indices.size() < SC_COUNT) {
+        sc_indices.insert(FLAMEGPU->random.uniform<unsigned int>(0, NB_COUNT + SC_COUNT - 1));
+    }
+    initNeuroblastoma(*FLAMEGPU, sc_indices);
+    initSchwann(*FLAMEGPU, sc_indices);
     initGrid(*FLAMEGPU);
 }
 

@@ -423,7 +423,7 @@ flamegpu::AgentDescription &defineSchwann(flamegpu::ModelDescription& model) {
     return sc;
 }
 
-void initSchwann(flamegpu::HostAPI &FLAMEGPU) {
+void initSchwann(flamegpu::HostAPI &FLAMEGPU, const std::set<unsigned int>& sc_indices) {
     auto SC =  FLAMEGPU.agent("Schwann");
     if (FLAMEGPU.agent("Schwann").count() != 0)
         return;  // SC agents must have been loaded already
@@ -444,7 +444,8 @@ void initSchwann(flamegpu::HostAPI &FLAMEGPU) {
     const float theta_sc = FLAMEGPU.environment.getProperty<float>("theta_sc");
 
     const std::array<float, 6> cellularity = FLAMEGPU.environment.getProperty<float, 6>("cellularity");
-    const float total_cellularity = cellularity[3] + cellularity[4] + cellularity[5];
+    const float total_cellularity_nb = cellularity[0] + cellularity[1] + cellularity[2];
+    const float total_cellularity_sc = cellularity[3] + cellularity[4] + cellularity[5];
     const int orchestrator_time = FLAMEGPU.environment.getProperty<int>("orchestrator_time");
 
     const float sc_telomere_length_mean = FLAMEGPU.environment.getProperty<float>("sc_telomere_length_mean");
@@ -454,20 +455,34 @@ void initSchwann(flamegpu::HostAPI &FLAMEGPU) {
     const float sc_apop_signal_mean = FLAMEGPU.environment.getProperty<float>("sc_apop_signal_mean");
     const float sc_apop_signal_sd = FLAMEGPU.environment.getProperty<float>("sc_apop_signal_sd");
 
-    const unsigned int SC_COUNT = (unsigned int)ceil(rho_tumour * V_tumour * total_cellularity);
+    const unsigned int NB_COUNT = (unsigned int)ceil(rho_tumour * V_tumour * total_cellularity_nb);
+    const unsigned int SC_COUNT = (unsigned int)ceil(rho_tumour * V_tumour * total_cellularity_sc);
+    const unsigned int TOTAL_COUNT = NB_COUNT + SC_COUNT;
     unsigned int validation_Nscl = 0;
-    for (unsigned int i = 0; i < SC_COUNT; ++i) {
+    for (unsigned int j : sc_indices) {
         // Decide cell type (living, apop, necro)
-        const float cell_rng = FLAMEGPU.random.uniform<float>() * total_cellularity;
+        const float cell_rng = FLAMEGPU.random.uniform<float>() * total_cellularity_sc;
         const int IS_APOP = cell_rng >= cellularity[3] && cell_rng < cellularity[3] + cellularity[4];
         const int IS_NECRO = cell_rng >= cellularity[3] + cellularity[4];
 
         auto agt = SC.newAgent();
+
+        // Place agent according to it's index in a cube with dims 2*R_tumour
+        // Cube root of Total count gives how many agents per row
+        float cb_rt = cbrt(TOTAL_COUNT);
+        // The total length if we were to run a line through every row
+        float total_length = (2 * R_tumour) * ceil(cb_rt) * ceil(cb_rt);
+        // Line offset into total_length
+        float offset = total_length * static_cast<float>(j) / TOTAL_COUNT;
+        // line index and line offset
+        unsigned int line_index = floor(offset / (2 * R_tumour));
+        unsigned int line_offset = offset - (line_index * 2 * R_tumour);
+        float x = line_offset;
+        float y = (line_index % static_cast<unsigned int>(ceil(cb_rt))) * ((2 * R_tumour) / ceil(cb_rt));
+        float z = (line_index / static_cast<unsigned int>(ceil(cb_rt))) * ((2 * R_tumour) / ceil(cb_rt));
+
         // Data Layer 0 (integration with imaging biomarkers).
-        agt.setVariable<glm::vec3>("xyz",
-            glm::vec3(-R_tumour + (FLAMEGPU.random.uniform<float>() * 2 * R_tumour),
-                -R_tumour + (FLAMEGPU.random.uniform<float>() * 2 * R_tumour),
-                -R_tumour + (FLAMEGPU.random.uniform<float>() * 2 * R_tumour)));
+        agt.setVariable<glm::vec3>("xyz", glm::vec3(-R_tumour +x, -R_tumour + y, -R_tumour + z));
         // Initial conditions.
         agt.setVariable<glm::vec3>("Fxyz", glm::vec3(0));
         agt.setVariable<float>("overlap", 0);

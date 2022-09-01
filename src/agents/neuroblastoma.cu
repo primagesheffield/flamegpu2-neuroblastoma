@@ -724,7 +724,7 @@ flamegpu::AgentDescription& defineNeuroblastoma(flamegpu::ModelDescription& mode
     return nb;
 }
 
-void initNeuroblastoma(flamegpu::HostAPI &FLAMEGPU) {
+void initNeuroblastoma(flamegpu::HostAPI &FLAMEGPU, const std::set<unsigned int> &sc_indices) {
     auto NB =  FLAMEGPU.agent("Neuroblastoma");
     if (FLAMEGPU.agent("Neuroblastoma").count() != 0)
         return;  // NB agents must have been loaded already
@@ -776,7 +776,8 @@ void initNeuroblastoma(flamegpu::HostAPI &FLAMEGPU) {
     const float theta_sc = FLAMEGPU.environment.getProperty<float>("theta_sc");
 
     const std::array<float, 6> cellularity = FLAMEGPU.environment.getProperty<float, 6>("cellularity");
-    const float total_cellularity = cellularity[0] + cellularity[1] + cellularity[2];
+    const float total_cellularity_nb = cellularity[0] + cellularity[1] + cellularity[2];
+    const float total_cellularity_sc = cellularity[3] + cellularity[4] + cellularity[5];
     const int orchestrator_time = FLAMEGPU.environment.getProperty<int>("orchestrator_time");
 
     const float nb_telomere_length_mean = FLAMEGPU.environment.getProperty<float>("nb_telomere_length_mean");
@@ -788,20 +789,40 @@ void initNeuroblastoma(flamegpu::HostAPI &FLAMEGPU) {
     const float nb_apop_signal_mean = FLAMEGPU.environment.getProperty<float>("nb_apop_signal_mean");
     const float nb_apop_signal_sd = FLAMEGPU.environment.getProperty<float>("nb_apop_signal_sd");
 
-    const unsigned int NB_COUNT = (unsigned int)ceil(rho_tumour * V_tumour * total_cellularity);
+    const unsigned int NB_COUNT = (unsigned int)ceil(rho_tumour * V_tumour * total_cellularity_nb);
+    const unsigned int SC_COUNT = (unsigned int)ceil(rho_tumour * V_tumour * total_cellularity_sc);
+    const unsigned int TOTAL_COUNT = NB_COUNT + SC_COUNT;
     unsigned int validation_Nnbl = 0;
+    unsigned int j = 0;
     for (unsigned int i = 0; i < NB_COUNT; ++i) {
         // Decide cell type (living, apop, necro)
-        const float cell_rng = FLAMEGPU.random.uniform<float>() * total_cellularity;
+        const float cell_rng = FLAMEGPU.random.uniform<float>() * total_cellularity_nb;
         const int IS_APOP = cell_rng >= cellularity[0] && cell_rng < cellularity[0] + cellularity[1];
         const int IS_NECRO = cell_rng >= cellularity[0] + cellularity[1];
 
+        // Device index for the agent
+        while(sc_indices.find(j) != sc_indices.end()) {
+            ++j;
+        }
+
         auto agt = NB.newAgent();
+
+        // Place agent according to it's index in a cube with dims 2*R_tumour
+        // Cube root of Total count gives how many agents per row
+        float cb_rt = cbrt(TOTAL_COUNT);
+        // The total length if we were to run a line through every row
+        float total_length = (2* R_tumour) * ceil(cb_rt) * ceil(cb_rt);
+        // Line offset into total_length
+        float offset = total_length * static_cast<float>(j) / TOTAL_COUNT;
+        // line index and line offset
+        unsigned int line_index = floor(offset / (2 * R_tumour));
+        unsigned int line_offset = offset- (line_index * 2 * R_tumour);
+        float x = line_offset;
+        float y = (line_index % static_cast<unsigned int>(ceil(cb_rt))) * ((2 * R_tumour) / ceil(cb_rt));
+        float z = (line_index / static_cast<unsigned int>(ceil(cb_rt))) * ((2 * R_tumour) / ceil(cb_rt));
+
         // Spatial coordinates (integration with imaging biomarkers).
-        agt.setVariable<glm::vec3>("xyz",
-            glm::vec3(-R_tumour + (FLAMEGPU.random.uniform<float>() * 2 * R_tumour),
-                -R_tumour + (FLAMEGPU.random.uniform<float>() * 2 * R_tumour),
-                -R_tumour + (FLAMEGPU.random.uniform<float>() * 2 * R_tumour)));
+        agt.setVariable<glm::vec3>("xyz", glm::vec3(-R_tumour +x, -R_tumour + y, -R_tumour + z));
         // Data Layer 1 (integration with genetic/molecular biomarkers).
         agt.setVariable<int>("MYCN_amp", MYCN_amp < 0 ? static_cast<int>(FLAMEGPU.random.uniform<float>() < 0.5) : MYCN_amp);
         agt.setVariable<int>("TERT_rarngm", TERT_rarngm < 0 ? static_cast<int>(FLAMEGPU.random.uniform<float>() < 0.5) : TERT_rarngm);
@@ -1004,6 +1025,9 @@ void initNeuroblastoma(flamegpu::HostAPI &FLAMEGPU) {
 
         // Internal.
         agt.setVariable<float>("force_magnitude", 0);
+
+        // Need to increment for created agent
+        ++j;
     }
     FLAMEGPU.environment.setProperty<unsigned int>("validation_Nnbl", validation_Nnbl);
 }

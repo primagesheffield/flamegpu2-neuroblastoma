@@ -33,7 +33,7 @@ flamegpu::AgentDescription& defineNeuroblastoma(flamegpu::ModelDescription& mode
  * Allocate and init all Neuroblastoma agents
  * @note This must follow derived environment initialisation
  */
-void initNeuroblastoma(flamegpu::HostAPI& FLAMEGPU);
+void initNeuroblastoma(flamegpu::HostAPI& FLAMEGPU, const std::set<unsigned int>& sc_indices);
 
 /**
  * Define the Schwann agent properties
@@ -43,7 +43,7 @@ flamegpu::AgentDescription& defineSchwann(flamegpu::ModelDescription& model);
  * Allocate and init all Schwann agents
  * @note This must follow derived environment initialisation
  */
-void initSchwann(flamegpu::HostAPI& FLAMEGPU);
+void initSchwann(flamegpu::HostAPI& FLAMEGPU, const std::set<unsigned int>& sc_indices);
 
 /**
  * Define the Grid agent/macro property
