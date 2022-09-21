@@ -78,21 +78,21 @@ void data_layer_1(flamegpu::ModelDescription& model) {
 void data_layer_2(flamegpu::ModelDescription& model) {
     auto& env = model.Environment();
     // Function of MYCN (continuous, 0 to 1), default (-1) means unknown.
-    const float MYCN_fn11 = 0.942648156f;  // Calibration LHC#564
+    const float MYCN_fn11 = 0.331408f;  // LHC_v13.9_Mabg 485
     const float MYCN_fn00 = 0.8f * 0.71f * MYCN_fn11;
     const float MYCN_fn10 = 0.71f * MYCN_fn11;
     const float MYCN_fn01 = 0.8f * MYCN_fn11;
     // Function of MAPK/RAS signalling (continuous, 0 to 1), default (-1) means unknown.
-    const float MAPK_RAS_fn11 = 0.377627766f;  // Calibration LHC#564
+    const float MAPK_RAS_fn11 = 0.985655f;  // LHC_v13.9_Mabg 485
     const float MAPK_RAS_fn10 = 0.77f * MAPK_RAS_fn11;
-    const float MAPK_RAS_fn01 = 0.003161348f;  // Calibration LHC#564
+    const float MAPK_RAS_fn01 = 0.869528f; // LHC_v13.9_Mabg 485
     const float MAPK_RAS_fn00 = 0.77f * MAPK_RAS_fn01;
     // Function of p53 signalling (continuous, 0 to 1), default (-1) means unknown.
-    const float p53_fn = 0.198089528f;  // Calibration LHC#564
+    const float p53_fn = 0.277201f;  // LHC_v13.9_Mabg 485
     // Function of p73 signalling (continuous, 0 to 1), default (-1) means unknown.
-    const float p73_fn = 0.141041534f;  // Calibration LHC#564
+    const float p73_fn = 0.974863f;  // LHC_v13.9_Mabg 485
     // Function of HIF signalling (continuous, 0 to 1), default (-1) means unknown.
-    const float HIF_fn = 0.591769646f;  // Calibration LHC#564
+    const float HIF_fn = 0.606737f;  // LHC_v13.9_Mabg 485
 
     env.newProperty<float>("MYCN_fn11", MYCN_fn11);
     env.newProperty<float>("MYCN_fn00", MYCN_fn00);
@@ -196,7 +196,8 @@ void cell_death_parameters(flamegpu::ModelDescription& model) {
     env.newProperty<float>("P_DNA_damage_pathways", 0.256f);  // Calibrated LHC_Cal4, index 754.
     // Probability of losing an apoptotic signal in an unstressed cell in an hour.
     // Assumed to be 1 % .
-    env.newProperty<float>("P_apoprp", 0.05f);  // Calibration LHC#564
+    // Made some changes to slow down recovery in the absence of chemo.
+    env.newProperty<float>("P_apoprp", 0.01f);  // Calibration LHC#564
     // Probability of losing a necrotic signal in an unstressed cell in an hour.
     // Assumed to be 1 % .
     env.newProperty<float>("P_necrorp", 0.98970852f);  // Calibration LHC#564
