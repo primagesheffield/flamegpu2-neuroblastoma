@@ -177,7 +177,7 @@ void stress_related_parameters(flamegpu::ModelDescription& model) {
     // Probability of gaining one unit of telomere in an hour, when telomerase or ALT is active.
     env.newProperty<float>("P_telorp", 0.08895382f);  // Calibration LHC#564
     // Probability of gaining DNA damage in an hour due to chemotherapy.
-    env.newProperty<float>("P_apopChemo", 0.644f);  // Calibrated LHC_Cal4, index 754.
+    env.newProperty<float>("P_apopChemo", 0.644f*0.1f);  // Calibrated LHC_Cal4, index 754.
     // Probability of gaining DNA damage in an hour due to hypoxia.
     env.newProperty<float>("P_DNA_damageHypo", 0.772947675f);  // Calibration LHC#564
     // Probability of repairing DNA damage in an hour.
@@ -195,11 +195,11 @@ void stress_related_parameters(flamegpu::ModelDescription& model) {
 void cell_death_parameters(flamegpu::ModelDescription& model) {
     auto& env = model.Environment();
     // Probability of DNA damages triggering CAS-independent pathways to induce an apoptotic signal in an hour.
-    env.newProperty<float>("P_DNA_damage_pathways", 0.256f);  // Calibrated LHC_Cal4, index 754.
+    env.newProperty<float>("P_DNA_damage_pathways", 0.256f*0.1f);  // Calibrated LHC_Cal4, index 754.
     // Number of apoptotic signals needed to kill the cell.
     env.newProperty<int>("apop_critical", 3);
     // Probability of losing an apoptotic signal in an unstressed cell in an hour.
-    env.newProperty<float>("P_apoprp", 0.01f);
+    env.newProperty<float>("P_apoprp", 0.03f);
     // Probability of secondary necrosis in an hour.
     env.newProperty<float>("P_2ndnecro", 0.2f);
     // Probability of the immune system triggering a necrotic signal in a living cell per necrotic cell present per hour.
