@@ -7,6 +7,7 @@
 #include <fstream>
 #include <stack>
 #include <set>
+#include <cassert>
 
 #include "json.h"
 /**
@@ -200,6 +201,17 @@ class JSONStateReader_impl : public rapidjson::BaseReaderHandler<rapidjson::UTF8
             if (lastKey == "cellularity" && current_variable_array_index !=6) {
                 fprintf(stderr, "Cellularity array should have length 6 (%u != 6).\n", current_variable_array_index);
                 throw std::exception();
+            } else {  
+                // Primage provides array in different order to what we implemented
+                // So remap it here
+                assert(input.cellularity == 6);          
+                // 0 NB living (already correct)
+                // 4 SC Apop (already correct)
+                // 5 SC Necro (already correct)
+                // SC Living 3->1 (correct), NB Apop 1->3
+                std::swap(input.cellularity[1], input.cellularity[3]);
+                // NB Apop 3->2 (correct), NB Necro 2->3 (correct)
+                std::swap(input.cellularity[3], input.cellularity[2]);
             }
             current_variable_array_index = 0;
         }
