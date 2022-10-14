@@ -204,7 +204,7 @@ class JSONStateReader_impl : public rapidjson::BaseReaderHandler<rapidjson::UTF8
             } else {  
                 // Primage provides array in different order to what we implemented
                 // So remap it here
-                assert(input.cellularity == 6);          
+                // assert(input.cellularity.size() == 6);          
                 // 0 NB living (already correct)
                 // 4 SC Apop (already correct)
                 // 5 SC Necro (already correct)
