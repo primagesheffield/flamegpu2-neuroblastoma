@@ -187,6 +187,7 @@ int main(int argc, const char** argv) {
     RunConfig cfg = parseArgs(argc, argv);
     // Parse input file
     OrchestratorInput input = readOrchestratorInput(cfg.inFile);
+    printf("Input file: %s\n", cfg.inFile.c_str());
     // Setup model
     flamegpu::ModelDescription model("PRIMAGE: Neuroblastoma");
     defineModel(model);

@@ -789,6 +789,7 @@ void initNeuroblastoma(flamegpu::HostAPI &FLAMEGPU) {
     const float nb_apop_signal_sd = FLAMEGPU.environment.getProperty<float>("nb_apop_signal_sd");
 
     const unsigned int NB_COUNT = (unsigned int)ceil(rho_tumour * V_tumour * total_cellularity);
+    printf("NB_COUNT: %u\n", NB_COUNT);
     unsigned int validation_Nnbl = 0;
     for (unsigned int i = 0; i < NB_COUNT; ++i) {
         // Decide cell type (living, apop, necro)
