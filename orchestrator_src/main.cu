@@ -175,7 +175,7 @@ FLAMEGPU_EXIT_FUNCTION(ConstructPrimageOutput) {
         const auto sc_necro_signal_count0 = Schwann.count<int>("necro_signal", 0);
         sc_necro_signal_mean2 += (sc_necro_signal_count0 - (SC_apop_count + SC_necro_count)) * pow(sim_out.sc_necro_signal_mean, 2);
         const auto sc_apop_signal_count0 = Schwann.count<int>("apop_signal", 0);
-        sc_apop_signal_mean2 += (sc_telomere_length_count0 - (SC_apop_count + SC_necro_count)) * pow(sim_out.sc_apop_signal_mean, 2);
+        sc_apop_signal_mean2 += (sc_apop_signal_count0 - (SC_apop_count + SC_necro_count)) * pow(sim_out.sc_apop_signal_mean, 2);
         // Divide and sqrt for the sd
         sim_out.sc_telomere_length_sd = static_cast<float>(sqrt(sc_telomere_length_mean2 / SC_living_count));
         sim_out.sc_necro_signal_sd = static_cast<float>(sqrt(sc_necro_signal_mean2 / SC_living_count));
