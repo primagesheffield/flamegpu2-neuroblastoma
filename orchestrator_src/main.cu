@@ -80,6 +80,12 @@ FLAMEGPU_EXIT_FUNCTION(ConstructPrimageOutput) {
     const unsigned int SC_living_count = FLAMEGPU->environment.getProperty<unsigned int>("validation_Nscl");
     const unsigned int SC_apop_count = Schwann.sum<int>("apop");
     const unsigned int SC_necro_count = Schwann.sum<int>("necro");
+    printf("END_NB_living_count: %u\n", NB_living_count);
+    printf("END_NB_apop_count: %u\n", NB_apop_count);
+    printf("END_NB_necro_count: %u\n", NB_necro_count);
+    printf("END_SC_living_count: %u\n", SC_living_count);
+    printf("END_SC_apop_count: %u\n", SC_apop_count);
+    printf("END_SC_necro_count: %u\n", SC_necro_count);
     const unsigned int TOTAL_CELL_COUNT = NB_living_count + NB_apop_count + NB_necro_count + SC_living_count + SC_apop_count + SC_necro_count;
     // Calculate each fraction (e.g. number of living SCs/number of all cells) and multiply it by (1-matrix).
     if (TOTAL_CELL_COUNT) {
