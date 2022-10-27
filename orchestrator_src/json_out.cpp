@@ -56,6 +56,25 @@ void writeOrchestratorOutput(const OrchestratorOutput&out, const std::string &ou
             writer.Double(out.cellularity[4]);  // SC Apop
             writer.Double(out.cellularity[5]);  // SC Necro
             writer.EndArray();
+            writer.Key("cell_count");
+            writer.StartArray();
+            // Primage expects array in different order to what we implemented
+            // So remap it here
+            assert(std::size(out.cell_count) == 6);
+            writer.Int64(out.cell_count[0]);  // NB Living
+            writer.Int64(out.cell_count[3]);  // SC Living
+            writer.Int64(out.cell_count[1]);  // NB Apop
+            writer.Int64(out.cell_count[2]);  // NB Necro
+            writer.Int64(out.cell_count[4]);  // SC Apop
+            writer.Int64(out.cell_count[5]);  // SC Necro
+            assert(std::size(out.cell_count_init) == 6);
+            writer.Int64(out.cell_count_init[0]);  // NB Living
+            writer.Int64(out.cell_count_init[3]);  // SC Living
+            writer.Int64(out.cell_count_init[1]);  // NB Apop
+            writer.Int64(out.cell_count_init[2]);  // NB Necro
+            writer.Int64(out.cell_count_init[4]);  // SC Apop
+            writer.Int64(out.cell_count_init[5]);  // SC Necro
+            writer.EndArray();
             writer.Key("tumour_volume");
             writer.Double(out.tumour_volume);
             writer.Key("ratio_VEGF_NB_SC");

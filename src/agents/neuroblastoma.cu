@@ -1,4 +1,6 @@
 #include "header.h"
+#include "../orchestrator_src/structures.h"
+extern OrchestratorOutput sim_out;
 
 __device__ __forceinline__ void Neuroblastoma_sense(flamegpu::DeviceAPI<flamegpu::MessageNone, flamegpu::MessageNone> *FLAMEGPU) {
     // Let a neuroblastoma cell respond and potentially adapt to the extracellular environment.
@@ -789,7 +791,6 @@ void initNeuroblastoma(flamegpu::HostAPI &FLAMEGPU) {
     const float nb_apop_signal_sd = FLAMEGPU.environment.getProperty<float>("nb_apop_signal_sd");
 
     const unsigned int NB_COUNT = (unsigned int)ceil(rho_tumour * V_tumour * total_cellularity);
-    printf("NB_COUNT: %u\n", NB_COUNT);
     unsigned int validation_Nnbl = 0;
     for (unsigned int i = 0; i < NB_COUNT; ++i) {
         // Decide cell type (living, apop, necro)
@@ -873,6 +874,9 @@ void initNeuroblastoma(flamegpu::HostAPI &FLAMEGPU) {
         agt.setVariable<int>("apop", IS_APOP);
         agt.setVariable<int>("necro", IS_NECRO);
         validation_Nnbl += IS_APOP || IS_NECRO ? 0 : 1;
+        sim_out.cell_count_init[0] += IS_APOP || IS_NECRO ? 0 : 1;
+        sim_out.cell_count_init[1] += IS_APOP ? 1 : 0;
+        sim_out.cell_count_init[2] +=  IS_NECRO ? 1 : 0;
         agt.setVariable<int>("necro_critical", FLAMEGPU.random.uniform<int>(3, 168));  // Random int in range [3, 168]
         if (IS_APOP || IS_NECRO) {
             agt.setVariable<float>("degdiff", 0);
