@@ -69,7 +69,7 @@ FLAMEGPU_EXIT_FUNCTION(ConstructPrimageOutput) {
     auto GridCell = FLAMEGPU->agent("GridCell");
     auto Neuroblastoma = FLAMEGPU->agent("Neuroblastoma");
     auto Schwann = FLAMEGPU->agent("Schwann");
-    sim_out = {};
+
     sim_out.O2 = FLAMEGPU->environment.getProperty<float>("O2");
     sim_out.ecm = GridCell.sum<float>("matrix_value") / glm::compMul(FLAMEGPU->environment.getProperty<glm::uvec3>("grid_dims"));
     sim_out.material_properties = 0;  // Unused
