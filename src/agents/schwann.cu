@@ -466,6 +466,7 @@ void initSchwann(flamegpu::HostAPI &FLAMEGPU) {
     const unsigned int SC_add = (SC_COUNT_dummy > SC_COUNT_min) ? 0 : 1;
 
     printf("SC_COUNT: %u\n", SC_COUNT);
+
     unsigned int validation_Nscl = 0;
     for (unsigned int i = 0; i < SC_COUNT; ++i) {
         // Decide cell type (living, apop, necro)
