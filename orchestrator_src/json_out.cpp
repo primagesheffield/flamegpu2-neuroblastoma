@@ -68,6 +68,9 @@ void writeOrchestratorOutput(const OrchestratorOutput&out, const std::string &ou
             writer.Int64(out.cell_count[2]);  // NB Necro
             writer.Int64(out.cell_count[4]);  // SC Apop
             writer.Int64(out.cell_count[5]);  // SC Necro
+            writer.EndArray();
+            writer.Key("cell_count_init");
+            writer.StartArray();
             assert(std::size(out.cell_count_init) == 6);
             writer.Int64(out.cell_count_init[0]);  // NB Living
             writer.Int64(out.cell_count_init[3]);  // SC Living
