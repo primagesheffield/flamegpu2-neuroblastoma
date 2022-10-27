@@ -457,7 +457,7 @@ void initSchwann(flamegpu::HostAPI &FLAMEGPU) {
     const float sc_apop_signal_sd = FLAMEGPU.environment.getProperty<float>("sc_apop_signal_sd");
 
     const unsigned int SC_COUNT = (unsigned int)ceil(rho_tumour * V_tumour * total_cellularity);
-    printf("SC_COUNT: %u\n", SC_COUNT);
+    // printf("SC_COUNT: %u\n", SC_COUNT);
     unsigned int validation_Nscl = 0;
     for (unsigned int i = 0; i < SC_COUNT; ++i) {
         // Decide cell type (living, apop, necro)
