@@ -65,7 +65,9 @@ struct OrchestratorOutput {
     float diffusion_coefficient = 0;  // Unused
     float total_volume_ratio_updated = 0;  // Unused
     std::array<float, 6> cellularity;
-    unsigned int cell_count;
+    //unsigned int cell_count;
+    std::array<unsigned int, 6> cell_count;
+    std::array<unsigned int, 6> cell_count_init;
     float tumour_volume;
     float ratio_VEGF_NB_SC;
     float nb_telomere_length_mean;

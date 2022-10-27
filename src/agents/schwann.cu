@@ -1,4 +1,6 @@
 #include "header.h"
+#include "../orchestrator_src/structures.h"
+extern OrchestratorOutput sim_out;
 
 __device__ __forceinline__ void Schwann_sense(flamegpu::DeviceAPI<flamegpu::MessageNone, flamegpu::MessageNone>* FLAMEGPU) {
     // Let a Schwann cell respond and potentially adapt to the extracellular environment.
@@ -496,6 +498,9 @@ void initSchwann(flamegpu::HostAPI &FLAMEGPU) {
         agt.setVariable<int>("apop", IS_APOP);
         agt.setVariable<int>("necro", IS_NECRO);
         validation_Nscl += IS_APOP || IS_NECRO ? 0 : 1;
+        sim_out.cell_count_init[3] += IS_APOP || IS_NECRO ? 0 : 1;
+        sim_out.cell_count_init[4] += IS_APOP ? 1 : 0;
+        sim_out.cell_count_init[5] += IS_NECRO ? 1 : 0;
         agt.setVariable<int>("necro_critical", FLAMEGPU.random.uniform<int>(3, 168));  // Random int in range [3, 168]
         if (IS_APOP || IS_NECRO) {
             agt.setVariable<int>("apop_signal", 0);
