@@ -10,6 +10,7 @@ struct RunConfig {
     std::string inFile;
     std::string primageOutputFile;
     unsigned int device = 0;
+    unsigned int version = 100;
 };
 RunConfig parseArgs(int argc, const char** argv);
 

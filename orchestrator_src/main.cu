@@ -205,7 +205,8 @@ int main(int argc, const char** argv) {
     const std::array<float, 5> _F1 = { 0.01f, 0.05f, 0.1f, 0.15f, 0.2f };
     const std::array<float, 5> _F2 = { 0.1f, 0.25f, 0.5f, 0.75f, 1.0f };
     const std::string out_file_raw = cfg.primageOutputFile;
-    for (const float &F1 : _F1) {
+    // for (const float &F1 : _F1) {
+    float F1 = _F1[cfg.version];
         for (const float& F2 : _F2) {
             // Reset the output struct
             sim_out = {};
@@ -233,17 +234,17 @@ int main(int argc, const char** argv) {
             sim.SimulationConfig().random_seed = input.seed;
             sim.CUDAConfig().device_id = static_cast<int>(cfg.device);
             sim.applyConfig();
-            sim.setEnvironmentProperty<int>("TERT_rarngm", input.TERT_rarngm);
-            sim.setEnvironmentProperty<int>("ATRX_inact", input.ATRX_inact);
+            sim.setEnvironmentProperty<int>("TERT_rarngm", 0); // input.TERT_rarngm);  // Manual patient 1 genetic data
+            sim.setEnvironmentProperty<int>("ATRX_inact", 0); // input.ATRX_inact);  // Manual patient 1 genetic data
             sim.setEnvironmentProperty<float>("V_tumour", static_cast<float>(input.V_tumour * 1e+9));  // Convert from primage mm^3 to micron ^3
             sim.setEnvironmentProperty<float>("O2", input.O2);
             sim.setEnvironmentProperty<float, 6>("cellularity", input.cellularity);
             sim.setEnvironmentProperty<int>("orchestrator_time", input.orchestrator_time);
-            sim.setEnvironmentProperty<int>("MYCN_amp", input.MYCN_amp);
-            sim.setEnvironmentProperty<int>("ALT", input.ALT);
-            sim.setEnvironmentProperty<int>("ALK", input.ALK);
-            sim.setEnvironmentProperty<int>("gradiff", input.gradiff);
-            sim.setEnvironmentProperty<int>("histology_init", input.histology_init);
+            sim.setEnvironmentProperty<int>("MYCN_amp", 1); // input.MYCN_amp);  // Manual patient 1 genetic data
+            sim.setEnvironmentProperty<int>("ALT", 0); // input.ALT);  // Manual patient 1 genetic data
+            sim.setEnvironmentProperty<int>("ALK", 0); // input.ALK);  // Manual patient 1 genetic data
+            sim.setEnvironmentProperty<int>("gradiff", 1); // input.gradiff);  // Manual patient 1 genetic data
+            sim.setEnvironmentProperty<int>("histology_init", 0); // input.histology_init);  // Manual patient 1 genetic data
             sim.setEnvironmentProperty<float>("nb_telomere_length_mean", input.nb_telomere_length_mean);
             sim.setEnvironmentProperty<float>("nb_telomere_length_sd", input.nb_telomere_length_sd);
             sim.setEnvironmentProperty<float>("sc_telomere_length_mean", input.sc_telomere_length_mean);
@@ -288,7 +289,7 @@ int main(int argc, const char** argv) {
             // Output simulation time
             printf("Simulation completed in %f seconds!\n", sim.getElapsedTimeSimulation());
         }
-    }
+    // }
     return 0;
 }
 RunConfig parseArgs(int argc, const char** argv) {
@@ -305,6 +306,11 @@ RunConfig parseArgs(int argc, const char** argv) {
         // -device <uint>, Uses the specified cuda device, defaults to 0
         if (arg.compare("--device") == 0 || arg.compare("-d") == 0) {
             cfg.device = (unsigned int)strtoul(argv[++i], nullptr, 0);
+            continue;
+        }
+        // -version <uint>
+        if (arg.compare("--version") == 0 || arg.compare("-v") == 0) {
+            cfg.version = (unsigned int)strtoul(argv[++i], nullptr, 0);
             continue;
         }
         // -in <string>, Specifies the input state file
