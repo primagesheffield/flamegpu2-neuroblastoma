@@ -56,6 +56,8 @@ void writeOrchestratorOutput(const OrchestratorOutput&out, const std::string &ou
             writer.Double(out.cellularity[4]);  // SC Apop
             writer.Double(out.cellularity[5]);  // SC Necro
             writer.EndArray();
+            writer.Key("cell_count");
+            writer.Uint(out.cell_count);
             writer.Key("tumour_volume");
             writer.Double(out.tumour_volume);
             writer.Key("ratio_VEGF_NB_SC");

@@ -98,6 +98,7 @@ FLAMEGPU_EXIT_FUNCTION(ConstructPrimageOutput) {
     } else {
         sim_out.cellularity = {};
     }
+    sim_out.cell_count = TOTAL_CELL_COUNT;
     // Tumour volume
     {
         const auto h_nbl = FLAMEGPU->environment.getMacroProperty<unsigned int, 42>("histogram_nbl");
@@ -211,6 +212,7 @@ int main(int argc, const char** argv) {
     sim.setEnvironmentProperty<float>("V_tumour", static_cast<float>(input.V_tumour * 1e+9));  // Convert from primage mm^3 to micron ^3
     sim.setEnvironmentProperty<float>("O2", input.O2);
     sim.setEnvironmentProperty<float, 6>("cellularity", input.cellularity);
+    sim.setEnvironmentProperty<int>("total_cell_init", static_cast<int>(input.cell_count));
     sim.setEnvironmentProperty<int>("orchestrator_time", input.orchestrator_time);
     sim.setEnvironmentProperty<int>("MYCN_amp", input.MYCN_amp);
     sim.setEnvironmentProperty<int>("ALT", input.ALT);

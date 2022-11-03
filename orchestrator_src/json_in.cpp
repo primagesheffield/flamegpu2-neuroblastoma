@@ -63,6 +63,8 @@ class JSONStateReader_impl : public rapidjson::BaseReaderHandler<rapidjson::UTF8
                         "in JSONStateReader::parse()\n", current_variable_array_index);
                     throw std::exception();
                 }
+            } else if (lastKey == "cell_count") {
+                input.cell_count = static_cast<uint32_t>(val);
             } else if (lastKey == "orchestrator_time") {
                 input.orchestrator_time = static_cast<int32_t>(val);
             } else if (lastKey == "MYCN_amp") {
@@ -249,6 +251,7 @@ class JSONStateReader_impl : public rapidjson::BaseReaderHandler<rapidjson::UTF8
             if (!found_keys.count("V_tumour")) printf("V_tumour\n");
             if (!found_keys.count("O2")) printf("O2\n");
             if (!found_keys.count("cellularity")) printf("cellularity\n");
+            if (!found_keys.count("cell_count")) printf("cell_count\n");
             if (!found_keys.count("orchestrator_time")) printf("orchestrator_time\n");
             if (!found_keys.count("MYCN_amp")) printf("MYCN_amp\n");
             if (!found_keys.count("ALT")) printf("ALT\n");
