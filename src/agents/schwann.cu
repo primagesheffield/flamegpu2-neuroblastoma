@@ -447,7 +447,7 @@ void initSchwann(flamegpu::HostAPI &FLAMEGPU) {
 
     const std::array<float, 6> cellularity = FLAMEGPU.environment.getProperty<float, 6>("cellularity");
     const float total_cellularity_old = cellularity[3] + cellularity[4] + cellularity[5];
-    const float total_cellularity = (cellularity[3] + cellularity[4] + cellularity[5])/(cellularity[0]+cellularity[1]+cellularity[2]+cellularity[3]+cellularity[4]+cellularity[6]);
+    const float total_cellularity = (cellularity[3] + cellularity[4] + cellularity[5])/(cellularity[0]+cellularity[1]+cellularity[2]+cellularity[3]+cellularity[4]+cellularity[5]);
     const int orchestrator_time = FLAMEGPU.environment.getProperty<int>("orchestrator_time");
 
     const float sc_telomere_length_mean = FLAMEGPU.environment.getProperty<float>("sc_telomere_length_mean");
