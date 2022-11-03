@@ -446,6 +446,7 @@ void initSchwann(flamegpu::HostAPI &FLAMEGPU) {
     const float mig_sc = FLAMEGPU.environment.getProperty<float>("mig_sc");
 
     const std::array<float, 6> cellularity = FLAMEGPU.environment.getProperty<float, 6>("cellularity");
+    const float total_cellularity_old = cellularity[3] + cellularity[4] + cellularity[5];
     const float total_cellularity = (cellularity[3] + cellularity[4] + cellularity[5])/(cellularity[0]+cellularity[1]+cellularity[2]+cellularity[3]+cellularity[4]+cellularity[6]);
     const int orchestrator_time = FLAMEGPU.environment.getProperty<int>("orchestrator_time");
 
@@ -459,7 +460,7 @@ void initSchwann(flamegpu::HostAPI &FLAMEGPU) {
     const unsigned int SC_COUNT_dummy = (unsigned int)ceil(total_cell_init * total_cellularity);
     const unsigned int SC_COUNT_min = (unsigned int)ceil(total_cell_init * theta_sc * mig_sc);
 
-	const unsigned int SC_COUNT = (SC_COUNT_dummy > SC_COUNT_min) ? SC_COUNT_dummy : SC_COUNT_min;
+	const unsigned int SC_COUNT = orchestrator_time == 0 ? (unsigned int)ceil(rho_tumour * V_tumour * total_cellularity_old) :((SC_COUNT_dummy > SC_COUNT_min) ? SC_COUNT_dummy : SC_COUNT_min);
 	const unsigned int SC_add = (SC_COUNT_dummy > SC_COUNT_min) ? 0 : 1;
 
     printf("SC_COUNT: %u\n", SC_COUNT);
