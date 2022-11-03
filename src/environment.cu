@@ -26,6 +26,8 @@ void data_layer_0(flamegpu::ModelDescription& model) {
     // (living, apoptotic, necrotic neuroblasts and Schwann cells)
     // This is always set via input file
     env.newProperty<float, 6>("cellularity", {});
+    // The initial total number of cells, from orchestrator.
+    env.newProperty<int>("total_cell_init", 1000);
     // Histology type (0 is neuroblastoma, 1 is ganglioneuroblastoma, 2 is nodular ganglioneuroblastoma, 3 is intermixed ganglioneuroblastoma, 4 is ganglioneuroma, 5 is maturing ganglioneuroma, and 6 is mature ganglioneuroma).
     // If it is a ganglioneuroblastoma or a ganglioneuroma, assign the subtype stochastically.
     env.newProperty<int>("histology_init", 0);
@@ -35,6 +37,9 @@ void data_layer_0(flamegpu::ModelDescription& model) {
     env.newProperty<int>("gradiff", 0);
     // DERIVED: Fraction of Schwann cells in the cell population (continuous, 0 to 1).
     env.newProperty<float>("theta_sc", 0.5);
+    // A parameter controlling the migration of Schwann cells into the tumour between successive loops.
+    env.newProperty<float("mig_sc", 1.0f);
+
     /**
      * Integration with imaging biomarkers, part 3
      */

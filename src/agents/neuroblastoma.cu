@@ -774,9 +774,10 @@ void initNeuroblastoma(flamegpu::HostAPI &FLAMEGPU) {
     const float rho_tumour = FLAMEGPU.environment.getProperty<float>("rho_tumour");
     const float V_tumour = FLAMEGPU.environment.getProperty<float>("V_tumour");
     const float theta_sc = FLAMEGPU.environment.getProperty<float>("theta_sc");
+    const int total_cell_init = FLAMEGPU.environment.getProperty<int>("total_cell_init");
 
     const std::array<float, 6> cellularity = FLAMEGPU.environment.getProperty<float, 6>("cellularity");
-    const float total_cellularity = cellularity[0] + cellularity[1] + cellularity[2];
+    const float total_cellularity = (cellularity[0] + cellularity[1] + cellularity[2])/(cellularity[0] + cellularity[1] + cellularity[2] + cellularity[3] + cellularity[4] + cellularity[5]);
     const int orchestrator_time = FLAMEGPU.environment.getProperty<int>("orchestrator_time");
 
     const float nb_telomere_length_mean = FLAMEGPU.environment.getProperty<float>("nb_telomere_length_mean");
@@ -788,7 +789,7 @@ void initNeuroblastoma(flamegpu::HostAPI &FLAMEGPU) {
     const float nb_apop_signal_mean = FLAMEGPU.environment.getProperty<float>("nb_apop_signal_mean");
     const float nb_apop_signal_sd = FLAMEGPU.environment.getProperty<float>("nb_apop_signal_sd");
 
-    const unsigned int NB_COUNT = (unsigned int)ceil(rho_tumour * V_tumour * total_cellularity);
+    const unsigned int NB_COUNT = (unsigned int)ceil(total_cell_init * total_cellularity);
     printf("NB_COUNT: %u\n", NB_COUNT);
     unsigned int validation_Nnbl = 0;
     for (unsigned int i = 0; i < NB_COUNT; ++i) {
