@@ -459,26 +459,16 @@ void initSchwann(flamegpu::HostAPI &FLAMEGPU) {
     const unsigned int SC_COUNT_dummy = (unsigned int)ceil(total_cell_init * total_cellularity);
     const unsigned int SC_COUNT_min = (unsigned int)ceil(total_cell_init * theta_sc * mig_sc);
 
-    if (SC_COUNT_dummy > SC_COUNT_min){
-	const unsigned int SC_COUNT = SC_COUNT_dummy;
-	const unsigned int SC_add = 0;
-    }else{
-	const unsigned int SC_COUNT = SC_COUNT_min;
-	const unsigned int SC_add = 1;
-    }
+	const unsigned int SC_COUNT = (SC_COUNT_dummy > SC_COUNT_min) ? SC_COUNT_dummy : SC_COUNT_min;
+	const unsigned int SC_add = (SC_COUNT_dummy > SC_COUNT_min) ? 0 : 1;
 
     printf("SC_COUNT: %u\n", SC_COUNT);
     unsigned int validation_Nscl = 0;
     for (unsigned int i = 0; i < SC_COUNT; ++i) {
         // Decide cell type (living, apop, necro)
-	if (SC_add == 0){
-        	const float cell_rng = FLAMEGPU.random.uniform<float>() * total_cellularity;
-        	const int IS_APOP = cell_rng >= cellularity[3] && cell_rng < cellularity[3] + cellularity[4];
-        	const int IS_NECRO = cell_rng >= cellularity[3] + cellularity[4];
-	}else{
-		const int IS_APOP = 0;
-		const int IS_NECRO = 0;
-	}
+        const float cell_rng = FLAMEGPU.random.uniform<float>() * total_cellularity;
+        const int IS_APOP = (SC_add == 0) ? (cell_rng >= cellularity[3] && cell_rng < cellularity[3] + cellularity[4]) : 0;
+        const int IS_NECRO = (SC_add == 0) ? (cell_rng >= cellularity[3] + cellularity[4]) : 0;
 
         auto agt = SC.newAgent();
         // Data Layer 0 (integration with imaging biomarkers).

@@ -38,7 +38,7 @@ void data_layer_0(flamegpu::ModelDescription& model) {
     // DERIVED: Fraction of Schwann cells in the cell population (continuous, 0 to 1).
     env.newProperty<float>("theta_sc", 0.5);
     // A parameter controlling the migration of Schwann cells into the tumour between successive loops.
-    env.newProperty<float("mig_sc", 1.0f);
+    env.newProperty<float>("mig_sc", 1.0f);
 
     /**
      * Integration with imaging biomarkers, part 3
