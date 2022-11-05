@@ -460,8 +460,8 @@ void initSchwann(flamegpu::HostAPI &FLAMEGPU) {
     const unsigned int SC_COUNT_dummy = (unsigned int)ceil(total_cell_init * total_cellularity);
     const unsigned int SC_COUNT_min = (unsigned int)ceil(total_cell_init * theta_sc * mig_sc);
 
-	const unsigned int SC_COUNT = orchestrator_time == 0 ? (unsigned int)ceil(rho_tumour * V_tumour * total_cellularity_old) :((SC_COUNT_dummy > SC_COUNT_min) ? SC_COUNT_dummy : SC_COUNT_min);
-	const unsigned int SC_add = (SC_COUNT_dummy > SC_COUNT_min) ? 0 : 1;
+    const unsigned int SC_COUNT = orchestrator_time == 0 ? (unsigned int)ceil(rho_tumour * V_tumour * total_cellularity_old) :((SC_COUNT_dummy > SC_COUNT_min) ? SC_COUNT_dummy : SC_COUNT_min);
+    const unsigned int SC_add = (SC_COUNT_dummy > SC_COUNT_min) ? 0 : 1;
 
     printf("SC_COUNT: %u\n", SC_COUNT);
     unsigned int validation_Nscl = 0;
