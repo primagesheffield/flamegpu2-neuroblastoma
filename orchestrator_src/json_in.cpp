@@ -221,7 +221,7 @@ class JSONStateReader_impl : public rapidjson::BaseReaderHandler<rapidjson::UTF8
         return true;
     }
     void validateInput() {
-        if (found_keys.size() == 33) {
+        if (found_keys.size() == 34) {
             if (input.start_effects.size() == input.end_effects.size()) {
                 if (input.drug_effects.size() != 6 * input.end_effects.size()) {
                     fprintf(stderr, "Input validation failed.\n'drug_effects' should be 6x the length of 'end_effects' should have the same length (%u != %u == 6 x %u).\n",
