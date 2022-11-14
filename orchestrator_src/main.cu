@@ -126,7 +126,7 @@ FLAMEGPU_EXIT_FUNCTION(ConstructPrimageOutput) {
             sim_out.total_volume_ratio_updated = sim_out.tumour_volume / init_volume_calculated;
         } else {
             sim_out.tumour_volume = init_volume_calculated;
-            sim_out.total_volume_ratio_updated = 1.0f;
+            sim_out.total_volume_ratio_updated = -1.0f;
         }
     }
     if (NB_living_count) {
