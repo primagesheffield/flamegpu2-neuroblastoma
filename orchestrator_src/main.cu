@@ -203,7 +203,7 @@ int main(int argc, const char** argv) {
     OrchestratorInput input = readOrchestratorInput(cfg.inFile);
     printf("Input file: %s\n", cfg.inFile.c_str());
 
-    const std::array<float, 5> _F1 = { 0.01f, 0.05f, 0.1f, 0.15f, 0.2f };
+    const std::array<float, 5> _F1 = { 0.01f, 0.05f, 0.1f, 0.2f, 1.2f };
     const std::array<float, 5> _F2 = { 0.1f, 0.25f, 0.5f, 0.75f, 1.0f };
     const std::string out_file_raw = cfg.primageOutputFile;
     // for (const float &F1 : _F1) {
