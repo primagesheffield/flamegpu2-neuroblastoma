@@ -206,8 +206,7 @@ int main(int argc, const char** argv) {
     const std::array<float, 5> _F1 = { 0.01f, 0.05f, 0.1f, 0.2f, 1.2f };
     const std::array<float, 5> _F2 = { 0.1f, 0.25f, 0.5f, 0.75f, 1.0f };
     const std::string out_file_raw = cfg.primageOutputFile;
-    // for (const float &F1 : _F1) {
-    float F1 = _F1[cfg.version];
+    for (const float &F1 : _F1) {
         for (const float& F2 : _F2) {
             // Reset the output struct
             sim_out = {};
@@ -290,7 +289,7 @@ int main(int argc, const char** argv) {
             // Output simulation time
             printf("Simulation completed in %f seconds!\n", sim.getElapsedTimeSimulation());
         }
-    // }
+    }
     return 0;
 }
 RunConfig parseArgs(int argc, const char** argv) {
