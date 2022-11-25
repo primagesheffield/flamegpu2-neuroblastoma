@@ -146,7 +146,13 @@ class JSONStateReader_impl : public rapidjson::BaseReaderHandler<rapidjson::UTF8
     bool Int64(int64_t i) { return processValue<int64_t>(i); }
     bool Uint64(uint64_t u) { return processValue<uint64_t>(u); }
     bool Double(double d) { return processValue<double>(d); }
-    bool String(const char*, rapidjson::SizeType, bool) {
+    bool String(const char*s, rapidjson::SizeType, bool) {
+        if (mode.top() == Environment) {
+            if (lastKey == "calibration_file") {
+                input.calibration_file = s;
+                return true;
+            }
+        }
         // String is not expected
         fprintf(stderr, "Unexpected string whilst parsing input file '%s'.\n", filename.c_str());
         throw std::exception();
@@ -221,7 +227,7 @@ class JSONStateReader_impl : public rapidjson::BaseReaderHandler<rapidjson::UTF8
         return true;
     }
     void validateInput() {
-        if (found_keys.size() == 34) {
+        if (found_keys.size() == 35) {
             if (input.start_effects.size() == input.end_effects.size()) {
                 if (input.drug_effects.size() != 6 * input.end_effects.size()) {
                     fprintf(stderr, "Input validation failed.\n'drug_effects' should be 6x the length of 'end_effects' should have the same length (%u != %u == 6 x %u).\n",
@@ -275,6 +281,7 @@ class JSONStateReader_impl : public rapidjson::BaseReaderHandler<rapidjson::UTF8
             if (!found_keys.count("drug_effects")) printf("drug_effects\n");
             if (!found_keys.count("start_effects")) printf("start_effects\n");
             if (!found_keys.count("end_effects")) printf("end_effects\n");
+            if (!found_keys.count("calibration_file")) printf("calibration_file\n");
             throw std::exception();
         }
     }

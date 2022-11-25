@@ -207,6 +207,15 @@ int main(int argc, const char** argv) {
     sim.SimulationConfig().random_seed = input.seed;
     sim.CUDAConfig().device_id = static_cast<int>(cfg.device);
     sim.applyConfig();
+    if (!input.calibration_file.empty()) {
+        // Fill init struct
+        CalibrationInput clbn_init;
+        clbn_init.TERT_rarngm = sim.getEnvironmentProperty<int>("");
+        // Parse input
+        CalibrationInput clbn_file = readCalibrationInput(input.calibration_file);
+        // Update calibration data
+        sim.setEnvironmentProperty<int>("TERT_rarngm", clbn_file.TERT_rarngm);
+    }
     sim.setEnvironmentProperty<int>("TERT_rarngm", input.TERT_rarngm);
     sim.setEnvironmentProperty<int>("ATRX_inact", input.ATRX_inact);
     sim.setEnvironmentProperty<float>("V_tumour", static_cast<float>(input.V_tumour * 1e+9));  // Convert from primage mm^3 to micron ^3

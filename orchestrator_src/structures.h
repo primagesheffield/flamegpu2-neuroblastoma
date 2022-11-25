@@ -3,6 +3,7 @@
 
 #include <array>
 #include <vector>
+#include <string>
 
 struct Version {
     /**
@@ -52,6 +53,7 @@ struct OrchestratorInput {
     std::vector<float> drug_effects;  // 6x length of start_effects and end_effects
     std::vector<int> start_effects;
     std::vector<int> end_effects;
+    std::string calibration_file;
 };
 /**
  * Properties in the file output by the orchestrator interface to FGPUNB
@@ -82,6 +84,11 @@ struct OrchestratorOutput {
     float sc_apop_signal_sd;
     float extent_of_differentiation_mean;
     float extent_of_differentiation_sd;
+};
+/**
+ * 22 fitting parameters which can be set via a secondary input file
+ */
+struct CalibrationInput {
 };
 
 #endif  // ORCHESTRATOR_SRC_STRUCTURES_H_
