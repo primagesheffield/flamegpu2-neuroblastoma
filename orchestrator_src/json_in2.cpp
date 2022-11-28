@@ -74,8 +74,6 @@ class JSONStateReader2_impl : public rapidjson::BaseReaderHandler<rapidjson::UTF
             input.nbapop_jux = static_cast<float>(val);
         } else if (lastKey == "mig_sc") {
             input.mig_sc = static_cast<float>(val);
-        } else if (lastKey == "total_cell_init") {
-            input.total_cell_init = static_cast<float>(val);
         } else {
             fprintf(stderr, "Unexpected key '%s' whilst parsing calibration file, "
                 "in JSONStateReader2::parse()\n", lastKey.c_str());

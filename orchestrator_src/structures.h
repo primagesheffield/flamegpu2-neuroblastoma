@@ -113,7 +113,6 @@ struct CalibrationInput {
     float nbdiff_amount;
     float nbapop_jux;
     float mig_sc;
-    int total_cell_init;
 };
 
 #endif  // ORCHESTRATOR_SRC_STRUCTURES_H_

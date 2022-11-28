@@ -233,7 +233,6 @@ int main(int argc, const char** argv) {
         clbn_init.nbdiff_amount = sim.getEnvironmentProperty<float>("nbdiff_amount");
         clbn_init.nbapop_jux = sim.getEnvironmentProperty<float>("nbapop_jux");
         clbn_init.mig_sc = sim.getEnvironmentProperty<float>("mig_sc");
-        clbn_init.total_cell_init = sim.getEnvironmentProperty<int>("total_cell_init");
         // Parse input
         CalibrationInput clbn_file = readCalibrationInput(input.calibration_file);
         // Update calibration data
@@ -260,7 +259,6 @@ int main(int argc, const char** argv) {
         sim.setEnvironmentProperty<float>("nbdiff_amount", clbn_file.nbdiff_amount);
         sim.setEnvironmentProperty<float>("nbapop_jux", clbn_file.nbapop_jux);
         sim.setEnvironmentProperty<float>("mig_sc", clbn_file.mig_sc);
-        sim.setEnvironmentProperty<int>("total_cell_init", clbn_file.total_cell_init);
     }
     sim.setEnvironmentProperty<int>("TERT_rarngm", input.TERT_rarngm);
     sim.setEnvironmentProperty<int>("ATRX_inact", input.ATRX_inact);
