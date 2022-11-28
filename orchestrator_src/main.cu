@@ -234,7 +234,7 @@ int main(int argc, const char** argv) {
         clbn_init.nbapop_jux = sim.getEnvironmentProperty<float>("nbapop_jux");
         clbn_init.mig_sc = sim.getEnvironmentProperty<float>("mig_sc");
         // Parse input
-        CalibrationInput clbn_file = readCalibrationInput(input.calibration_file);
+        CalibrationInput clbn_file = readCalibrationInput(input.calibration_file, clbn_init);
         // Update calibration data
         sim.setEnvironmentProperty<float>("MYCN_fn11", clbn_file.MYCN_fn11);
         sim.setEnvironmentProperty<float>("MAPK_RAS_fn11", clbn_file.MAPK_RAS_fn11);
