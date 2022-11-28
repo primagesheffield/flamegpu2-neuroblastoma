@@ -210,11 +210,57 @@ int main(int argc, const char** argv) {
     if (!input.calibration_file.empty()) {
         // Fill init struct
         CalibrationInput clbn_init;
-        clbn_init.TERT_rarngm = sim.getEnvironmentProperty<int>("");
+        clbn_init.MYCN_fn11 = sim.getEnvironmentProperty<float>("MYCN_fn11");
+        clbn_init.MAPK_RAS_fn11 = sim.getEnvironmentProperty<float>("MAPK_RAS_fn11");
+        clbn_init.MAPK_RAS_fn01 = sim.getEnvironmentProperty<float>("MAPK_RAS_fn01");
+        clbn_init.p53_fn = sim.getEnvironmentProperty<float>("p53_fn");
+        clbn_init.p73_fn = sim.getEnvironmentProperty<float>("p73_fn");
+        clbn_init.HIF_fn = sim.getEnvironmentProperty<float>("HIF_fn");
+        clbn_init.P_cycle_nb = sim.getEnvironmentProperty<float>("P_cycle_nb");
+        clbn_init.P_cycle_sc = sim.getEnvironmentProperty<float>("P_cycle_sc");
+        clbn_init.P_DNA_damageHypo = sim.getEnvironmentProperty<float>("P_DNA_damageHypo");
+        clbn_init.P_DNA_damagerp = sim.getEnvironmentProperty<float>("P_DNA_damagerp");
+        clbn_init.P_unrepDNAHypo = sim.getEnvironmentProperty<float>("P_unrepDNAHypo");
+        clbn_init.P_unrepDNArp = sim.getEnvironmentProperty<float>("P_unrepDNArp");
+        clbn_init.P_necroIS = sim.getEnvironmentProperty<float>("P_necroIS");
+        clbn_init.P_telorp = sim.getEnvironmentProperty<float>("P_telorp");
+        clbn_init.P_apopChemo = sim.getEnvironmentProperty<float>("P_apopChemo");
+        clbn_init.P_DNA_damage_pathways = sim.getEnvironmentProperty<float>("P_DNA_damage_pathways");
+        clbn_init.P_apoprp = sim.getEnvironmentProperty<float>("P_apoprp");
+        clbn_init.P_necrorp = sim.getEnvironmentProperty<float>("P_necrorp");
+        clbn_init.scpro_jux = sim.getEnvironmentProperty<float>("scpro_jux");
+        clbn_init.nbdiff_jux = sim.getEnvironmentProperty<float>("nbdiff_jux");
+        clbn_init.nbdiff_amount = sim.getEnvironmentProperty<float>("nbdiff_amount");
+        clbn_init.nbapop_jux = sim.getEnvironmentProperty<float>("nbapop_jux");
+        clbn_init.mig_sc = sim.getEnvironmentProperty<float>("mig_sc");
+        clbn_init.total_cell_init = sim.getEnvironmentProperty<int>("total_cell_init");
         // Parse input
         CalibrationInput clbn_file = readCalibrationInput(input.calibration_file);
         // Update calibration data
-        sim.setEnvironmentProperty<int>("TERT_rarngm", clbn_file.TERT_rarngm);
+        sim.setEnvironmentProperty<float>("MYCN_fn11", clbn_file.MYCN_fn11);
+        sim.setEnvironmentProperty<float>("MAPK_RAS_fn11", clbn_file.MAPK_RAS_fn11);
+        sim.setEnvironmentProperty<float>("MAPK_RAS_fn01", clbn_file.MAPK_RAS_fn01);
+        sim.setEnvironmentProperty<float>("p53_fn", clbn_file.p53_fn);
+        sim.setEnvironmentProperty<float>("p73_fn", clbn_file.p73_fn);
+        sim.setEnvironmentProperty<float>("HIF_fn", clbn_file.HIF_fn);
+        sim.setEnvironmentProperty<float>("P_cycle_nb", clbn_file.P_cycle_nb);
+        sim.setEnvironmentProperty<float>("P_cycle_sc", clbn_file.P_cycle_sc);
+        sim.setEnvironmentProperty<float>("P_DNA_damageHypo", clbn_file.P_DNA_damageHypo);
+        sim.setEnvironmentProperty<float>("P_DNA_damagerp", clbn_file.P_DNA_damagerp);
+        sim.setEnvironmentProperty<float>("P_unrepDNAHypo", clbn_file.P_unrepDNAHypo);
+        sim.setEnvironmentProperty<float>("P_unrepDNArp", clbn_file.P_unrepDNArp);
+        sim.setEnvironmentProperty<float>("P_necroIS", clbn_file.P_necroIS);
+        sim.setEnvironmentProperty<float>("P_telorp", clbn_file.P_telorp);
+        sim.setEnvironmentProperty<float>("P_apopChemo", clbn_file.P_apopChemo);
+        sim.setEnvironmentProperty<float>("P_DNA_damage_pathways", clbn_file.P_DNA_damage_pathways);
+        sim.setEnvironmentProperty<float>("P_apoprp", clbn_file.P_apoprp);
+        sim.setEnvironmentProperty<float>("P_necrorp", clbn_file.P_necrorp);
+        sim.setEnvironmentProperty<float>("scpro_jux", clbn_file.scpro_jux);
+        sim.setEnvironmentProperty<float>("nbdiff_jux", clbn_file.nbdiff_jux);
+        sim.setEnvironmentProperty<float>("nbdiff_amount", clbn_file.nbdiff_amount);
+        sim.setEnvironmentProperty<float>("nbapop_jux", clbn_file.nbapop_jux);
+        sim.setEnvironmentProperty<float>("mig_sc", clbn_file.mig_sc);
+        sim.setEnvironmentProperty<int>("total_cell_init", clbn_file.total_cell_init);
     }
     sim.setEnvironmentProperty<int>("TERT_rarngm", input.TERT_rarngm);
     sim.setEnvironmentProperty<int>("ATRX_inact", input.ATRX_inact);

@@ -86,9 +86,34 @@ struct OrchestratorOutput {
     float extent_of_differentiation_sd;
 };
 /**
- * 22 fitting parameters which can be set via a secondary input file
+ * fitting parameters which can be set via a secondary input file
+ * Refer to environment.cu for their detail and/or default values
  */
 struct CalibrationInput {
+    float MYCN_fn11;
+    float MAPK_RAS_fn11;
+    float MAPK_RAS_fn01;
+    float p53_fn;
+    float p73_fn;
+    float HIF_fn;
+    float P_cycle_nb;
+    float P_cycle_sc;
+    float P_DNA_damageHypo;
+    float P_DNA_damagerp;
+    float P_unrepDNAHypo;
+    float P_unrepDNArp;
+    float P_necroIS;
+    float P_telorp;
+    float P_apopChemo;
+    float P_DNA_damage_pathways;
+    float P_apoprp;
+    float P_necrorp;
+    float scpro_jux;
+    float nbdiff_jux;
+    float nbdiff_amount;
+    float nbapop_jux;
+    float mig_sc;
+    int total_cell_init;
 };
 
 #endif  // ORCHESTRATOR_SRC_STRUCTURES_H_

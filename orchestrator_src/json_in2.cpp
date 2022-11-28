@@ -28,8 +28,54 @@ class JSONStateReader2_impl : public rapidjson::BaseReaderHandler<rapidjson::UTF
     }
     template<typename T>
     bool processValue(const T&val) {
-        if (lastKey == "TERT_rarngm") {
-            input.TERT_rarngm = static_cast<int32_t>(val);
+        if (lastKey == "MYCN_fn11") {
+            input.MYCN_fn11 = static_cast<float>(val);
+        } else if (lastKey == "MAPK_RAS_fn11") {
+            input.MAPK_RAS_fn11 = static_cast<float>(val);
+        } else if (lastKey == "MAPK_RAS_fn01") {
+            input.MAPK_RAS_fn01 = static_cast<float>(val);
+        } else if (lastKey == "p53_fn") {
+            input.p53_fn = static_cast<float>(val);
+        } else if (lastKey == "p73_fn") {
+            input.p73_fn = static_cast<float>(val);
+        } else if (lastKey == "HIF_fn") {
+            input.HIF_fn = static_cast<float>(val);
+        } else if (lastKey == "P_cycle_nb") {
+            input.P_cycle_nb = static_cast<float>(val);
+        } else if (lastKey == "P_cycle_sc") {
+            input.P_cycle_sc = static_cast<float>(val);
+        } else if (lastKey == "P_DNA_damageHypo") {
+            input.P_DNA_damageHypo = static_cast<float>(val);
+        } else if (lastKey == "P_DNA_damagerp") {
+            input.P_DNA_damagerp = static_cast<float>(val);
+        } else if (lastKey == "P_unrepDNAHypo") {
+            input.P_unrepDNAHypo = static_cast<float>(val);
+        } else if (lastKey == "P_unrepDNArp") {
+            input.P_unrepDNArp = static_cast<float>(val);
+        } else if (lastKey == "P_necroIS") {
+            input.P_necroIS = static_cast<float>(val);
+        } else if (lastKey == "P_telorp") {
+            input.P_telorp = static_cast<float>(val);
+        } else if (lastKey == "P_apopChemo") {
+            input.P_apopChemo = static_cast<float>(val);
+        } else if (lastKey == "P_DNA_damage_pathways") {
+            input.P_DNA_damage_pathways = static_cast<float>(val);
+        } else if (lastKey == "P_apoprp") {
+            input.P_apoprp = static_cast<float>(val);
+        } else if (lastKey == "P_necrorp") {
+            input.P_necrorp = static_cast<float>(val);
+        } else if (lastKey == "scpro_jux") {
+            input.scpro_jux = static_cast<float>(val);
+        } else if (lastKey == "nbdiff_jux") {
+            input.nbdiff_jux = static_cast<float>(val);
+        } else if (lastKey == "nbdiff_amount") {
+            input.nbdiff_amount = static_cast<float>(val);
+        } else if (lastKey == "nbapop_jux") {
+            input.nbapop_jux = static_cast<float>(val);
+        } else if (lastKey == "mig_sc") {
+            input.mig_sc = static_cast<float>(val);
+        } else if (lastKey == "total_cell_init") {
+            input.total_cell_init = static_cast<float>(val);
         } else {
             fprintf(stderr, "Unexpected key '%s' whilst parsing calibration file, "
                 "in JSONStateReader2::parse()\n", lastKey.c_str());
