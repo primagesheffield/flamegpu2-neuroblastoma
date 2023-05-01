@@ -442,9 +442,12 @@ void initSchwann(flamegpu::HostAPI &FLAMEGPU) {
     const float rho_tumour = FLAMEGPU.environment.getProperty<float>("rho_tumour");
     const float V_tumour = FLAMEGPU.environment.getProperty<float>("V_tumour");
     const float theta_sc = FLAMEGPU.environment.getProperty<float>("theta_sc");
+    const int total_cell_init = FLAMEGPU.environment.getProperty<int>("total_cell_init");
+    const float mig_sc = FLAMEGPU.environment.getProperty<float>("mig_sc");
 
     const std::array<float, 6> cellularity = FLAMEGPU.environment.getProperty<float, 6>("cellularity");
-    const float total_cellularity = cellularity[3] + cellularity[4] + cellularity[5];
+    const float total_cellularity_old = cellularity[3] + cellularity[4] + cellularity[5];
+    const float total_cellularity = (cellularity[3] + cellularity[4] + cellularity[5])/(cellularity[0]+cellularity[1]+cellularity[2]+cellularity[3]+cellularity[4]+cellularity[5]);
     const int orchestrator_time = FLAMEGPU.environment.getProperty<int>("orchestrator_time");
 
     const float sc_telomere_length_mean = FLAMEGPU.environment.getProperty<float>("sc_telomere_length_mean");
@@ -454,13 +457,19 @@ void initSchwann(flamegpu::HostAPI &FLAMEGPU) {
     const float sc_apop_signal_mean = FLAMEGPU.environment.getProperty<float>("sc_apop_signal_mean");
     const float sc_apop_signal_sd = FLAMEGPU.environment.getProperty<float>("sc_apop_signal_sd");
 
-    const unsigned int SC_COUNT = (unsigned int)ceil(rho_tumour * V_tumour * total_cellularity);
+    const unsigned int SC_COUNT_dummy = (unsigned int)ceil(total_cell_init * total_cellularity);
+    const unsigned int SC_COUNT_min = (unsigned int)ceil(total_cell_init * theta_sc * mig_sc);
+
+    const unsigned int SC_COUNT = orchestrator_time == 0 ? (unsigned int)ceil(rho_tumour * V_tumour * total_cellularity_old) :((SC_COUNT_dummy > SC_COUNT_min) ? SC_COUNT_dummy : SC_COUNT_min);
+    const unsigned int SC_add = (SC_COUNT_dummy > SC_COUNT_min) ? 0 : 1;
+
+    printf("SC_COUNT: %u\n", SC_COUNT);
     unsigned int validation_Nscl = 0;
     for (unsigned int i = 0; i < SC_COUNT; ++i) {
         // Decide cell type (living, apop, necro)
         const float cell_rng = FLAMEGPU.random.uniform<float>() * total_cellularity;
-        const int IS_APOP = cell_rng >= cellularity[3] && cell_rng < cellularity[3] + cellularity[4];
-        const int IS_NECRO = cell_rng >= cellularity[3] + cellularity[4];
+        const int IS_APOP = (SC_add == 0) ? (cell_rng >= cellularity[3] && cell_rng < cellularity[3] + cellularity[4]) : 0;
+        const int IS_NECRO = (SC_add == 0) ? (cell_rng >= cellularity[3] + cellularity[4]) : 0;
 
         auto agt = SC.newAgent();
         // Data Layer 0 (integration with imaging biomarkers).

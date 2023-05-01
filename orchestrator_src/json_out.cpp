@@ -5,6 +5,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <cassert>
 
 #include "structures.h"
 
@@ -45,9 +46,18 @@ void writeOrchestratorOutput(const OrchestratorOutput&out, const std::string &ou
             writer.Double(out.total_volume_ratio_updated);
             writer.Key("cellularity");
             writer.StartArray();
-            for (unsigned int i = 0; i < std::size(out.cellularity); ++i)
-                writer.Double(out.cellularity[i]);
+            // Primage expects array in different order to what we implemented
+            // So remap it here
+            assert(std::size(out.cellularity) == 6);
+            writer.Double(out.cellularity[0]);  // NB Living
+            writer.Double(out.cellularity[3]);  // SC Living
+            writer.Double(out.cellularity[1]);  // NB Apop
+            writer.Double(out.cellularity[2]);  // NB Necro
+            writer.Double(out.cellularity[4]);  // SC Apop
+            writer.Double(out.cellularity[5]);  // SC Necro
             writer.EndArray();
+            writer.Key("cell_count");
+            writer.Uint(out.cell_count);
             writer.Key("tumour_volume");
             writer.Double(out.tumour_volume);
             writer.Key("ratio_VEGF_NB_SC");

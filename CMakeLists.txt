@@ -10,7 +10,7 @@ option(VISUALISATION "Enable visualisation support" OFF)
 
 # Optionaly set the version of flamegpu which should be used.
 # Use a branch name such as `master`, or a tagged version such as `v2.0.0-alpha` 
-set(FLAMEGPU_VERSION "master" CACHE STRING "Git branch or tag to use")
+set(FLAMEGPU_VERSION "797d09a00f591e88e67f34647f662f180c97c4c5" CACHE STRING "Git branch or tag to use")
 
 # Our core dependency is FLAMEGPU2 lib, first lets find it
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/flamegpu2.cmake)
@@ -60,6 +60,7 @@ SET(ORCHESTRATOR_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/orchestrator_src/main.cu
     ${CMAKE_CURRENT_SOURCE_DIR}/orchestrator_src/json.h
     ${CMAKE_CURRENT_SOURCE_DIR}/orchestrator_src/json_in.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/orchestrator_src/json_in2.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/orchestrator_src/json_out.cpp
 )
 add_flamegpu_executable(${PROJECT_NAME} "${ORCHESTRATOR_SRC}" "${FLAMEGPU_ROOT}" "${PROJECT_BINARY_DIR}" TRUE)  

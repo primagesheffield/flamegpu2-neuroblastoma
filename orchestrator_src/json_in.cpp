@@ -7,6 +7,7 @@
 #include <fstream>
 #include <stack>
 #include <set>
+#include <cassert>
 
 #include "json.h"
 /**
@@ -62,6 +63,8 @@ class JSONStateReader_impl : public rapidjson::BaseReaderHandler<rapidjson::UTF8
                         "in JSONStateReader::parse()\n", current_variable_array_index);
                     throw std::exception();
                 }
+            } else if (lastKey == "cell_count") {
+                input.cell_count = static_cast<uint32_t>(val);
             } else if (lastKey == "orchestrator_time") {
                 input.orchestrator_time = static_cast<int32_t>(val);
             } else if (lastKey == "MYCN_amp") {
@@ -143,7 +146,13 @@ class JSONStateReader_impl : public rapidjson::BaseReaderHandler<rapidjson::UTF8
     bool Int64(int64_t i) { return processValue<int64_t>(i); }
     bool Uint64(uint64_t u) { return processValue<uint64_t>(u); }
     bool Double(double d) { return processValue<double>(d); }
-    bool String(const char*, rapidjson::SizeType, bool) {
+    bool String(const char*s, rapidjson::SizeType, bool) {
+        if (mode.top() == Environment) {
+            if (lastKey == "calibration_file") {
+                input.calibration_file = s;
+                return true;
+            }
+        }
         // String is not expected
         fprintf(stderr, "Unexpected string whilst parsing input file '%s'.\n", filename.c_str());
         throw std::exception();
@@ -200,6 +209,17 @@ class JSONStateReader_impl : public rapidjson::BaseReaderHandler<rapidjson::UTF8
             if (lastKey == "cellularity" && current_variable_array_index !=6) {
                 fprintf(stderr, "Cellularity array should have length 6 (%u != 6).\n", current_variable_array_index);
                 throw std::exception();
+            } else {
+                // Primage provides array in different order to what we implemented
+                // So remap it here
+                // assert(input.cellularity.size() == 6);
+                // 0 NB living (already correct)
+                // 4 SC Apop (already correct)
+                // 5 SC Necro (already correct)
+                // SC Living 3->1 (correct), NB Apop 1->3
+                std::swap(input.cellularity[1], input.cellularity[3]);
+                // NB Apop 3->2 (correct), NB Necro 2->3 (correct)
+                std::swap(input.cellularity[3], input.cellularity[2]);
             }
             current_variable_array_index = 0;
         }
@@ -207,7 +227,7 @@ class JSONStateReader_impl : public rapidjson::BaseReaderHandler<rapidjson::UTF8
         return true;
     }
     void validateInput() {
-        if (found_keys.size() == 33) {
+        if (found_keys.size() == 35) {
             if (input.start_effects.size() == input.end_effects.size()) {
                 if (input.drug_effects.size() != 6 * input.end_effects.size()) {
                     fprintf(stderr, "Input validation failed.\n'drug_effects' should be 6x the length of 'end_effects' should have the same length (%u != %u == 6 x %u).\n",
@@ -237,6 +257,7 @@ class JSONStateReader_impl : public rapidjson::BaseReaderHandler<rapidjson::UTF8
             if (!found_keys.count("V_tumour")) printf("V_tumour\n");
             if (!found_keys.count("O2")) printf("O2\n");
             if (!found_keys.count("cellularity")) printf("cellularity\n");
+            if (!found_keys.count("cell_count")) printf("cell_count\n");
             if (!found_keys.count("orchestrator_time")) printf("orchestrator_time\n");
             if (!found_keys.count("MYCN_amp")) printf("MYCN_amp\n");
             if (!found_keys.count("ALT")) printf("ALT\n");
@@ -260,6 +281,7 @@ class JSONStateReader_impl : public rapidjson::BaseReaderHandler<rapidjson::UTF8
             if (!found_keys.count("drug_effects")) printf("drug_effects\n");
             if (!found_keys.count("start_effects")) printf("start_effects\n");
             if (!found_keys.count("end_effects")) printf("end_effects\n");
+            if (!found_keys.count("calibration_file")) printf("calibration_file\n");
             throw std::exception();
         }
     }

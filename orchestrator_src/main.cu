@@ -80,6 +80,12 @@ FLAMEGPU_EXIT_FUNCTION(ConstructPrimageOutput) {
     const unsigned int SC_living_count = FLAMEGPU->environment.getProperty<unsigned int>("validation_Nscl");
     const unsigned int SC_apop_count = Schwann.sum<int>("apop");
     const unsigned int SC_necro_count = Schwann.sum<int>("necro");
+    printf("END_NB_living_count: %u\n", NB_living_count);
+    printf("END_NB_apop_count: %u\n", NB_apop_count);
+    printf("END_NB_necro_count: %u\n", NB_necro_count);
+    printf("END_SC_living_count: %u\n", SC_living_count);
+    printf("END_SC_apop_count: %u\n", SC_apop_count);
+    printf("END_SC_necro_count: %u\n", SC_necro_count);
     const unsigned int TOTAL_CELL_COUNT = NB_living_count + NB_apop_count + NB_necro_count + SC_living_count + SC_apop_count + SC_necro_count;
     // Calculate each fraction (e.g. number of living SCs/number of all cells) and multiply it by (1-matrix).
     if (TOTAL_CELL_COUNT) {
@@ -92,6 +98,7 @@ FLAMEGPU_EXIT_FUNCTION(ConstructPrimageOutput) {
     } else {
         sim_out.cellularity = {};
     }
+    sim_out.cell_count = TOTAL_CELL_COUNT;
     // Tumour volume
     {
         const auto h_nbl = FLAMEGPU->environment.getMacroProperty<unsigned int, 42>("histogram_nbl");
@@ -119,7 +126,7 @@ FLAMEGPU_EXIT_FUNCTION(ConstructPrimageOutput) {
             sim_out.total_volume_ratio_updated = sim_out.tumour_volume / init_volume_calculated;
         } else {
             sim_out.tumour_volume = init_volume_calculated;
-            sim_out.total_volume_ratio_updated = 1.0f;
+            sim_out.total_volume_ratio_updated = -1.0f;
         }
     }
     if (NB_living_count) {
@@ -175,7 +182,7 @@ FLAMEGPU_EXIT_FUNCTION(ConstructPrimageOutput) {
         const auto sc_necro_signal_count0 = Schwann.count<int>("necro_signal", 0);
         sc_necro_signal_mean2 += (sc_necro_signal_count0 - (SC_apop_count + SC_necro_count)) * pow(sim_out.sc_necro_signal_mean, 2);
         const auto sc_apop_signal_count0 = Schwann.count<int>("apop_signal", 0);
-        sc_apop_signal_mean2 += (sc_telomere_length_count0 - (SC_apop_count + SC_necro_count)) * pow(sim_out.sc_apop_signal_mean, 2);
+        sc_apop_signal_mean2 += (sc_apop_signal_count0 - (SC_apop_count + SC_necro_count)) * pow(sim_out.sc_apop_signal_mean, 2);
         // Divide and sqrt for the sd
         sim_out.sc_telomere_length_sd = static_cast<float>(sqrt(sc_telomere_length_mean2 / SC_living_count));
         sim_out.sc_necro_signal_sd = static_cast<float>(sqrt(sc_necro_signal_mean2 / SC_living_count));
@@ -187,6 +194,7 @@ int main(int argc, const char** argv) {
     RunConfig cfg = parseArgs(argc, argv);
     // Parse input file
     OrchestratorInput input = readOrchestratorInput(cfg.inFile);
+    printf("Input file: %s\n", cfg.inFile.c_str());
     // Setup model
     flamegpu::ModelDescription model("PRIMAGE: Neuroblastoma");
     defineModel(model);
@@ -199,11 +207,65 @@ int main(int argc, const char** argv) {
     sim.SimulationConfig().random_seed = input.seed;
     sim.CUDAConfig().device_id = static_cast<int>(cfg.device);
     sim.applyConfig();
+    if (!input.calibration_file.empty()) {
+        // Fill init struct
+        CalibrationInput clbn_init;
+        clbn_init.MYCN_fn11 = sim.getEnvironmentProperty<float>("MYCN_fn11");
+        clbn_init.MAPK_RAS_fn11 = sim.getEnvironmentProperty<float>("MAPK_RAS_fn11");
+        clbn_init.MAPK_RAS_fn01 = sim.getEnvironmentProperty<float>("MAPK_RAS_fn01");
+        clbn_init.p53_fn = sim.getEnvironmentProperty<float>("p53_fn");
+        clbn_init.p73_fn = sim.getEnvironmentProperty<float>("p73_fn");
+        clbn_init.HIF_fn = sim.getEnvironmentProperty<float>("HIF_fn");
+        clbn_init.P_cycle_nb = sim.getEnvironmentProperty<float>("P_cycle_nb");
+        clbn_init.P_cycle_sc = sim.getEnvironmentProperty<float>("P_cycle_sc");
+        clbn_init.P_DNA_damageHypo = sim.getEnvironmentProperty<float>("P_DNA_damageHypo");
+        clbn_init.P_DNA_damagerp = sim.getEnvironmentProperty<float>("P_DNA_damagerp");
+        clbn_init.P_unrepDNAHypo = sim.getEnvironmentProperty<float>("P_unrepDNAHypo");
+        clbn_init.P_unrepDNArp = sim.getEnvironmentProperty<float>("P_unrepDNArp");
+        clbn_init.P_necroIS = sim.getEnvironmentProperty<float>("P_necroIS");
+        clbn_init.P_telorp = sim.getEnvironmentProperty<float>("P_telorp");
+        clbn_init.P_apopChemo = sim.getEnvironmentProperty<float>("P_apopChemo");
+        clbn_init.P_DNA_damage_pathways = sim.getEnvironmentProperty<float>("P_DNA_damage_pathways");
+        clbn_init.P_apoprp = sim.getEnvironmentProperty<float>("P_apoprp");
+        clbn_init.P_necrorp = sim.getEnvironmentProperty<float>("P_necrorp");
+        clbn_init.scpro_jux = sim.getEnvironmentProperty<float>("scpro_jux");
+        clbn_init.nbdiff_jux = sim.getEnvironmentProperty<float>("nbdiff_jux");
+        clbn_init.nbdiff_amount = sim.getEnvironmentProperty<float>("nbdiff_amount");
+        clbn_init.nbapop_jux = sim.getEnvironmentProperty<float>("nbapop_jux");
+        clbn_init.mig_sc = sim.getEnvironmentProperty<float>("mig_sc");
+        // Parse input
+        CalibrationInput clbn_file = readCalibrationInput(input.calibration_file, clbn_init);
+        // Update calibration data
+        sim.setEnvironmentProperty<float>("MYCN_fn11", clbn_file.MYCN_fn11);
+        sim.setEnvironmentProperty<float>("MAPK_RAS_fn11", clbn_file.MAPK_RAS_fn11);
+        sim.setEnvironmentProperty<float>("MAPK_RAS_fn01", clbn_file.MAPK_RAS_fn01);
+        sim.setEnvironmentProperty<float>("p53_fn", clbn_file.p53_fn);
+        sim.setEnvironmentProperty<float>("p73_fn", clbn_file.p73_fn);
+        sim.setEnvironmentProperty<float>("HIF_fn", clbn_file.HIF_fn);
+        sim.setEnvironmentProperty<float>("P_cycle_nb", clbn_file.P_cycle_nb);
+        sim.setEnvironmentProperty<float>("P_cycle_sc", clbn_file.P_cycle_sc);
+        sim.setEnvironmentProperty<float>("P_DNA_damageHypo", clbn_file.P_DNA_damageHypo);
+        sim.setEnvironmentProperty<float>("P_DNA_damagerp", clbn_file.P_DNA_damagerp);
+        sim.setEnvironmentProperty<float>("P_unrepDNAHypo", clbn_file.P_unrepDNAHypo);
+        sim.setEnvironmentProperty<float>("P_unrepDNArp", clbn_file.P_unrepDNArp);
+        sim.setEnvironmentProperty<float>("P_necroIS", clbn_file.P_necroIS);
+        sim.setEnvironmentProperty<float>("P_telorp", clbn_file.P_telorp);
+        sim.setEnvironmentProperty<float>("P_apopChemo", clbn_file.P_apopChemo);
+        sim.setEnvironmentProperty<float>("P_DNA_damage_pathways", clbn_file.P_DNA_damage_pathways);
+        sim.setEnvironmentProperty<float>("P_apoprp", clbn_file.P_apoprp);
+        sim.setEnvironmentProperty<float>("P_necrorp", clbn_file.P_necrorp);
+        sim.setEnvironmentProperty<float>("scpro_jux", clbn_file.scpro_jux);
+        sim.setEnvironmentProperty<float>("nbdiff_jux", clbn_file.nbdiff_jux);
+        sim.setEnvironmentProperty<float>("nbdiff_amount", clbn_file.nbdiff_amount);
+        sim.setEnvironmentProperty<float>("nbapop_jux", clbn_file.nbapop_jux);
+        sim.setEnvironmentProperty<float>("mig_sc", clbn_file.mig_sc);
+    }
     sim.setEnvironmentProperty<int>("TERT_rarngm", input.TERT_rarngm);
     sim.setEnvironmentProperty<int>("ATRX_inact", input.ATRX_inact);
     sim.setEnvironmentProperty<float>("V_tumour", static_cast<float>(input.V_tumour * 1e+9));  // Convert from primage mm^3 to micron ^3
     sim.setEnvironmentProperty<float>("O2", input.O2);
     sim.setEnvironmentProperty<float, 6>("cellularity", input.cellularity);
+    sim.setEnvironmentProperty<int>("total_cell_init", static_cast<int>(input.cell_count));
     sim.setEnvironmentProperty<int>("orchestrator_time", input.orchestrator_time);
     sim.setEnvironmentProperty<int>("MYCN_amp", input.MYCN_amp);
     sim.setEnvironmentProperty<int>("ALT", input.ALT);
