@@ -1,0 +1,41 @@
+{
+	"version": [
+		13,
+		9,
+		0,
+		false
+	],
+	"primage": {
+		"delta_O2": -0.00001790374517440796,
+		"O2": 0.10112509876489639,
+		"delta_ecm": 8.940696716308594e-8,
+		"ecm": 0.4792450964450836,
+		"material_properties": 0.0,
+		"diffusion_coefficient": 0.0,
+		"total_volume_ratio_updated": 1.102641224861145,
+		"cellularity": [
+			0.5205476880073547,
+			0.00012631146819330752,
+			0.00008094377699308097,
+			0.0,
+			0.0,
+			0.0
+		],
+		"tumour_volume": 35.80100631713867,
+		"ratio_VEGF_NB_SC": 0.0,
+		"nb_telomere_length_mean": 59.987728118896487,
+		"nb_telomere_length_sd": 0.11036907136440277,
+		"sc_telomere_length_mean": 0.0,
+		"sc_telomere_length_sd": 0.0,
+		"nb_necro_signal_mean": 1.4003527164459229,
+		"nb_necro_signal_sd": 2.0080089569091799,
+		"nb_apop_signal_mean": 0.04674074798822403,
+		"nb_apop_signal_sd": 0.22509713470935822,
+		"sc_necro_signal_mean": 0.0,
+		"sc_necro_signal_sd": 0.0,
+		"sc_apop_signal_mean": 0.0,
+		"sc_apop_signal_sd": 0.0,
+		"extent_of_differentiation_mean": 0.5021679401397705,
+		"extent_of_differentiation_sd": 0.17360052466392518
+	}
+}

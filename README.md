@@ -1,5 +1,9 @@
 # PRIMAGE USFD Agent Based Neuroblastoma model
 
+This (branch of the) repository holds the final version of the USFD agent based neuroblastoma model used as part of the multi-scale model during the Primage project.
+
+The below details in the README correspond to building and running the model on the PLGrid clusters Prometheus & Ares, they can be used as an example for using the model on other systems.
+
 ## Prerequisites
 
 The dependencies below are required for building the project, it's advised to that you use the newest version of any dependencies.
@@ -27,12 +31,11 @@ The build scripts will create `build_output.out` and `build_error.err`, containi
 
 On success, you should find the USFD orchestrator model exists at `build/bin/Release/orchestrator_FGPUNB`.
 
-*Note: Currently this branch is not pinned to a particular release of FLAMEGPU2, instead it follows origin/master, rebuilds may therefore update FLAMEGPU2.*
-
 ## Running
 
 This branch of the repository contains test run scripts setup for PLGrid's Prometheus & Ares clusters. These simply pass an input file to the model, to ensure it executes to completion and outputs a correctly formatted output file (no validation of the contents of the output file is carried out).
 These jobs can be submitted from the root of the repository using `sbatch scripts/test_run_on_prometheus.sh` or `sbatch scripts/test_run_on_ares.sh`.
+
 
 
 *Note: Prometheus has multiple partitions with GPUs `plgrid-gpu` and `plgrid-gpu-v100`. The prior has K80 GPUs, these are older, hence less demand in the job queue but will execute the model more slowly than the latter which has V100s.*
