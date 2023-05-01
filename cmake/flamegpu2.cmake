@@ -17,7 +17,7 @@ FetchContent_Declare(
     flamegpu2
     GIT_REPOSITORY ${FLAMEGPU_REPOSITORY}
     GIT_TAG        ${FLAMEGPU_VERSION}
-    GIT_SHALLOW    1
+    GIT_SHALLOW    0
     GIT_PROGRESS   ON
     # UPDATE_DISCONNECTED   ON
 )
